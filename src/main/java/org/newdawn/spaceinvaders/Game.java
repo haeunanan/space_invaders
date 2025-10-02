@@ -80,6 +80,10 @@ public class Game extends Canvas
 	 * Construct our game and set it running.
 	 */
 	public Game() {
+
+		FirebaseInitializer firebase = new FirebaseInitializer();
+		firebase.initialize();
+
 		// create a frame to contain our game
 		container = new JFrame("Space Invaders 102");
 		

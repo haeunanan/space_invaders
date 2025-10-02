@@ -36,3 +36,4 @@ build/
 
 ### Mac OS ###
 .DS_Store
+/src/main/resources/space-invaders-dd665-firebase-adminsdk-fbsvc-dfecce036c.json
