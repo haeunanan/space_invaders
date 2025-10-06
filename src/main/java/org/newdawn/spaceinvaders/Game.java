@@ -6,6 +6,8 @@ import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferStrategy;
@@ -41,9 +43,9 @@ public class Game extends Canvas
 	/** True if the game is currently "running", i.e. the game loop is looping */
 	private boolean gameRunning = true;
 	/** The list of all the entities that exist in our game */
-	private ArrayList entities = new ArrayList();
+	private ArrayList<Entity> entities = new ArrayList<Entity>();
 	/** The list of entities that need to be removed from the game this loop */
-	private ArrayList removeList = new ArrayList();
+	private ArrayList<Entity> removeList = new ArrayList<Entity>();
 	/** The entity representing the player */
 	private Entity ship;
 	/** The speed at which the player's ship should move (pixels/sec) */
@@ -52,6 +54,20 @@ public class Game extends Canvas
 	private long lastFire = 0;
 	/** The interval between our players shot (ms) */
 	private long firingInterval = 500;
+	/** The number of missiles fired per shot */
+	private int missileCount = 1;
+	/** The number of coins player has to spend in shop */
+	private int coins = 0;
+	/** Whether the shop UI is currently open */
+	private boolean shopOpen = false;
+	/** Cost for each upgrade (same price) */
+	private final int UPGRADE_COST = 10;
+	/** Max times an individual upgrade can be purchased */
+	private final int MAX_UPGRADES = 6;
+	/** Levels for each upgrade */
+	private int attackLevel = 0;
+	private int moveLevel = 0;
+	private int missileLevel = 0;
 	/** The number of aliens left on the screen */
 	private int alienCount;
 	
@@ -101,23 +117,54 @@ public class Game extends Canvas
 		container.setResizable(false);
 		container.setVisible(true);
 		
-		// add a listener to respond to the user closing the window. If they
-		// do we'd like to exit the game
+		// 윈도우 창 닫는 리스너 
 		container.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
 				System.exit(0);
 			}
 		});
 		
-		// add a key input system (defined below) to our canvas
-		// so we can respond to key pressed
+		// add a key input system (defined below) to our canvas so we can respond to key pressed
 		addKeyListener(new KeyInputHandler());
+
+		// add mouse listener for shop clicks
+		addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				int mx = e.getX();
+				int my = e.getY();
+				// simple shop button at top-right
+				if (mx >= 720 && mx <= 780 && my >= 10 && my <= 40) {
+					shopOpen = !shopOpen;
+					return;
+				}
+				// if shop open, check option clicks
+				if (shopOpen) {
+					// calculate panel positions consistent with rendering
+					int overlayX = 40;
+					int overlayY = 40;
+					int overlayW = 720;
+					int overlayH = 520;
+					int pad = 20;
+					int panelW = (overlayW - pad*4)/3; // space for 3 panels and paddings
+					int panelH = overlayH - 120;
+					int panelY = overlayY + 60;
+					for (int i=0;i<3;i++) {
+						int px = overlayX + pad + i*(panelW + pad);
+						int py = panelY;
+						if (mx >= px && mx <= px + panelW && my >= py && my <= py + panelH) {
+							if (i == 0) purchaseAttackSpeed();
+							if (i == 1) purchaseMoveSpeed();
+							if (i == 2) purchaseMissileCount();
+						}
+					}
+				}
+			}
+		});
 		
 		// request the focus so key events come to us
 		requestFocus();
 
-		// create the buffering strategy which will allow AWT
-		// to manage our accelerated graphics
+		// create the buffering strategy which will allow AWT to manage our accelerated graphics
 		createBufferStrategy(2);
 		strategy = getBufferStrategy();
 		
@@ -185,7 +232,7 @@ public class Game extends Canvas
 	 */
 	public void notifyDeath() {
 		message = "Oh no! They got you, try again?";
-		waitingForKeyPress = true;
+		waitingForKeyPress = true; //죽었을땐 코인 ㄴㄴ 다시시작해야대
 	}
 	
 	/**
@@ -195,6 +242,62 @@ public class Game extends Canvas
 	public void notifyWin() {
 		message = "Well done! You Win!";
 		waitingForKeyPress = true;
+		coins += 10;// 라운드 클리어 > 코인 
+		
+	}
+
+	/** Purchase attack speed upgrade: reduce firing interval by 10% */
+	private void purchaseAttackSpeed() {
+		if (attackLevel >= MAX_UPGRADES) return;
+		if (coins < UPGRADE_COST) return;
+		coins -= UPGRADE_COST;
+		attackLevel++;
+		// reduce interval but clamp to a minimum
+		firingInterval = Math.max(100, (long)(firingInterval * 0.9));
+	}
+
+	/** Purchase move speed upgrade: increase move speed by 10% */
+	private void purchaseMoveSpeed() {
+		if (moveLevel >= MAX_UPGRADES) return;
+		if (coins < UPGRADE_COST) return;
+		coins -= UPGRADE_COST;
+		moveLevel++;
+		moveSpeed = moveSpeed * 1.1;
+	}
+
+	/** Purchase missile count upgrade: increment missiles by 1 up to a reasonable cap */
+	private void purchaseMissileCount() {
+		if (missileLevel >= MAX_UPGRADES) return;
+		if (coins < UPGRADE_COST) return;
+		coins -= UPGRADE_COST;
+		missileLevel++;
+		missileCount = Math.min(5, missileCount + 1);
+	}
+
+	/** Helper to draw wrapped text within a max width. */
+	private void drawWrappedString(Graphics2D g, String text, int x, int y, int maxWidth, int lineHeight) {
+		if (text == null || text.length() == 0) return;
+		java.awt.FontMetrics fm = g.getFontMetrics();
+		String[] words = text.split(" ");
+		StringBuilder line = new StringBuilder();
+		int curY = y;
+		for (int i=0;i<words.length;i++) {
+			String word = words[i];
+			String test = line.length() == 0 ? word : line + " " + word;
+			int width = fm.stringWidth(test);
+			if (width > maxWidth) {
+				// draw current line and start new
+				g.drawString(line.toString(), x, curY);
+				curY += lineHeight;
+				line = new StringBuilder(word);
+			} else {
+				if (line.length() > 0) line.append(" ");
+				line.append(word);
+			}
+		}
+		if (line.length() > 0) {
+			g.drawString(line.toString(), x, curY);
+		}
 	}
 	
 	/**
@@ -230,11 +333,17 @@ public class Game extends Canvas
 		if (System.currentTimeMillis() - lastFire < firingInterval) {
 			return;
 		}
-		
-		// if we waited long enough, create the shot entity, and record the time.
+        
+		// if we waited long enough, create shot(s) according to missileCount, and record the time.
 		lastFire = System.currentTimeMillis();
-		ShotEntity shot = new ShotEntity(this,"sprites/shot.gif",ship.getX()+10,ship.getY()-30);
-		entities.add(shot);
+		int baseX = ship.getX()+10;
+		int baseY = ship.getY()-30;
+		// spread shots slightly when multiple missiles
+		for (int i=0;i<missileCount;i++) {
+			int offset = (i - (missileCount-1)/2) * 10; // centers the spread
+			ShotEntity shot = new ShotEntity(this,"sprites/shot.gif",baseX + offset,baseY);
+			entities.add(shot);
+		}
 	}
 	
 	/**
@@ -331,6 +440,88 @@ public class Game extends Canvas
 				g.drawString(message,(800-g.getFontMetrics().stringWidth(message))/2,250);
 				g.drawString("Press any key",(800-g.getFontMetrics().stringWidth("Press any key"))/2,300);
 			}
+
+			// 코인뱃지 왼쪽상단 
+			int badgeX = 20;
+			int badgeY = 20;
+			int badgeW = 120;
+			int badgeH = 40;
+			g.setColor(new Color(255,165,0)); // orange
+			g.fillRoundRect(badgeX,badgeY,badgeW,badgeH,20,20);
+			// 코인 아이콘
+			g.setColor(new Color(255,215,0)); // gold
+			g.fillOval(badgeX+6,badgeY+6,28,28);
+			g.setColor(Color.black);
+			g.drawString("★", badgeX+12, badgeY+28);
+			g.setColor(Color.black);
+			g.drawString(String.valueOf(coins), badgeX+46, badgeY+26);
+
+			// 오른쪽 상단 샵버튼
+			g.setColor(Color.gray);
+			g.fillRect(720,10,60,30);
+			g.setColor(Color.white);
+			g.drawString("Shop",732,30);
+
+			// if 샵 오픈 >> overlay with three panels 표시
+			if (shopOpen) {
+				int overlayX = 40;
+				int overlayY = 40;
+				int overlayW = 720;
+				int overlayH = 520;
+				// dark rounded background
+				g.setColor(new Color(40,42,45));
+				g.fillRoundRect(overlayX,overlayY,overlayW,overlayH,10,10);
+
+				// top coin badge inside overlay (mirror) optional - skip
+
+				// 3개의 light panel
+				int pad = 20;
+				int panelW = (overlayW - pad*4)/3;
+				int panelH = overlayH - 120;
+				int panelY = overlayY + 60;
+				g.setColor(new Color(220,220,220));
+				g.setFont(g.getFont().deriveFont(14f));
+				String[] titles = {"공격 속도 증가","이동 속도 증가","미사일 개수 증가"};
+				String[] desc = {
+					"공격 속도가 증가합니다",
+					"플레이어의 이동속도가 증가합니다",
+					"한 번에 발사할 수 있는 미사일의 개수가 1개 추가됩니다"
+				};
+				for (int i=0;i<3;i++) {
+					int px = overlayX + pad + i*(panelW + pad);
+					int py = panelY;
+					// determine if this upgrade is maxed or affordable
+					boolean maxed = false;
+					int level = 0;
+					if (i==0) { level = attackLevel; maxed = attackLevel>=MAX_UPGRADES; }
+					if (i==1) { level = moveLevel; maxed = moveLevel>=MAX_UPGRADES; }
+					if (i==2) { level = missileLevel; maxed = missileLevel>=MAX_UPGRADES; }
+
+					g.fillRect(px,py,panelW,panelH);
+					// draw wrapped title and description
+					g.setColor(Color.black);
+					int textX = px + 12;
+					int textY = py + 20;
+					int innerWidth = panelW - 24;
+					g.setFont(g.getFont().deriveFont(16f));
+					drawWrappedString(g, titles[i], textX, textY, innerWidth, 20);
+					g.setFont(g.getFont().deriveFont(12f));
+					drawWrappedString(g, desc[i], textX, textY + 36, innerWidth, 16);
+					// price and level display
+					String levelText = "Lv "+level;
+					String priceText = maxed ? "MAX" : ("Price: "+UPGRADE_COST);
+					// color price red if not enough coins
+					if (!maxed && coins < UPGRADE_COST) g.setColor(Color.red);
+					else g.setColor(Color.darkGray);
+					g.setFont(g.getFont().deriveFont(12f));
+					drawWrappedString(g, priceText, px+12, py+panelH-40, innerWidth, 14);
+					g.drawString(levelText, px+panelW-60, py+panelH-20);
+					g.setColor(new Color(220,220,220));
+				}
+				// 왼쪽 상단에 코인 개수 표시 
+				g.setColor(Color.white);
+				g.drawString("Coins: "+coins, overlayX+20, overlayY+30);
+			}
 			
 			// finally, we've completed drawing so clear up the graphics
 			// and flip the buffer over
@@ -348,15 +539,13 @@ public class Game extends Canvas
 				ship.setHorizontalMovement(moveSpeed);
 			}
 			
-			// if we're pressing fire, attempt to fire
+			// fire를 누르면 fire를 시도 
 			if (firePressed) {
 				tryToFire();
 			}
 			
-			// we want each frame to take 10 milliseconds, to do this
-			// we've recorded when we started the frame. We add 10 milliseconds
-			// to this and then factor in the current time to give 
-			// us our final value to wait for
+			
+			// to this and then factor in the current time to give  us our final value to wait for 
 			SystemTimer.sleep(lastLoopTime+10-SystemTimer.getTime());
 		}
 	}
