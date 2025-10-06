@@ -127,7 +127,7 @@ public class Game extends Canvas
 		// add a key input system (defined below) to our canvas so we can respond to key pressed
 		addKeyListener(new KeyInputHandler());
 
-		// add mouse listener for shop clicks
+		// 샵 클릭에 대한 마우스 리스너 
 		addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				int mx = e.getX();
@@ -242,13 +242,13 @@ public class Game extends Canvas
 	public void notifyWin() {
 		message = "Well done! You Win!";
 		waitingForKeyPress = true;
-		coins += 10;// 라운드 클리어 > 코인 
+		coins += 10;// 라운드 클리어 -> 코인 
 		
 	}
 
-	/** Purchase attack speed upgrade: reduce firing interval by 10% */
+	// 상점 옵션1: 공격 속도 증가 >> firing interval 10% 감소 
 	private void purchaseAttackSpeed() {
-		if (attackLevel >= MAX_UPGRADES) return;
+		if (attackLevel >= MAX_UPGRADES) return; 
 		if (coins < UPGRADE_COST) return;
 		coins -= UPGRADE_COST;
 		attackLevel++;
@@ -256,7 +256,7 @@ public class Game extends Canvas
 		firingInterval = Math.max(100, (long)(firingInterval * 0.9));
 	}
 
-	/** Purchase move speed upgrade: increase move speed by 10% */
+	// 상점 옵션2: 이동 속도 증가 >> move speed 10% 증가 
 	private void purchaseMoveSpeed() {
 		if (moveLevel >= MAX_UPGRADES) return;
 		if (coins < UPGRADE_COST) return;
@@ -265,7 +265,7 @@ public class Game extends Canvas
 		moveSpeed = moveSpeed * 1.1;
 	}
 
-	/** Purchase missile count upgrade: increment missiles by 1 up to a reasonable cap */
+	// 상점 옵션3: 미사일 개수 증가 increment missiles by 1 up to a reasonable cap 
 	private void purchaseMissileCount() {
 		if (missileLevel >= MAX_UPGRADES) return;
 		if (coins < UPGRADE_COST) return;
@@ -274,7 +274,7 @@ public class Game extends Canvas
 		missileCount = Math.min(5, missileCount + 1);
 	}
 
-	/** Helper to draw wrapped text within a max width. */
+	// Helper to draw wrapped text within a max width. 
 	private void drawWrappedString(Graphics2D g, String text, int x, int y, int maxWidth, int lineHeight) {
 		if (text == null || text.length() == 0) return;
 		java.awt.FontMetrics fm = g.getFontMetrics();
@@ -286,7 +286,7 @@ public class Game extends Canvas
 			String test = line.length() == 0 ? word : line + " " + word;
 			int width = fm.stringWidth(test);
 			if (width > maxWidth) {
-				// draw current line and start new
+				// 현재 라인에서부터 새로 그리기 
 				g.drawString(line.toString(), x, curY);
 				curY += lineHeight;
 				line = new StringBuilder(word);
@@ -300,18 +300,15 @@ public class Game extends Canvas
 		}
 	}
 	
-	/**
-	 * Notification that an alien has been killed
-	 */
+	// Notification that an alien has been killed
 	public void notifyAlienKilled() {
-		// reduce the alient count, if there are none left, the player has won!
 		alienCount--;
 		
 		if (alienCount == 0) {
 			notifyWin();
 		}
 		
-		// if there are still some aliens left then they all need to get faster, so
+		// if there are still some aliens left then they all need to get faster
 		// speed up all the existing aliens
 		for (int i=0;i<entities.size();i++) {
 			Entity entity = (Entity) entities.get(i);
@@ -485,8 +482,9 @@ public class Game extends Canvas
 				String[] desc = {
 					"공격 속도가 증가합니다",
 					"플레이어의 이동속도가 증가합니다",
-					"한 번에 발사할 수 있는 미사일의 개수가 1개 추가됩니다"
+					"한 번에 발사할 수 있는 미사일의 개수를 하나 추가합니다"
 				};
+							
 				for (int i=0;i<3;i++) {
 					int px = overlayX + pad + i*(panelW + pad);
 					int py = panelY;
@@ -496,6 +494,7 @@ public class Game extends Canvas
 					if (i==0) { level = attackLevel; maxed = attackLevel>=MAX_UPGRADES; }
 					if (i==1) { level = moveLevel; maxed = moveLevel>=MAX_UPGRADES; }
 					if (i==2) { level = missileLevel; maxed = missileLevel>=MAX_UPGRADES; }
+				
 
 					g.fillRect(px,py,panelW,panelH);
 					// draw wrapped title and description
