@@ -8,8 +8,7 @@ import java.awt.event.WindowEvent;
 import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
+import javax.swing.*;
 
 import org.newdawn.spaceinvaders.entity.AlienEntity;
 import org.newdawn.spaceinvaders.entity.Entity;
@@ -31,17 +30,20 @@ import org.newdawn.spaceinvaders.entity.ShotEntity;
  * 
  * @author Kevin Glass
  */
-public class Game extends Canvas 
+public class Game
 {
 	public enum GameState {
 		START_MENU, // 시작 메뉴
-		LOGIN,      // 로그인 화면
+		SIGN_IN,    // 로그인 화면
+		SIGN_UP,    // 회원가입 화면
 		PLAYING     // 게임 중
 	}
 	private GameState currentState;
 
 	private StartMenuPanel startMenuPanel;
-	// private LoginPanel loginPanel;
+	private SignInPanel signInPanel;
+	private SignUpPanel signUpPanel;
+	private GamePlayPanel gamePlayPanel;
 	/** The stragey that allows us to use accelerate page flipping */
 	private BufferStrategy strategy;
 	/** True if the game is currently "running", i.e. the game loop is looping */
@@ -81,6 +83,8 @@ public class Game extends Canvas
 	private String windowTitle = "Space Invaders 102";
 	/** The game window that we'll update with the frame count */
 	private JFrame container;
+	private CardLayout cardLayout;
+	private JPanel mainPanel;
 	
 	/**
 	 * Construct our game and set it running.
@@ -94,55 +98,47 @@ public class Game extends Canvas
 
 		// create a frame to contain our game
 		container = new JFrame("Space Invaders 102");
-		
-		// get hold the content of the frame and set up the resolution of the game
-		JPanel panel = (JPanel) container.getContentPane();
-		panel.setPreferredSize(new Dimension(800,600));
-		panel.setLayout(new BorderLayout());
+
+		cardLayout = new CardLayout();
+		mainPanel = new JPanel(cardLayout);
+		mainPanel.setPreferredSize(new Dimension(800, 600));
 
 		startMenuPanel = new StartMenuPanel(this);
-		panel.add(startMenuPanel, BorderLayout.CENTER);
+		signInPanel = new SignInPanel(this);
+		signUpPanel = new SignUpPanel(this);
+		gamePlayPanel = new GamePlayPanel(this);
 
-		// loginPanel = new LoginPanel(this); // 나중에 만들 로그인 패널
-		// panel.add(loginPanel, BorderLayout.CENTER);
+		mainPanel.add(startMenuPanel, "START");
+		mainPanel.add(signInPanel, "SIGN_IN");
+		mainPanel.add(signUpPanel, "SIGN_UP");
+		mainPanel.add(gamePlayPanel, "PLAYING");
+
+		container.getContentPane().add(mainPanel);
 
 		changeState(GameState.START_MENU);
-		// setup our canvas size and put it into the content of the frame
-		//setBounds(0,0,800,600);
-		//panel.add(this);
-		
-		// Tell AWT not to bother repainting our canvas since we're
-		// going to do that our self in accelerated mode
-		setIgnoreRepaint(true);
-		
+
+		gamePlayPanel.addKeyListener(new KeyInputHandler());
+		gamePlayPanel.setFocusable(true);
+
 		// finally make the window visible 
 		container.pack();
 		container.setResizable(false);
+		container.setLocationRelativeTo(null);
 		container.setVisible(true);
 		
 		// add a listener to respond to the user closing the window. If they
 		// do we'd like to exit the game
 		container.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
+				gameRunning = false;
 				System.exit(0);
 			}
 		});
-		
-		// add a key input system (defined below) to our canvas
-		// so we can respond to key pressed
-		addKeyListener(new KeyInputHandler());
-		
-		// request the focus so key events come to us
-		requestFocus();
 
-		// create the buffering strategy which will allow AWT
-		// to manage our accelerated graphics
-		createBufferStrategy(2);
-		strategy = getBufferStrategy();
-		
-		// initialise the entities in our game so there's something
-		// to see at startup
-		initEntities();
+		Thread gameThread = new Thread(()-> {
+			this.gameLoop();
+		});
+		gameThread.start();
 	}
 
 	// Game.java에 아래 메소드 추가
@@ -150,23 +146,20 @@ public class Game extends Canvas
 	public void changeState(GameState newState) {
 		currentState = newState;
 
-		// 일단 모든 패널을 숨깁니다.
-		if (startMenuPanel != null) startMenuPanel.setVisible(false);
-		// if (loginPanel != null) loginPanel.setVisible(false);
-
-		// 현재 상태에 맞는 패널만 보여줍니다.
 		switch (currentState) {
 			case START_MENU:
-				if (startMenuPanel != null) startMenuPanel.setVisible(true);
+				cardLayout.show(mainPanel, "START");
 				break;
-			case LOGIN:
-				// if (loginPanel != null) loginPanel.setVisible(true);
+			case SIGN_IN:
+				cardLayout.show(mainPanel, "SIGN_IN");
+				break;
+			case SIGN_UP:
+				cardLayout.show(mainPanel, "SIGN_UP");
 				break;
 			case PLAYING:
-				// 게임 플레이 상태가 되면 모든 UI 패널을 숨기고,
-				// 게임 로직이 직접 화면을 그리기 시작합니다.
-				startGame(); // 게임 판 초기화
-				requestFocus(); // Game Canvas가 키 입력을 받을 수 있도록 포커스 요청
+				cardLayout.show(mainPanel, "PLAYING");
+				gamePlayPanel.requestFocusInWindow();
+				startGame();
 				break;
 		}
 	}
@@ -281,7 +274,7 @@ public class Game extends Canvas
 		ShotEntity shot = new ShotEntity(this,"sprites/shot.gif",ship.getX()+10,ship.getY()-30);
 		entities.add(shot);
 	}
-	
+
 	/**
 	 * The main game loop. This loop is running during all game
 	 * play as is responsible for the following activities:
@@ -318,12 +311,6 @@ public class Game extends Canvas
 					fps = 0;
 				}
 
-				// Get hold of a graphics context for the accelerated
-				// surface and blank it out
-				Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
-				g.setColor(Color.black);
-				g.fillRect(0, 0, 800, 600);
-
 				// cycle round asking each entity to move itself
 				if (!waitingForKeyPress) {
 					for (int i = 0; i < entities.size(); i++) {
@@ -331,13 +318,6 @@ public class Game extends Canvas
 
 						entity.move(delta);
 					}
-				}
-
-				// cycle round drawing all the entities we have in the game
-				for (int i = 0; i < entities.size(); i++) {
-					Entity entity = (Entity) entities.get(i);
-
-					entity.draw(g);
 				}
 
 				// brute force collisions, compare every entity against
@@ -371,33 +351,24 @@ public class Game extends Canvas
 					logicRequiredThisLoop = false;
 				}
 
-				// if we're waiting for an "any key" press then draw the
-				// current message
-				if (waitingForKeyPress) {
-					g.setColor(Color.white);
-					g.drawString(message, (800 - g.getFontMetrics().stringWidth(message)) / 2, 250);
-					g.drawString("Press any key", (800 - g.getFontMetrics().stringWidth("Press any key")) / 2, 300);
-				}
+				gamePlayPanel.repaint();
 
-				// finally, we've completed drawing so clear up the graphics
-				// and flip the buffer over
-				g.dispose();
-				strategy.show();
+				if(ship!=null) {
+					// resolve the movement of the ship. First assume the ship
+					// isn't moving. If either cursor key is pressed then
+					// update the movement appropraitely
+					ship.setHorizontalMovement(0);
 
-				// resolve the movement of the ship. First assume the ship
-				// isn't moving. If either cursor key is pressed then
-				// update the movement appropraitely
-				ship.setHorizontalMovement(0);
+					if ((leftPressed) && (!rightPressed)) {
+						ship.setHorizontalMovement(-moveSpeed);
+					} else if ((rightPressed) && (!leftPressed)) {
+						ship.setHorizontalMovement(moveSpeed);
+					}
 
-				if ((leftPressed) && (!rightPressed)) {
-					ship.setHorizontalMovement(-moveSpeed);
-				} else if ((rightPressed) && (!leftPressed)) {
-					ship.setHorizontalMovement(moveSpeed);
-				}
-
-				// if we're pressing fire, attempt to fire
-				if (firePressed) {
-					tryToFire();
+					// if we're pressing fire, attempt to fire
+					if (firePressed) {
+						tryToFire();
+					}
 				}
 			}
 			
@@ -407,6 +378,18 @@ public class Game extends Canvas
 			// us our final value to wait for
 			SystemTimer.sleep(10); // 루프가 너무 빨리 돌지 않도록 잠시 대기
 		}
+	}
+
+	public ArrayList<Entity> getEntities() {
+		return entities;
+	}
+
+	public boolean isWaitingForKeyPress() {
+		return waitingForKeyPress;
+	}
+
+	public String getMessage() {
+		return message;
 	}
 	
 	/**
@@ -437,7 +420,8 @@ public class Game extends Canvas
 				// if we're waiting for an "any key" typed then we don't
 				// want to do anything with just a "press"
 				if (waitingForKeyPress) {
-					return;
+					waitingForKeyPress = false; // "Press any key" 상태를 해제
+					return; // 게임 시작 처리 후 다른 키 입력은 무시
 				}
 
 
@@ -449,28 +433,6 @@ public class Game extends Canvas
 				}
 				if (e.getKeyCode() == KeyEvent.VK_SPACE) {
 					firePressed = true;
-				}
-			}
-
-			if (e.getKeyCode() == KeyEvent.VK_L) {
-				System.out.println("'L' 키가 눌렸습니다. Firebase 인증을 테스트합니다.");
-
-				// 1. AuthService 객체를 생성합니다.
-				AuthService authService = new AuthService();
-
-				// 2. 클라이언트(게임)에서 실제로 받아와야 할 ID 토큰입니다.
-				//    지금은 테스트를 위해 임시 더미 값을 넣습니다.
-				String dummyToken = "여기에_클라이언트에서_받은_ID_토큰을_넣으세요";
-
-				// 3. 토큰 검증을 요청하고 결과를 받습니다.
-				String uid = authService.verifyIdToken(dummyToken);
-
-				if (uid != null) {
-					// 인증 성공 시 로직
-					System.out.println("로그인 검증 성공! 게임을 시작할 수 있습니다. User ID: " + uid);
-				} else {
-					// 인증 실패 시 로직
-					System.out.println("로그인 검증 실패! 게임을 시작할 수 없습니다.");
 				}
 			}
 		} 
@@ -505,24 +467,6 @@ public class Game extends Canvas
 		 * @param e The details of the key that was typed. 
 		 */
 		public void keyTyped(KeyEvent e) {
-			// if we're waiting for a "any key" type then
-			// check if we've recieved any recently. We may
-			// have had a keyType() event from the user releasing
-			// the shoot or move keys, hence the use of the "pressCount"
-			// counter.
-			if (waitingForKeyPress) {
-				if (pressCount == 1) {
-					// since we've now recieved our key typed
-					// event we can mark it as such and start 
-					// our new game
-					waitingForKeyPress = false;
-					startGame();
-					pressCount = 0;
-				} else {
-					pressCount++;
-				}
-			}
-			
 			// if we hit escape, then quit the game
 			if (e.getKeyChar() == 27) {
 				System.exit(0);
@@ -538,11 +482,8 @@ public class Game extends Canvas
 	 * @param argv The arguments that are passed into our game
 	 */
 	public static void main(String argv[]) {
-		Game g = new Game();
-
-		// Start the main game loop, note: this method will not
-		// return until the game has finished running. Hence we are
-		// using the actual main thread to run the game.
-		g.gameLoop();
+		SwingUtilities.invokeLater(() -> {
+			new Game();
+		});
 	}
 }

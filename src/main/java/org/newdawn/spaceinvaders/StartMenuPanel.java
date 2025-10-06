@@ -28,7 +28,7 @@ public class StartMenuPanel extends JPanel {
         // 버튼 클릭 이벤트 처리
         startButton.addActionListener(e -> {
             // 버튼이 클릭되면 Game 클래스에 알려 상태를 변경하도록 요청
-            game.changeState(Game.GameState.LOGIN);
+            game.changeState(Game.GameState.SIGN_IN);
         });
     }
 
