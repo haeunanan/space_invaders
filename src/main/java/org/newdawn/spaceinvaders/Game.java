@@ -15,6 +15,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import org.newdawn.spaceinvaders.entity.*;
+import org.newdawn.spaceinvaders.entity.AlienShotEntity;
 
 /**
  * The main hook of our game. This class with both act as a manager
@@ -52,7 +53,7 @@ public class Game extends Canvas
 	/** The number of aliens left on the screen */
 	private int alienCount;
     private int currentLevel = 1; // ADDED: 현재 레벨을 추적하는 변수
-    private static final int BOSS_LEVEL = 2; // ADDED: 보스가 나타날 레벨 정의
+    private static final int BOSS_LEVEL = 5; // ADDED: 보스가 나타날 레벨 정의
 	
 	/** The message to display which waiting for a key press */
 	private String message = "";
@@ -156,14 +157,45 @@ public class Game extends Canvas
         }
     }
     private void initStandardStage() {
-    for (int row=0;row<5;row++) {
-        for (int x=0;x<12;x++) {
-            Entity alien = new AlienEntity(this,100+(x*50),(50)+row*30);
-            entities.add(alien);
-            alienCount++;
+        double moveSpeed = 100;
+        int alienRows = 3;
+        double firingChance = 0; // 레벨 1은 공격 안 함 (0%)
+        int startY = 50;
+
+        // 레벨에 따라 변수 값 설정
+        switch (currentLevel) {
+            case 1:
+                moveSpeed = 100;
+                alienRows = 3;
+                firingChance = 0; // 공격 없음
+                break;
+            case 2:
+                moveSpeed = 130;
+                alienRows = 4;
+                firingChance = 0.0002; // 0.02% 확률로 매 프레임 발사 시도
+                break;
+            case 3:
+                moveSpeed = 160;
+                alienRows = 5;
+                firingChance = 0.0005; // 0.05% 확률
+                break;
+            case 4:
+                moveSpeed = 200;
+                alienRows = 5;
+                firingChance = 0.0008; // 0.08% 확률
+                startY = 80; // 시작 위치를 더 낮춰서 난이도 상승
+                break;
+        }
+
+        // 설정된 값으로 외계인 생성
+        for (int row = 0; row < alienRows; row++) {
+            for (int x = 0; x < 12; x++) {
+                Entity alien = new AlienEntity(this, "sprites/alien.gif", 100 + (x * 50), startY + row * 30, moveSpeed, firingChance);
+                entities.add(alien);
+                alienCount++;
+            }
         }
     }
-}
     private void initBossStage() {
         Entity boss = new BossEntity(this, "sprites/boss.gif", 350, 50);
         entities.add(boss);
@@ -206,14 +238,16 @@ public class Game extends Canvas
 	 * are dead.
 	 */
     public void notifyWin() {
-        // MODIFIED: 스테이지 클리어 및 다음 레벨 진행 로직
         currentLevel++;
         if (currentLevel > BOSS_LEVEL) {
             message = "Congratulations! You have defeated the final boss!";
             waitingForKeyPress = true;
-            currentLevel = 1; // 게임 클리어 후 다시 시작하면 레벨 1부터
+            currentLevel = 1;
+        } else if (currentLevel == BOSS_LEVEL) {
+            message = "Final Stage! The Boss is approaching!";
+            waitingForKeyPress = true;
         } else {
-            message = "Stage " + (currentLevel - 1) + " Cleared! Prepare for the Boss!";
+            message = "Stage " + (currentLevel - 1) + " Cleared! Prepare for the next stage.";
             waitingForKeyPress = true;
         }
     }
