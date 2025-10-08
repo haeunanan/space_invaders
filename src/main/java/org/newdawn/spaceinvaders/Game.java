@@ -14,10 +14,7 @@ import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import org.newdawn.spaceinvaders.entity.AlienEntity;
-import org.newdawn.spaceinvaders.entity.Entity;
-import org.newdawn.spaceinvaders.entity.ShipEntity;
-import org.newdawn.spaceinvaders.entity.ShotEntity;
+import org.newdawn.spaceinvaders.entity.*;
 
 /**
  * The main hook of our game. This class with both act as a manager
@@ -54,6 +51,8 @@ public class Game extends Canvas
 	private long firingInterval = 500;
 	/** The number of aliens left on the screen */
 	private int alienCount;
+    private int currentLevel = 1; // ADDED: 현재 레벨을 추적하는 변수
+    private static final int BOSS_LEVEL = 2; // ADDED: 보스가 나타날 레벨 정의
 	
 	/** The message to display which waiting for a key press */
 	private String message = "";
@@ -130,36 +129,49 @@ public class Game extends Canvas
 	 * Start a fresh game, this should clear out any old data and
 	 * create a new set.
 	 */
-	private void startGame() {
-		// clear out any existing entities and intialise a new set
-		entities.clear();
-		initEntities();
-		
-		// blank out any keyboard settings we might currently have
-		leftPressed = false;
-		rightPressed = false;
-		firePressed = false;
-	}
+    private void startGame() {
+        entities.clear();
+        initEntities(); // MODIFIED: 이제 initEntities가 레벨에 따라 다르게 동작
+
+        leftPressed = false;
+        rightPressed = false;
+        firePressed = false;
+    }
 	
 	/**
 	 * Initialise the starting state of the entities (ship and aliens). Each
 	 * entitiy will be added to the overall list of entities in the game.
 	 */
-	private void initEntities() {
-		// create the player ship and place it roughly in the center of the screen
-		ship = new ShipEntity(this,"sprites/ship.gif",370,550);
-		entities.add(ship);
-		
-		// create a block of aliens (5 rows, by 12 aliens, spaced evenly)
-		alienCount = 0;
-		for (int row=0;row<5;row++) {
-			for (int x=0;x<12;x++) {
-				Entity alien = new AlienEntity(this,100+(x*50),(50)+row*30);
-				entities.add(alien);
-				alienCount++;
-			}
-		}
-	}
+    private void initEntities() {
+        ship = new ShipEntity(this,"sprites/ship.gif",370,550);
+        entities.add(ship);
+
+        alienCount = 0;
+
+        // MODIFIED: 현재 레벨에 따라 다른 스테이지 초기화
+        if (currentLevel >= BOSS_LEVEL) {
+            initBossStage();
+        } else {
+            initStandardStage();
+        }
+    }
+    private void initStandardStage() {
+    for (int row=0;row<5;row++) {
+        for (int x=0;x<12;x++) {
+            Entity alien = new AlienEntity(this,100+(x*50),(50)+row*30);
+            entities.add(alien);
+            alienCount++;
+        }
+    }
+}
+    private void initBossStage() {
+        Entity boss = new BossEntity(this, "sprites/boss.gif", 350, 50);
+        entities.add(boss);
+        // 보스 스테이지에서는 alienCount가 아닌 다른 방식으로 승리 조건을 관리합니다.
+    }
+    public void addEntity(Entity entity) {
+        entities.add(entity);
+    }
 	
 	/**
 	 * Notification from a game entity that the logic of the game
@@ -183,30 +195,41 @@ public class Game extends Canvas
 	/**
 	 * Notification that the player has died. 
 	 */
-	public void notifyDeath() {
-		message = "Oh no! They got you, try again?";
-		waitingForKeyPress = true;
-	}
+    public void notifyDeath() {
+        message = "Oh no! They got you, try again?";
+        waitingForKeyPress = true;
+        currentLevel = 1; // ADDED: 죽으면 레벨 1로 리셋
+    }
 	
 	/**
 	 * Notification that the player has won since all the aliens
 	 * are dead.
 	 */
-	public void notifyWin() {
-		message = "Well done! You Win!";
-		waitingForKeyPress = true;
-	}
+    public void notifyWin() {
+        // MODIFIED: 스테이지 클리어 및 다음 레벨 진행 로직
+        currentLevel++;
+        if (currentLevel > BOSS_LEVEL) {
+            message = "Congratulations! You have defeated the final boss!";
+            waitingForKeyPress = true;
+            currentLevel = 1; // 게임 클리어 후 다시 시작하면 레벨 1부터
+        } else {
+            message = "Stage " + (currentLevel - 1) + " Cleared! Prepare for the Boss!";
+            waitingForKeyPress = true;
+        }
+    }
+    public void notifyBossKilled() {
+        notifyWin(); // 보스를 이기면 게임에서 승리
+    }
 	
 	/**
 	 * Notification that an alien has been killed
 	 */
-	public void notifyAlienKilled() {
-		// reduce the alient count, if there are none left, the player has won!
-		alienCount--;
-		
-		if (alienCount == 0) {
-			notifyWin();
-		}
+    public void notifyAlienKilled() {
+        alienCount--;
+
+        if (alienCount == 0) {
+            notifyWin(); // 일반 스테이지 클리어
+        }
 		
 		// if there are still some aliens left then they all need to get faster, so
 		// speed up all the existing aliens
