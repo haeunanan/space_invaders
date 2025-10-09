@@ -2,6 +2,7 @@ package org.newdawn.spaceinvaders;
 
 import java.awt.Canvas;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.event.KeyAdapter;
@@ -10,8 +11,10 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import org.newdawn.spaceinvaders.entity.*;
@@ -52,13 +55,15 @@ public class Game extends Canvas
 	private long firingInterval = 500;
 	/** The number of aliens left on the screen */
 	private int alienCount;
+    private int score = 0;
+    private RankingManager rankingManager;
     private int currentLevel = 1; // ADDED: 현재 레벨을 추적하는 변수
     private static final int BOSS_LEVEL = 5; // ADDED: 보스가 나타날 레벨 정의
 	
 	/** The message to display which waiting for a key press */
 	private String message = "";
 	/** True if we're holding up game play until a key has been pressed */
-	private boolean waitingForKeyPress = true;
+	private boolean waitingForKeyPress = false;
 	/** True if the left cursor key is currently pressed */
 	private boolean leftPressed = false;
 	/** True if the right cursor key is currently pressed */
@@ -120,23 +125,30 @@ public class Game extends Canvas
 		// to manage our accelerated graphics
 		createBufferStrategy(2);
 		strategy = getBufferStrategy();
-		
-		// initialise the entities in our game so there's something
+
+        rankingManager = new RankingManager();
+        score = 0;
+
+        // initialise the entities in our game so there's something
 		// to see at startup
-		initEntities();
-	}
+        startGame();
+    }
 	
 	/**
 	 * Start a fresh game, this should clear out any old data and
 	 * create a new set.
 	 */
     private void startGame() {
+        // 1. 모든 기존 엔티티(우주선, 외계인, 총알)를 깨끗하게 제거합니다.
         entities.clear();
-        initEntities(); // MODIFIED: 이제 initEntities가 레벨에 따라 다르게 동작
 
+        // 2. 점수 및 키 입력을 초기화합니다.
         leftPressed = false;
         rightPressed = false;
         firePressed = false;
+
+        // 3. 새로운 엔티티들을 생성하고 배치합니다.
+        initEntities();
     }
 	
 	/**
@@ -144,12 +156,15 @@ public class Game extends Canvas
 	 * entitiy will be added to the overall list of entities in the game.
 	 */
     private void initEntities() {
-        ship = new ShipEntity(this,"sprites/ship.gif",370,550);
+        // 1. 플레이어 우주선을 생성하고 entities 리스트에 추가합니다.
+        // 이 부분이 누락되면 우주선이 나타나지 않습니다.
+        ship = new ShipEntity(this, "sprites/ship.gif", 370, 550);
         entities.add(ship);
 
+        // 2. 외계인 수를 초기화합니다.
         alienCount = 0;
 
-        // MODIFIED: 현재 레벨에 따라 다른 스테이지 초기화
+        // 3. 현재 레벨에 맞는 스테이지를 설정합니다.
         if (currentLevel >= BOSS_LEVEL) {
             initBossStage();
         } else {
@@ -159,35 +174,35 @@ public class Game extends Canvas
     private void initStandardStage() {
         double moveSpeed = 100;
         int alienRows = 3;
-        double firingChance = 0; // 레벨 1은 공격 안 함 (0%)
+        double firingChance = 0;
         int startY = 50;
 
-        // 레벨에 따라 변수 값 설정
         switch (currentLevel) {
             case 1:
                 moveSpeed = 100;
                 alienRows = 3;
-                firingChance = 0; // 공격 없음
+                firingChance = 0;
                 break;
             case 2:
                 moveSpeed = 130;
                 alienRows = 4;
-                firingChance = 0.0002; // 0.02% 확률로 매 프레임 발사 시도
+                firingChance = 0.0002;
                 break;
             case 3:
                 moveSpeed = 160;
                 alienRows = 5;
-                firingChance = 0.0005; // 0.05% 확률
+                firingChance = 0.0005;
                 break;
             case 4:
                 moveSpeed = 200;
                 alienRows = 5;
-                firingChance = 0.0008; // 0.08% 확률
-                startY = 80; // 시작 위치를 더 낮춰서 난이도 상승
+                firingChance = 0.0008;
+                startY = 80;
                 break;
         }
 
-        // 설정된 값으로 외계인 생성
+        // 설정된 값으로 외계인을 생성하고 entities 리스트에 추가합니다.
+        // 이 부분이 누락되면 외계인이 나타나지 않습니다.
         for (int row = 0; row < alienRows; row++) {
             for (int x = 0; x < 12; x++) {
                 Entity alien = new AlienEntity(this, "sprites/alien.gif", 100 + (x * 50), startY + row * 30, moveSpeed, firingChance);
@@ -228,11 +243,19 @@ public class Game extends Canvas
 	 * Notification that the player has died. 
 	 */
     public void notifyDeath() {
-        message = "Oh no! They got you, try again?";
+        message = "Oh no! They got you...";
         waitingForKeyPress = true;
-        currentLevel = 1; // ADDED: 죽으면 레벨 1로 리셋
+
+        // ADDED: 랭킹 확인 및 저장 로직
+        if (rankingManager.isHighScore(score)) {
+            String name = JOptionPane.showInputDialog(container, "New High Score! Enter your name:", "Ranking", JOptionPane.PLAIN_MESSAGE);
+            if (name != null && !name.trim().isEmpty()) {
+                rankingManager.addScore(score, name);
+            }
+        }
+        currentLevel = 1;// 죽으면 레벨 1로 리셋
+        score = 0;
     }
-	
 	/**
 	 * Notification that the player has won since all the aliens
 	 * are dead.
@@ -252,7 +275,8 @@ public class Game extends Canvas
         }
     }
     public void notifyBossKilled() {
-        notifyWin(); // 보스를 이기면 게임에서 승리
+        notifyWin();
+        score += 5000;// 보스를 이기면 게임에서 승리
     }
 	
 	/**
@@ -260,6 +284,7 @@ public class Game extends Canvas
 	 */
     public void notifyAlienKilled() {
         alienCount--;
+        score += 100;
 
         if (alienCount == 0) {
             notifyWin(); // 일반 스테이지 클리어
@@ -305,118 +330,116 @@ public class Game extends Canvas
 	 * - Checking Input
 	 * <p>
 	 */
-	public void gameLoop() {
-		long lastLoopTime = SystemTimer.getTime();
-		
-		// keep looping round til the game ends
-		while (gameRunning) {
-			// work out how long its been since the last update, this
-			// will be used to calculate how far the entities should
-			// move this loop
-			long delta = SystemTimer.getTime() - lastLoopTime;
-			lastLoopTime = SystemTimer.getTime();
+    public void gameLoop() {
+        long lastLoopTime = SystemTimer.getTime();
 
-			// update the frame counter
-			lastFpsTime += delta;
-			fps++;
-			
-			// update our FPS counter if a second has passed since
-			// we last recorded
-			if (lastFpsTime >= 1000) {
-				container.setTitle(windowTitle+" (FPS: "+fps+")");
-				lastFpsTime = 0;
-				fps = 0;
-			}
-			
-			// Get hold of a graphics context for the accelerated 
-			// surface and blank it out
-			Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
-			g.setColor(Color.black);
-			g.fillRect(0,0,800,600);
-			
-			// cycle round asking each entity to move itself
-			if (!waitingForKeyPress) {
-				for (int i=0;i<entities.size();i++) {
-					Entity entity = (Entity) entities.get(i);
-					
-					entity.move(delta);
-				}
-			}
-			
-			// cycle round drawing all the entities we have in the game
-			for (int i=0;i<entities.size();i++) {
-				Entity entity = (Entity) entities.get(i);
-				
-				entity.draw(g);
-			}
-			
-			// brute force collisions, compare every entity against
-			// every other entity. If any of them collide notify 
-			// both entities that the collision has occured
-			for (int p=0;p<entities.size();p++) {
-				for (int s=p+1;s<entities.size();s++) {
-					Entity me = (Entity) entities.get(p);
-					Entity him = (Entity) entities.get(s);
-					
-					if (me.collidesWith(him)) {
-						me.collidedWith(him);
-						him.collidedWith(me);
-					}
-				}
-			}
-			
-			// remove any entity that has been marked for clear up
-			entities.removeAll(removeList);
-			removeList.clear();
+        while (gameRunning) {
+            // 1. 프레임 시간 계산
+            long delta = SystemTimer.getTime() - lastLoopTime;
+            lastLoopTime = SystemTimer.getTime();
 
-			// if a game event has indicated that game logic should
-			// be resolved, cycle round every entity requesting that
-			// their personal logic should be considered.
-			if (logicRequiredThisLoop) {
-				for (int i=0;i<entities.size();i++) {
-					Entity entity = (Entity) entities.get(i);
-					entity.doLogic();
-				}
-				
-				logicRequiredThisLoop = false;
-			}
-			
-			// if we're waiting for an "any key" press then draw the 
-			// current message 
-			if (waitingForKeyPress) {
-				g.setColor(Color.white);
-				g.drawString(message,(800-g.getFontMetrics().stringWidth(message))/2,250);
-				g.drawString("Press any key",(800-g.getFontMetrics().stringWidth("Press any key"))/2,300);
-			}
-			
-			// finally, we've completed drawing so clear up the graphics
-			// and flip the buffer over
-			g.dispose();
-			strategy.show();
-			
-			// resolve the movement of the ship. First assume the ship 
-			// isn't moving. If either cursor key is pressed then
-			// update the movement appropraitely
-			ship.setHorizontalMovement(0);
-			
-			if ((leftPressed) && (!rightPressed)) {
-				ship.setHorizontalMovement(-moveSpeed);
-			} else if ((rightPressed) && (!leftPressed)) {
-				ship.setHorizontalMovement(moveSpeed);
-			}
-			
-			// if we're pressing fire, attempt to fire
-			if (firePressed) {
-				tryToFire();
-			}
-			
-			// we want each frame to take 10 milliseconds, to do this
-			// we've recorded when we started the frame. We add 10 milliseconds
-			// to this and then factor in the current time to give 
-			// us our final value to wait for
-			SystemTimer.sleep(lastLoopTime+10-SystemTimer.getTime());
-		}
-	}
+            // FPS 카운터 업데이트
+            lastFpsTime += delta;
+            fps++;
+            if (lastFpsTime >= 1000) {
+                container.setTitle(windowTitle + " (FPS: " + fps + ")");
+                lastFpsTime = 0;
+                fps = 0;
+            }
+
+            // 2. 그리기 준비: 그래픽 객체를 얻고 화면을 검은색으로 지웁니다.
+            Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
+            g.setColor(Color.black);
+            g.fillRect(0, 0, 800, 600);
+
+            // 3. 게임 플레이 로직 (일시정지 상태가 아닐 때)
+            if (!waitingForKeyPress) {
+                // 모든 엔티티를 움직입니다.
+                for (int i = 0; i < entities.size(); i++) {
+                    Entity entity = (Entity) entities.get(i);
+                    entity.move(delta);
+                }
+
+                // 모든 엔티티를 화면에 그립니다.
+                for (int i = 0; i < entities.size(); i++) {
+                    Entity entity = (Entity) entities.get(i);
+                    entity.draw(g);
+                }
+
+                // 모든 엔티티 간의 충돌을 확인합니다.
+                for (int p = 0; p < entities.size(); p++) {
+                    for (int s = p + 1; s < entities.size(); s++) {
+                        Entity me = (Entity) entities.get(p);
+                        Entity him = (Entity) entities.get(s);
+                        if (me.collidesWith(him)) {
+                            me.collidedWith(him);
+                            him.collidedWith(me);
+                        }
+                    }
+                }
+            }
+
+            // 4. 제거할 엔티티들을 목록에서 삭제합니다.
+            entities.removeAll(removeList);
+            removeList.clear();
+
+            // 5. 특별한 로직이 필요한 엔티티들의 로직을 실행합니다. (외계인 방향 전환 등)
+            if (logicRequiredThisLoop) {
+                for (int i = 0; i < entities.size(); i++) {
+                    Entity entity = (Entity) entities.get(i);
+                    entity.doLogic();
+                }
+                logicRequiredThisLoop = false;
+            }
+
+            // 6. UI(점수 등)를 항상 위에 그립니다.
+            g.setColor(Color.white);
+            g.setFont(new Font("Arial", Font.BOLD, 14));
+            g.drawString("Score: " + score, 10, 20);
+
+            // 7. 게임 오버/랭킹 화면 로직 (일시정지 상태일 때)
+            if (waitingForKeyPress) {
+                g.setColor(Color.white);
+                g.setFont(new Font("Arial", Font.BOLD, 24));
+                g.drawString(message, (800 - g.getFontMetrics().stringWidth(message)) / 2, 150);
+
+                g.setFont(new Font("Arial", Font.BOLD, 20));
+                g.drawString("--- RANKING ---", (800 - g.getFontMetrics().stringWidth("--- RANKING ---")) / 2, 220);
+
+                List<ScoreEntry> topScores = rankingManager.getScores();
+                g.setFont(new Font("Monospaced", Font.PLAIN, 16));
+                for (int i = 0; i < topScores.size(); i++) {
+                    ScoreEntry entry = topScores.get(i);
+                    String rankString = String.format("%2d. %-10s %7d", (i + 1), entry.getPlayerName(), entry.getScore());
+                    g.drawString(rankString, 280, 260 + i * 25);
+                }
+
+                g.setFont(new Font("Arial", Font.BOLD, 20));
+                g.drawString("Press any key to continue", (800 - g.getFontMetrics().stringWidth("Press any key to continue")) / 2, 550);
+            }
+
+            // 8. 모든 그리기가 끝난 후, 최종적으로 화면에 보여주고 리소스를 정리합니다.
+            g.dispose();
+            strategy.show();
+
+            // 9. 플레이어 입력 처리 (일시정지 상태가 아닐 때)
+            if (!waitingForKeyPress) {
+                ship.setHorizontalMovement(0);
+                if ((leftPressed) && (!rightPressed)) {
+                    ship.setHorizontalMovement(-moveSpeed);
+                } else if ((rightPressed) && (!leftPressed)) {
+                    ship.setHorizontalMovement(moveSpeed);
+                }
+
+                if (firePressed) {
+                    tryToFire();
+                }
+            }
+
+            // 10. 프레임 속도 조절
+            SystemTimer.sleep(lastLoopTime + 10 - SystemTimer.getTime());
+        }
+    }
 	
 	/**
 	 * A class to handle keyboard input from the user. The class
