@@ -496,6 +496,7 @@ public class Game
 				// want to do anything with just a "press"
 				if (waitingForKeyPress) {
 					waitingForKeyPress = false; // "Press any key" 상태를 해제
+					startGame();
 					return; // 게임 시작 처리 후 다른 키 입력은 무시
 				}
 
