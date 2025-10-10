@@ -1,10 +1,7 @@
 package org.newdawn.spaceinvaders;
 
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
 
@@ -62,6 +59,15 @@ public class Game
 	private long firingInterval = 500;
 	/** The number of aliens left on the screen */
 	private int alienCount;
+	// shop 브랜치에서 복사해올 변수들
+	public int missileCount = 1; // 다중 미사일 기능
+	public int coins = 0;
+	public boolean shopOpen = false;
+	public final int UPGRADE_COST = 10;
+	public final int MAX_UPGRADES = 6;
+	public int attackLevel = 0;
+	public int moveLevel = 0;
+	public int missileLevel = 0;
 	
 	/** The message to display which waiting for a key press */
 	private String message = "";
@@ -118,6 +124,40 @@ public class Game
 		changeState(GameState.START_MENU);
 
 		gamePlayPanel.addKeyListener(new KeyInputHandler());
+		gamePlayPanel.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				System.out.println("Mouse clicked at: " + e.getX() + ", " + e.getY());
+
+				int mx = e.getX();
+				int my = e.getY();
+				// simple shop button at top-right
+				if (mx >= 720 && mx <= 780 && my >= 10 && my <= 40) {
+					shopOpen = !shopOpen;
+					return;
+				}
+				// if shop open, check option clicks
+				if (shopOpen) {
+					// calculate panel positions consistent with rendering
+					int overlayX = 40;
+					int overlayY = 40;
+					int overlayW = 720;
+					int overlayH = 520;
+					int pad = 20;
+					int panelW = (overlayW - pad*4)/3; // space for 3 panels and paddings
+					int panelH = overlayH - 120;
+					int panelY = overlayY + 60;
+					for (int i=0;i<3;i++) {
+						int px = overlayX + pad + i*(panelW + pad);
+						int py = panelY;
+						if (mx >= px && mx <= px + panelW && my >= py && my <= py + panelH) {
+							if (i == 0) purchaseAttackSpeed();
+							if (i == 1) purchaseMoveSpeed();
+							if (i == 2) purchaseMissileCount();
+						}
+					}
+				}
+			}
+		});
 		gamePlayPanel.setFocusable(true);
 
 		// finally make the window visible 
@@ -233,6 +273,35 @@ public class Game
 	public void notifyWin() {
 		message = "Well done! You Win!";
 		waitingForKeyPress = true;
+		coins += 10;// 라운드 클리어 -> 코인
+	}
+
+	// 상점 옵션1: 공격 속도 증가 >> firing interval 10% 감소
+	private void purchaseAttackSpeed() {
+		if (attackLevel >= MAX_UPGRADES) return;
+		if (coins < UPGRADE_COST) return;
+		coins -= UPGRADE_COST;
+		attackLevel++;
+		// reduce interval but clamp to a minimum
+		firingInterval = Math.max(100, (long)(firingInterval * 0.9));
+	}
+
+	// 상점 옵션2: 이동 속도 증가 >> move speed 10% 증가
+	private void purchaseMoveSpeed() {
+		if (moveLevel >= MAX_UPGRADES) return;
+		if (coins < UPGRADE_COST) return;
+		coins -= UPGRADE_COST;
+		moveLevel++;
+		moveSpeed = moveSpeed * 1.1;
+	}
+
+	// 상점 옵션3: 미사일 개수 증가 increment missiles by 1 up to a reasonable cap
+	private void purchaseMissileCount() {
+		if (missileLevel >= MAX_UPGRADES) return;
+		if (coins < UPGRADE_COST) return;
+		coins -= UPGRADE_COST;
+		missileLevel++;
+		missileCount = Math.min(5, missileCount + 1);
 	}
 	
 	/**
@@ -271,8 +340,14 @@ public class Game
 		
 		// if we waited long enough, create the shot entity, and record the time.
 		lastFire = System.currentTimeMillis();
-		ShotEntity shot = new ShotEntity(this,"sprites/shot.gif",ship.getX()+10,ship.getY()-30);
-		entities.add(shot);
+		int baseX = ship.getX()+10;
+		int baseY = ship.getY()-30;
+		// spread shots slightly when multiple missiles
+		for (int i=0;i<missileCount;i++) {
+			int offset = (i - (missileCount-1)/2) * 10; // centers the spread
+			ShotEntity shot = new ShotEntity(this,"sprites/shot.gif",baseX + offset,baseY);
+			entities.add(shot);
+		}
 	}
 
 	/**

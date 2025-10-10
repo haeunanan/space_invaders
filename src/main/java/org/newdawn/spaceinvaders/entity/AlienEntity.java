@@ -14,6 +14,8 @@ public class AlienEntity extends Entity {
 	private double moveSpeed = 75;
 	/** The game in which the entity exists */
 	private Game game;
+	/** Whether this alien is still alive (prevents double-kill) */
+	private boolean alive = true;
 	/** The animation frames */
 	private Sprite[] frames = new Sprite[4];
 	/** The time since the last frame change took place */
@@ -42,6 +44,17 @@ public class AlienEntity extends Entity {
 		this.game = game;
 		dx = -moveSpeed;
 	}
+
+	/** Check whether the alien is alive */
+	public boolean isAlive() {
+		return alive;
+	}
+
+	/** Mark the alien as dead to avoid duplicate handling */
+	public void markDead() {
+		this.alive = false;
+	}
+
 
 	/**
 	 * Request that this alien moved based on time elapsed

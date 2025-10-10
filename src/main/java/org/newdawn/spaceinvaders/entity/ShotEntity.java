@@ -61,6 +61,13 @@ public class ShotEntity extends Entity {
 		
 		// if we've hit an alien, kill it!
 		if (other instanceof AlienEntity) {
+			AlienEntity alien = (AlienEntity) other;
+			// only handle if alien still alive
+			if (!alien.isAlive()) {
+				return;
+			}
+			// mark as dead to prevent other shots from double-counting
+			alien.markDead();
 			// remove the affected entities
 			game.removeEntity(this);
 			game.removeEntity(other);
