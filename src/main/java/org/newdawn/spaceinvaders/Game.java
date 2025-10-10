@@ -7,10 +7,7 @@ import java.util.ArrayList;
 
 import javax.swing.*;
 
-import org.newdawn.spaceinvaders.entity.AlienEntity;
-import org.newdawn.spaceinvaders.entity.Entity;
-import org.newdawn.spaceinvaders.entity.ShipEntity;
-import org.newdawn.spaceinvaders.entity.ShotEntity;
+import org.newdawn.spaceinvaders.entity.*;
 
 /**
  * The main hook of our game. This class with both act as a manager
@@ -68,6 +65,10 @@ public class Game
 	public int attackLevel = 0;
 	public int moveLevel = 0;
 	public int missileLevel = 0;
+	public int score = 0;
+	public RankingManager rankingManager;
+	public int currentLevel = 1;
+	public static final int BOSS_LEVEL = 5;
 	
 	/** The message to display which waiting for a key press */
 	private String message = "";
@@ -113,6 +114,9 @@ public class Game
 		signInPanel = new SignInPanel(this);
 		signUpPanel = new SignUpPanel(this);
 		gamePlayPanel = new GamePlayPanel(this);
+		// dev 브랜치의 Game() 생성자 안에 추가
+		rankingManager = new RankingManager();
+		score = 0;
 
 		mainPanel.add(startMenuPanel, "START");
 		mainPanel.add(signInPanel, "SIGN_IN");
@@ -217,6 +221,8 @@ public class Game
 		leftPressed = false;
 		rightPressed = false;
 		firePressed = false;
+
+		waitingForKeyPress = false;
 	}
 	
 	/**
@@ -224,19 +230,68 @@ public class Game
 	 * entitiy will be added to the overall list of entities in the game.
 	 */
 	private void initEntities() {
-		// create the player ship and place it roughly in the center of the screen
-		ship = new ShipEntity(this,"sprites/ship.gif",370,550);
+		// 1. 플레이어 우주선을 생성하고 entities 리스트에 추가합니다.
+		// 이 부분이 누락되면 우주선이 나타나지 않습니다.
+		ship = new ShipEntity(this, "sprites/ship.gif", 370, 550);
 		entities.add(ship);
-		
-		// create a block of aliens (5 rows, by 12 aliens, spaced evenly)
+
+		// 2. 외계인 수를 초기화합니다.
 		alienCount = 0;
-		for (int row=0;row<5;row++) {
-			for (int x=0;x<12;x++) {
-				Entity alien = new AlienEntity(this,100+(x*50),(50)+row*30);
+
+		// 3. 현재 레벨에 맞는 스테이지를 설정합니다.
+		if (currentLevel >= BOSS_LEVEL) {
+			initBossStage();
+		} else {
+			initStandardStage();
+		}
+	}
+	private void initStandardStage() {
+		double moveSpeed = 100;
+		int alienRows = 3;
+		double firingChance = 0;
+		int startY = 50;
+
+		switch (currentLevel) {
+			case 1:
+				moveSpeed = 100;
+				alienRows = 3;
+				firingChance = 0;
+				break;
+			case 2:
+				moveSpeed = 130;
+				alienRows = 4;
+				firingChance = 0.0002;
+				break;
+			case 3:
+				moveSpeed = 160;
+				alienRows = 5;
+				firingChance = 0.0005;
+				break;
+			case 4:
+				moveSpeed = 200;
+				alienRows = 5;
+				firingChance = 0.0008;
+				startY = 80;
+				break;
+		}
+
+		// 설정된 값으로 외계인을 생성하고 entities 리스트에 추가합니다.
+		// 이 부분이 누락되면 외계인이 나타나지 않습니다.
+		for (int row = 0; row < alienRows; row++) {
+			for (int x = 0; x < 12; x++) {
+				Entity alien = new AlienEntity(this, "sprites/alien.gif", 100 + (x * 50), startY + row * 30, moveSpeed, firingChance);
 				entities.add(alien);
 				alienCount++;
 			}
 		}
+	}
+	private void initBossStage() {
+		Entity boss = new BossEntity(this, "sprites/boss.gif", 350, 50);
+		entities.add(boss);
+		// 보스 스테이지에서는 alienCount가 아닌 다른 방식으로 승리 조건을 관리합니다.
+	}
+	public void addEntity(Entity entity) {
+		entities.add(entity);
 	}
 	
 	/**
@@ -264,6 +319,16 @@ public class Game
 	public void notifyDeath() {
 		message = "Oh no! They got you, try again?";
 		waitingForKeyPress = true;
+
+		// ADDED: 랭킹 확인 및 저장 로직
+		if (rankingManager.isHighScore(score)) {
+			String name = JOptionPane.showInputDialog(container, "New High Score! Enter your name:", "Ranking", JOptionPane.PLAIN_MESSAGE);
+			if (name != null && !name.trim().isEmpty()) {
+				rankingManager.addScore(score, name);
+			}
+		}
+		currentLevel = 1;// 죽으면 레벨 1로 리셋
+		score = 0;
 	}
 	
 	/**
@@ -271,9 +336,24 @@ public class Game
 	 * are dead.
 	 */
 	public void notifyWin() {
-		message = "Well done! You Win!";
-		waitingForKeyPress = true;
 		coins += 10;// 라운드 클리어 -> 코인
+		currentLevel++;
+		if (currentLevel > BOSS_LEVEL) {
+			message = "Congratulations! You have defeated the final boss!";
+			waitingForKeyPress = true;
+			currentLevel = 1;
+		} else if (currentLevel == BOSS_LEVEL) {
+			message = "Final Stage! The Boss is approaching!";
+			waitingForKeyPress = true;
+		} else {
+			message = "Stage " + (currentLevel - 1) + " Cleared! Prepare for the next stage.";
+			waitingForKeyPress = true;
+		}
+	}
+
+	public void notifyBossKilled() {
+		notifyWin();
+		score += 5000;// 보스를 이기면 게임에서 승리
 	}
 
 	// 상점 옵션1: 공격 속도 증가 >> firing interval 10% 감소
@@ -310,6 +390,7 @@ public class Game
 	public void notifyAlienKilled() {
 		// reduce the alient count, if there are none left, the player has won!
 		alienCount--;
+		score += 100;
 		
 		if (alienCount == 0) {
 			notifyWin();

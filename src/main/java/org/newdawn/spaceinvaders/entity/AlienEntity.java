@@ -4,121 +4,99 @@ import org.newdawn.spaceinvaders.Game;
 import org.newdawn.spaceinvaders.Sprite;
 import org.newdawn.spaceinvaders.SpriteStore;
 
-/**
- * An entity which represents one of our space invader aliens.
- * 
- * @author Kevin Glass
- */
 public class AlienEntity extends Entity {
-	/** The speed at which the alient moves horizontally */
-	private double moveSpeed = 75;
-	/** The game in which the entity exists */
+	// === dev 브랜치와 boss 브랜치의 모든 변수를 통합 ===
 	private Game game;
-	/** Whether this alien is still alive (prevents double-kill) */
+	private double moveSpeed = 75;
+	private double firingChance; // boss 브랜치의 발사 확률 변수
+
+	// dev 브랜치의 생존 상태 변수
 	private boolean alive = true;
-	/** The animation frames */
+
+	// dev 브랜치의 애니메이션 관련 변수
 	private Sprite[] frames = new Sprite[4];
-	/** The time since the last frame change took place */
 	private long lastFrameChange;
-	/** The frame duration in milliseconds, i.e. how long any given frame of animation lasts */
 	private long frameDuration = 250;
-	/** The current frame of animation being displayed */
 	private int frameNumber;
-	
+
 	/**
-	 * Create a new alien entity
-	 * 
-	 * @param game The game in which this entity is being created
-	 * @param x The intial x location of this alien
-	 * @param y The intial y location of this alient
+	 * 최종 통합된 생성자 (boss 브랜치 기반)
+	 * 6개의 인자를 모두 받아 처리합니다.
 	 */
-	public AlienEntity(Game game,int x,int y) {
-		super("sprites/alien.gif",x,y);
-		
-		// setup the animatin frames
+	public AlienEntity(Game game, String ref, int x, int y, double moveSpeed, double firingChance) {
+		super(ref, x, y); // Entity의 생성자 호출
+
+		// 애니메이션 프레임 초기화 (dev 브랜치 로직)
 		frames[0] = sprite;
 		frames[1] = SpriteStore.get().getSprite("sprites/alien2.gif");
 		frames[2] = sprite;
 		frames[3] = SpriteStore.get().getSprite("sprites/alien3.gif");
-		
+
 		this.game = game;
-		dx = -moveSpeed;
+		this.moveSpeed = moveSpeed;
+		this.firingChance = firingChance;
+		this.dx = -this.moveSpeed; // 초기 이동 방향 설정
 	}
-
-	/** Check whether the alien is alive */
-	public boolean isAlive() {
-		return alive;
-	}
-
-	/** Mark the alien as dead to avoid duplicate handling */
-	public void markDead() {
-		this.alive = false;
-	}
-
 
 	/**
-	 * Request that this alien moved based on time elapsed
-	 * 
-	 * @param delta The time that has elapsed since last move
+	 * move 메소드 통합
+	 * dev의 애니메이션 로직과 boss의 발사 로직을 모두 포함합니다.
 	 */
+	@Override
 	public void move(long delta) {
-		// since the move tells us how much time has passed
-		// by we can use it to drive the animation, however
-		// its the not the prettiest solution
+		// 애니메이션 프레임 변경 로직 (from dev)
 		lastFrameChange += delta;
-		
-		// if we need to change the frame, update the frame number
-		// and flip over the sprite in use
 		if (lastFrameChange > frameDuration) {
-			// reset our frame change time counter
 			lastFrameChange = 0;
-			
-			// update the frame
 			frameNumber++;
 			if (frameNumber >= frames.length) {
 				frameNumber = 0;
 			}
-			
 			sprite = frames[frameNumber];
 		}
-		
-		// if we have reached the left hand side of the screen and
-		// are moving left then request a logic update 
+
+		// 화면 경계 체크 로직 (양쪽 공통)
 		if ((dx < 0) && (x < 10)) {
 			game.updateLogic();
 		}
-		// and vice vesa, if we have reached the right hand side of 
-		// the screen and are moving right, request a logic update
 		if ((dx > 0) && (x > 750)) {
 			game.updateLogic();
 		}
-		
-		// proceed with normal move
+
+		// 총알 발사 로직 (from boss)
+		if (Math.random() < firingChance) {
+			fire();
+		}
+
+		// 최종 이동 처리
 		super.move(delta);
 	}
-	
-	/**
-	 * Update the game logic related to aliens
-	 */
+
+	// fire 메소드 (from boss)
+	private void fire() {
+		game.addEntity(new AlienShotEntity(game, "sprites/alien_shot.gif", getX() + 10, getY() + 20));
+	}
+
+	// doLogic 메소드 (양쪽 공통)
 	public void doLogic() {
-		// swap over horizontal movement and move down the
-		// screen a bit
 		dx = -dx;
 		y += 10;
-		
-		// if we've reached the bottom of the screen then the player
-		// dies
 		if (y > 570) {
 			game.notifyDeath();
 		}
 	}
-	
-	/**
-	 * Notification that this alien has collided with another entity
-	 * 
-	 * @param other The other entity
-	 */
+
+	// 생존 상태 관련 메소드 (from dev)
+	public boolean isAlive() {
+		return alive;
+	}
+
+	public void markDead() {
+		this.alive = false;
+	}
+
+	// collidedWith 메소드 (양쪽 공통)
 	public void collidedWith(Entity other) {
-		// collisions with aliens are handled elsewhere
+		// 충돌 처리는 다른 곳에서 하므로 비워둡니다.
 	}
 }
