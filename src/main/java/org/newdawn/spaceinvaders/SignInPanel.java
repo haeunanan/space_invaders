@@ -68,27 +68,45 @@ public class SignInPanel extends JPanel {
         String email = emailField.getText();
         String password = new String(passwordField.getPassword());
 
+        if (email.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "이메일과 비밀번호를 모두 입력해주세요.");
+            return;
+        }
+
         FirebaseClientService clientService = new FirebaseClientService();
-        String idToken = clientService.signIn(email, password);
 
-        if (idToken != null) {
-            AuthService authService = new AuthService();
-            String uid = authService.verifyIdToken(idToken);
+        // 1. Firebase Authentication으로 로그인 시도 (이제 uid를 바로 받아옵니다)
+        String uid = clientService.signIn(email, password);
 
-            if (uid != null) {
-                // 최종 검증 성공!
-                JOptionPane.showMessageDialog(this, "로그인 성공! 게임을 시작합니다.");
-                game.changeState(Game.GameState.PLAYING);
-            } else {
-                // 서버 검증 실패 (보안 문제 등)
-                JOptionPane.showMessageDialog(this, "서버 인증에 실패했습니다.");
+        if (uid != null) {
+            // 2. 로그인 성공! Firestore에서 닉네임 정보를 가져옵니다.
+            String nickname = clientService.getUsername(uid);
+
+            if (nickname == null) {
+                // 3. 닉네임이 없는 경우 (기존 사용자), 새로 입력받습니다.
+                nickname = JOptionPane.showInputDialog(this, "최초 접속입니다. 사용할 닉네임을 입력해주세요.");
+
+                if (nickname != null && !nickname.trim().isEmpty()) {
+                    // 입력받은 닉네임을 Firestore에 저장합니다.
+                    clientService.saveUsername(uid, nickname);
+                } else {
+                    JOptionPane.showMessageDialog(this, "닉네임 설정이 취소되어 로그인을 중단합니다.");
+                    return; // 닉네임 설정 안하면 로그인 중단
+                }
             }
+
+            // 4. 최종적으로 얻은 uid와 nickname을 CurrentUserManager에 저장합니다.
+            CurrentUserManager.getInstance().login(uid, nickname);
+
+            // 5. PVP 메뉴 화면으로 전환합니다.
+            JOptionPane.showMessageDialog(this, nickname + "님, 환영합니다!");
+            game.changeState(Game.GameState.PVP_MENU);
+
         } else {
             // 클라이언트 로그인 실패 (아이디/비밀번호 틀림)
             JOptionPane.showMessageDialog(this, "이메일 또는 비밀번호가 올바르지 않습니다.");
         }
     }
-
     // paintComponent를 오버라이드하여 로고 등을 그릴 수 있습니다.
     @Override
     protected void paintComponent(Graphics g) {
@@ -96,5 +114,6 @@ public class SignInPanel extends JPanel {
 
         if (titleLogoSprite != null) {
             titleLogoSprite.draw(g, 130, 30);
-        }    }
+        }
+    }
 }

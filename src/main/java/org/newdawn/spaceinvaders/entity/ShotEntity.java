@@ -1,5 +1,6 @@
 package org.newdawn.spaceinvaders.entity;
 
+import org.newdawn.spaceinvaders.CurrentUserManager;
 import org.newdawn.spaceinvaders.Game;
 
 /**
@@ -14,6 +15,7 @@ public class ShotEntity extends Entity {
 	private Game game;
 	/** True if this shot has been "used", i.e. its hit something */
 	private boolean used = false;
+	private String ownerUid;
 	
 	/**
 	 * Create a new shot from the player
@@ -23,12 +25,20 @@ public class ShotEntity extends Entity {
 	 * @param x The initial x location of the shot
 	 * @param y The initial y location of the shot
 	 */
-	public ShotEntity(Game game,String sprite,int x,int y) {
+	public ShotEntity(Game game,String sprite,int x,int y, String ownerUid) {
 		super(sprite,x,y);
-		
 		this.game = game;
-		
-		dy = moveSpeed;
+		this.ownerUid = ownerUid;
+		dy = -300;
+	}
+
+	public String getOwnerUid() { // <-- Getter 추가
+		return ownerUid;
+	}
+	// 내가 쏜 총알인지 확인하는 헬퍼 메소드
+	public boolean isOwnedBy(String uid) {
+		if (uid == null || ownerUid == null) return false;
+		return ownerUid.equals(uid);
 	}
 
 	/**
@@ -58,23 +68,30 @@ public class ShotEntity extends Entity {
 		if (used) {
 			return;
 		}
-		
-		// if we've hit an alien, kill it!
-		if (other instanceof AlienEntity) {
-			AlienEntity alien = (AlienEntity) other;
-			// only handle if alien still alive
-			if (!alien.isAlive()) {
-				return;
+		if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE) {
+			// if we've hit an alien, kill it!
+			if (other instanceof AlienEntity) {
+				AlienEntity alien = (AlienEntity) other;
+				// only handle if alien still alive
+				if (!alien.isAlive()) {
+					return;
+				}
+				// mark as dead to prevent other shots from double-counting
+				alien.markDead();
+				// remove the affected entities
+				game.removeEntity(this);
+				game.removeEntity(other);
+
+				// notify the game that the alien has been killed
+				game.notifyAlienKilled();
+				used = true;
 			}
-			// mark as dead to prevent other shots from double-counting
-			alien.markDead();
-			// remove the affected entities
-			game.removeEntity(this);
-			game.removeEntity(other);
-			
-			// notify the game that the alien has been killed
-			game.notifyAlienKilled();
-			used = true;
+		} else if (game.getCurrentState() == Game.GameState.PLAYING_PVP) {
+			if (other == game.getOpponentShip()) {
+				used = true;
+				game.removeEntity(this);
+				// 데미지 처리는 상대방 클라이언트가 스스로 하므로, 여기서는 총알만 제거합니다.
+			}
 		}
 	}
 }

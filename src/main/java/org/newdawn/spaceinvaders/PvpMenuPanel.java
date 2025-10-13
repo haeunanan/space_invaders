@@ -1,0 +1,100 @@
+package org.newdawn.spaceinvaders;
+
+import javax.swing.*;
+import java.awt.*;
+
+public class PvpMenuPanel extends JPanel {
+    private Game game;
+    private Sprite titleLogoSprite;
+    private JButton myPageButton;
+    private JButton soloPlayButton;
+    private JButton pvpPlayButton;
+    private JButton logoutButton;
+
+    public PvpMenuPanel(Game game) {
+        this.game = game;
+        setLayout(null); // 절대 위치 사용
+        setBackground(Color.BLACK); // 배경색을 어둡게 변경
+        // 타이틀 로고 이미지 로드
+        titleLogoSprite = SpriteStore.get().getSprite("sprites/title-logo.png");
+
+        // --- '환영 메시지' 대신 '마이페이지' 버튼 추가 ---
+        myPageButton = createStyledButton("마이페이지");
+        myPageButton.setBounds(300, 250, 200, 40);
+        add(myPageButton);
+
+        myPageButton.addActionListener(e -> {
+            game.changeState(Game.GameState.MY_PAGE);
+        });
+
+        // --- '혼자하기'와 '대결하기' 버튼 중앙 배치 ---
+        int buttonWidth = 180;
+        int buttonHeight = 50;
+        int gap = 40;
+        int totalWidth = buttonWidth * 2 + gap;
+        int startX = (800 - totalWidth) / 2; // 버튼 그룹의 시작 X 좌표 계산
+
+        soloPlayButton = createStyledButton("혼자하기");
+        soloPlayButton.setBounds(startX, 350, buttonWidth, buttonHeight);
+        add(soloPlayButton);
+
+        pvpPlayButton = createStyledButton("대결하기");
+        pvpPlayButton.setBounds(startX + buttonWidth + gap, 350, buttonWidth, buttonHeight);
+        add(pvpPlayButton);
+
+        // --- '로그아웃' 버튼 설정 ---
+        logoutButton = createStyledButton("로그아웃");
+        logoutButton.setBounds((800 - buttonWidth) / 2, 450, buttonWidth, buttonHeight);
+        add(logoutButton);
+
+        // --- 버튼 클릭 이벤트 리스너 ---
+        soloPlayButton.addActionListener(e -> {
+            // PLAYING_SINGLE 대신 PLAYING_SINGLE로 상태 변경
+            game.changeState(Game.GameState.PLAYING_SINGLE);
+        });
+        pvpPlayButton.addActionListener(e -> {
+            // 1. 현재 로그인된 사용자 정보를 가져옵니다.
+            String uid = CurrentUserManager.getInstance().getUid();
+            String nickname = CurrentUserManager.getInstance().getNickname();
+
+            if (uid == null || nickname == null) {
+                JOptionPane.showMessageDialog(this, "로그인 정보가 없습니다.");
+                return;
+            }
+
+            // 2. Firebase에 매치메이킹 시작을 요청합니다.
+            FirebaseClientService clientService = new FirebaseClientService();
+            boolean success = clientService.startMatchmaking(uid, nickname);
+
+            // 3. 요청이 성공하면 로비 화면으로 이동합니다.
+            if (success) {
+                game.changeState(Game.GameState.PVP_LOBBY);
+            } else {
+                JOptionPane.showMessageDialog(this, "매칭 서버에 접속할 수 없습니다.");
+            }
+        });
+        logoutButton.addActionListener(e -> {
+            CurrentUserManager.getInstance().logout();
+            // 로그아웃 로직 추가 후 SIGN_IN 상태로 변경 (필요시)
+            game.changeState(Game.GameState.SIGN_IN);
+        });
+    }
+    // 버튼 스타일을 통일하기 위한 헬퍼 메소드
+    private JButton createStyledButton(String text) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Malgun Gothic", Font.BOLD, 18));
+        button.setBackground(Color.WHITE);
+        button.setForeground(Color.BLACK);
+        button.setFocusPainted(false); // 클릭 시 테두리 제거
+        button.setBorderPainted(true); // 테두리 보이게 설정
+        return button;
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        if (titleLogoSprite != null) {
+            titleLogoSprite.draw(g, 130, 30);
+        }
+    }
+}

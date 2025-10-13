@@ -34,7 +34,16 @@ public abstract class Entity {
 	private Rectangle me = new Rectangle();
 	/** The rectangle used for other entities during collision resolution */
 	private Rectangle him = new Rectangle();
-	
+
+	/**
+	 * Sets the location of this entity.
+	 * @param x The new x coordinate
+	 * @param y The new y coordinate
+	 */
+	public void setLocation(int x, int y) {
+		this.x = x;
+		this.y = y;
+	}
 	/**
 	 * Construct a entity based on a sprite image and a location.
 	 * 
@@ -59,7 +68,19 @@ public abstract class Entity {
 		x += (delta * dx) / 1000;
 		y += (delta * dy) / 1000;
 	}
-	
+	/**
+	 * Get the width of the sprite representing this entity
+	 * @return The width in pixels of this entity
+	 */
+	public int getSpriteWidth() {
+		if (sprite == null) return 0;
+		return sprite.getWidth();
+	}
+
+	public int getSpriteHeight() {
+		if (sprite == null) return 0;
+		return sprite.getHeight();
+	}
 	/**
 	 * Set the horizontal speed of this entity
 	 * 
@@ -72,7 +93,7 @@ public abstract class Entity {
 	/**
 	 * Set the vertical speed of this entity
 	 * 
-	 * @param dx The vertical speed of this entity (pixels/sec)
+	 * @param dy The vertical speed of this entity (pixels/sec)
 	 */
 	public void setVerticalMovement(double dy) {
 		this.dy = dy;
@@ -95,14 +116,23 @@ public abstract class Entity {
 	public double getVerticalMovement() {
 		return dy;
 	}
-	
+
 	/**
-	 * Draw this entity to the graphics context provided
-	 * 
-	 * @param g The graphics context on which to draw
+	 * 이 엔티티를 지정된 좌표에 그립니다.
+	 * @param g 그래픽 컨텍스트
+	 * @param x 화면에 그릴 x 좌표
+	 * @param y 화면에 그릴 y 좌표
+	 */
+	public void draw(Graphics g, int x, int y) {
+		sprite.draw(g, x, y);
+	}
+
+	/**
+	 * 이 엔티티를 자신의 내부 좌표에 그립니다. (기존 코드 호환용)
+	 * @param g 그래픽 컨텍스트
 	 */
 	public void draw(Graphics g) {
-		sprite.draw(g,(int) x,(int) y);
+		draw(g, (int) x, (int) y);
 	}
 	
 	/**

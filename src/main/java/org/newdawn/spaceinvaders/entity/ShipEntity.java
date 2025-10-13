@@ -10,7 +10,42 @@ import org.newdawn.spaceinvaders.Game;
 public class ShipEntity extends Entity {
 	/** The game in which the ship exists */
 	private Game game;
-	
+
+	private int maxHealth = 1; // 최대 체력
+	private int currentHealth; // 현재 체력
+
+	/**
+	 * 게임 모드에 맞게 체력을 설정합니다.
+	 * @param health 설정할 체력 값
+	 */
+	public void setHealth(int health) {
+		this.maxHealth = health;
+		this.currentHealth = health;
+	}
+
+	/**
+	 * 데미지를 입었을 때 호출됩니다.
+	 */
+	public void takeDamage() {
+		currentHealth--;
+		if (currentHealth <= 0) {
+			game.notifyDeath(); // 체력이 0이 되면 게임 오버 처리
+		}
+	}
+
+	public int getCurrentHealth() {
+		return currentHealth;
+	}
+	/**
+	 * 현재 체력을 특정 값으로 설정합니다. (네트워크 동기화용)
+	 */
+	public void setCurrentHealth(int health) {
+		this.currentHealth = health;
+	}
+
+	public int getMaxHealth() {
+		return maxHealth;
+	}
 	/**
 	 * Create a new entity to represent the players ship
 	 *  

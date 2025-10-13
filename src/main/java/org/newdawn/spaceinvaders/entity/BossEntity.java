@@ -13,6 +13,19 @@ public class BossEntity extends Entity {
         this.game = game;
         dx = -150; // 초기 이동 속도 (좌측으로)
     }
+    /**
+     * 보스가 데미지를 입었을 때 호출됩니다.
+     * (gameLoop가 이 메소드를 호출합니다.)
+     */
+    public void takeDamage() {
+        health--; // 체력 감소
+
+        if (health <= 0) {
+            // 보스가 죽었을 때
+            game.removeEntity(this);
+            game.notifyBossKilled(); // 게임에 보스가 죽었음을 알림
+        }
+    }
 
     @Override
     public void move(long delta) {

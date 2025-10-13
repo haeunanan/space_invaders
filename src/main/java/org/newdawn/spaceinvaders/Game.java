@@ -4,6 +4,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.*;
 
@@ -30,7 +32,11 @@ public class Game
 		START_MENU, // 시작 메뉴
 		SIGN_IN,    // 로그인 화면
 		SIGN_UP,    // 회원가입 화면
-		PLAYING     // 게임 중
+		PVP_MENU,   // PvP 모드 선택 화면
+		PVP_LOBBY,  // 매치메이킹 대기 화면
+		PLAYING_SINGLE,    // 기존 혼자하기 모드
+		PLAYING_PVP, // PvP 게임 플레이 중
+		MY_PAGE
 	}
 	private GameState currentState;
 
@@ -38,16 +44,18 @@ public class Game
 	private SignInPanel signInPanel;
 	private SignUpPanel signUpPanel;
 	private GamePlayPanel gamePlayPanel;
+	private PvpMenuPanel pvpMenuPanel;
+	private PvpLobbyPanel pvpLobbyPanel;
+	private MyPagePanel myPagePanel;
 	/** The stragey that allows us to use accelerate page flipping */
 	private BufferStrategy strategy;
 	/** True if the game is currently "running", i.e. the game loop is looping */
 	private boolean gameRunning = true;
-	/** The list of all the entities that exist in our game */
-	private ArrayList entities = new ArrayList();
-	/** The list of entities that need to be removed from the game this loop */
-	private ArrayList removeList = new ArrayList();
+	private ArrayList<Entity> entities = new ArrayList<>();
+	private ArrayList<Entity> removeList = new ArrayList<>();
 	/** The entity representing the player */
 	private Entity ship;
+	private Entity opponentShip;
 	/** The speed at which the player's ship should move (pixels/sec) */
 	private double moveSpeed = 300;
 	/** The time at which last fired a shot */
@@ -69,7 +77,13 @@ public class Game
 	public RankingManager rankingManager;
 	public int currentLevel = 1;
 	public static final int BOSS_LEVEL = 5;
-	
+	private Thread matchmakingThread;
+	private String currentMatchId;
+	private volatile String player1_uid;
+	private volatile String player2_uid;
+	private Thread networkThread;
+	private volatile Map<String, Object> lastOpponentState;
+
 	/** The message to display which waiting for a key press */
 	private String message = "";
 	/** True if we're holding up game play until a key has been pressed */
@@ -96,6 +110,38 @@ public class Game
 	/**
 	 * Construct our game and set it running.
 	 */
+	public GameState getCurrentState() {
+		return currentState;
+	}
+	public Entity getShip() {
+		return this.ship;
+	}
+	public Entity getOpponentShip() {
+		return this.opponentShip;
+	}
+	public JFrame getContainer() {
+		return this.container;
+	}
+	public boolean amIPlayer1() {
+		// 현재 로그인한 사용자의 UID를 가져옵니다.
+		String myUid = CurrentUserManager.getInstance().getUid();
+
+		// player1_uid나 myUid가 아직 설정되지 않은 경우(null)를 대비한 안전장치입니다.
+		// 두 값 모두 유효할 때만 비교를 수행합니다.
+		if (myUid != null && player1_uid != null) {
+			return myUid.equals(player1_uid);
+		}
+
+		// 정보가 불완전하면 기본값으로 false를 반환하여 오류를 방지합니다.
+		return false;
+	}
+	// Game.java 파일 내부에 추가
+
+	public void resetSinglePlayerState() {
+		this.currentLevel = 1;
+		this.score = 0;
+	}
+
 	public Game() {
 
 		currentState = GameState.START_MENU;
@@ -114,6 +160,9 @@ public class Game
 		signInPanel = new SignInPanel(this);
 		signUpPanel = new SignUpPanel(this);
 		gamePlayPanel = new GamePlayPanel(this);
+		pvpMenuPanel = new PvpMenuPanel(this);
+		pvpLobbyPanel = new PvpLobbyPanel(this);
+		myPagePanel = new MyPagePanel(this);
 		// dev 브랜치의 Game() 생성자 안에 추가
 		rankingManager = new RankingManager();
 		score = 0;
@@ -121,7 +170,10 @@ public class Game
 		mainPanel.add(startMenuPanel, "START");
 		mainPanel.add(signInPanel, "SIGN_IN");
 		mainPanel.add(signUpPanel, "SIGN_UP");
-		mainPanel.add(gamePlayPanel, "PLAYING");
+		mainPanel.add(gamePlayPanel, "PLAYING_SINGLE");
+		mainPanel.add(pvpMenuPanel, "PVP_MENU");
+		mainPanel.add(pvpLobbyPanel, "PVP_LOBBY");
+		mainPanel.add(myPagePanel, "MY_PAGE");
 
 		container.getContentPane().add(mainPanel);
 
@@ -130,10 +182,29 @@ public class Game
 		gamePlayPanel.addKeyListener(new KeyInputHandler());
 		gamePlayPanel.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
-				System.out.println("Mouse clicked at: " + e.getX() + ", " + e.getY());
-
 				int mx = e.getX();
 				int my = e.getY();
+
+				// ▼▼▼ '메뉴로 돌아가기' 버튼 클릭 처리 추가 ▼▼▼
+				// 게임이 끝나고(waitingForKeyPress) 싱글 플레이 상태일 때
+				if (Game.this.isWaitingForKeyPress() && Game.this.getCurrentState() == Game.GameState.PLAYING_SINGLE) {
+					if (mx >= 325 && mx <= 475 && my >= 550 && my <= 590) {
+						int choice = JOptionPane.showConfirmDialog(
+								container,
+								"진행 상황이 저장되지 않습니다. 메뉴로 돌아가시겠습니까?\n(레벨 1부터 다시 시작합니다)",
+								"메뉴로 돌아가기",
+								JOptionPane.YES_NO_OPTION
+						);
+
+						if (choice == JOptionPane.YES_OPTION) {
+							Game.this.resetSinglePlayerState(); // '예'를 눌렀을 때만 초기화
+							Game.this.changeState(GameState.PVP_MENU);
+						}
+						// '아니오'를 누르면 아무것도 하지 않고 게임 종료 화면에 남아있습니다.
+						return;
+					}
+				}
+
 				// simple shop button at top-right
 				if (mx >= 720 && mx <= 780 && my >= 10 && my <= 40) {
 					shopOpen = !shopOpen;
@@ -185,10 +256,16 @@ public class Game
 		gameThread.start();
 	}
 
-	// Game.java에 아래 메소드 추가
-
 	public void changeState(GameState newState) {
+		System.out.println("!!! Changing state from " + currentState + " to " + newState);
 		currentState = newState;
+
+		if (matchmakingThread != null && matchmakingThread.isAlive()) {
+			matchmakingThread.interrupt();
+		}
+		if (networkThread != null && networkThread.isAlive()) {
+			networkThread.interrupt();
+		}
 
 		switch (currentState) {
 			case START_MENU:
@@ -200,10 +277,29 @@ public class Game
 			case SIGN_UP:
 				cardLayout.show(mainPanel, "SIGN_UP");
 				break;
-			case PLAYING:
-				cardLayout.show(mainPanel, "PLAYING");
+			case PVP_MENU:
+				cardLayout.show(mainPanel, "PVP_MENU");
+				break;
+			case PVP_LOBBY:
+				cardLayout.show(mainPanel, "PVP_LOBBY");
+				startMatchmakingLoop();
+				break;
+			case PLAYING_SINGLE:
+				cardLayout.show(mainPanel, "PLAYING_SINGLE");
 				gamePlayPanel.requestFocusInWindow();
 				startGame();
+				break;
+			case PLAYING_PVP:
+				waitingForKeyPress = false;
+				cardLayout.show(mainPanel, "PLAYING_SINGLE");
+				SwingUtilities.invokeLater(() -> {
+					gamePlayPanel.requestFocusInWindow();
+				});
+				startPvpGame();
+				break;
+			case MY_PAGE:
+				cardLayout.show(mainPanel, "MY_PAGE");
+				myPagePanel.updateUser();
 				break;
 		}
 	}
@@ -215,6 +311,7 @@ public class Game
 	private void startGame() {
 		// clear out any existing entities and intialise a new set
 		entities.clear();
+		alienCount = 0;
 		initEntities();
 		
 		// blank out any keyboard settings we might currently have
@@ -224,19 +321,180 @@ public class Game
 
 		waitingForKeyPress = false;
 	}
+
+	private void startMatchmakingLoop() {
+		matchmakingThread = new Thread(() -> {
+			FirebaseClientService clientService = new FirebaseClientService();
+			String myUid = CurrentUserManager.getInstance().getUid();
+
+			while (!Thread.currentThread().isInterrupted()) {
+				try {
+					System.out.println("상대방 찾는 중...");
+					String opponentUid = clientService.findOpponent(myUid);
+
+					if (opponentUid != null) {
+						// === 방장(Creator) 로직 ===
+						if (myUid.compareTo(opponentUid) < 0) {
+							System.out.println("내가 방장! 게임 방 생성 시도.");
+							String matchId = clientService.createMatch(myUid, opponentUid);
+							if (matchId != null) {
+								this.currentMatchId = matchId;
+								this.player1_uid = myUid;
+								this.player2_uid = opponentUid;
+								clientService.deleteFromQueue(myUid);
+								clientService.deleteFromQueue(opponentUid);
+
+								SwingUtilities.invokeLater(() -> Game.this.changeState(GameState.PLAYING_PVP));
+								break;
+							}
+						}
+					} else {
+						// === 참가자(Follower) 로직 ▼▼▼ 수정 ▼▼▼ ===
+						if (!clientService.isUserInQueue(myUid)) {
+							System.out.println("큐에서 사라짐! 내 게임 방을 찾습니다.");
+							String matchId = clientService.findMyMatch(myUid);
+
+							if (matchId != null) {
+								this.currentMatchId = matchId;
+								System.out.println("매치 찾음! ID: " + matchId);
+
+								// 매치 데이터를 가져와서 player1, player2 uid 설정
+								Map<String, Object> matchData = clientService.getMatchData(matchId);
+								if (matchData != null) {
+									this.player1_uid = (String) matchData.get("player1");
+									this.player2_uid = (String) matchData.get("player2");
+
+									// 모든 정보가 설정되었으므로 PVP 상태로 전환
+									SwingUtilities.invokeLater(() -> Game.this.changeState(GameState.PLAYING_PVP));
+									break;
+								}
+							}
+						}
+					}
+
+					Thread.sleep(2000);
+
+				} catch (InterruptedException e) {
+					System.out.println("매치메이킹 중단됨.");
+					Thread.currentThread().interrupt();
+				}
+			}
+		});
+		matchmakingThread.start();
+	}
+
+	private void startPvpGame() {
+		entities.clear();
+		waitingForKeyPress = false;
+
+		// 언제나 '나'는 아래쪽에 생성
+		ship = new ShipEntity(this, "sprites/ship.gif", 370, 550);
+		((ShipEntity) ship).setHealth(3);
+		entities.add(ship);
+
+		// 언제나 '상대방'은 위쪽에 생성
+		opponentShip = new ShipEntity(this, "sprites/opponent_ship.gif", 370, 50);
+		((ShipEntity) opponentShip).setHealth(3);
+		entities.add(opponentShip);
+
+		startNetworkLoop();
+	}
+
+	private void startNetworkLoop() {
+		networkThread = new Thread(() -> {
+			FirebaseClientService clientService = new FirebaseClientService();
+			String myUid = CurrentUserManager.getInstance().getUid();
+
+			while (currentState == GameState.PLAYING_PVP && !Thread.currentThread().isInterrupted()) {
+				try {
+					// --- 내 상태 전송 ---
+					Map<String, Object> myState = new java.util.HashMap<>();
+					myState.put("x", ship.getX());
+					myState.put("y", ship.getY());
+					myState.put("health", ((ShipEntity) ship).getCurrentHealth());
+
+					// 내가 쏜 총알들의 좌표 목록 생성
+					java.util.List<Map<String, Integer>> myShotsData = new ArrayList<>();
+					for (Entity entity : entities) {
+						if (entity instanceof ShotEntity) {
+							ShotEntity shot = (ShotEntity) entity;
+							if (myUid.equals(shot.getOwnerUid())) {
+								Map<String, Integer> shotData = new HashMap<>();
+								shotData.put("x", shot.getX());
+								shotData.put("y", shot.getY());
+								myShotsData.add(shotData);
+							}
+						}
+					}
+					myState.put("shots", myShotsData);
+
+					String myPlayerNode = amIPlayer1() ? "player1_state" : "player2_state";
+					clientService.updatePlayerState(currentMatchId, myPlayerNode, myState);
+
+					// --- 상대 상태 수신 ---
+					String opponentNode = amIPlayer1() ? "player2_state" : "player1_state";
+					Map<String, Object> opponentState = clientService.getOpponentState(currentMatchId, opponentNode);
+
+					if (opponentState != null) {
+						if (opponentState.get("x") != null) {
+							Object xObj = opponentState.get("x");
+							Object yObj = opponentState.get("y");
+							if (xObj instanceof Number && yObj instanceof Number) {
+								double opponentX = ((Number) xObj).doubleValue();
+								double opponentY = ((Number) yObj).doubleValue();
+								opponentShip.setLocation((int) opponentX, (int) opponentY);
+							}
+						}
+						String opponentUid = amIPlayer1() ? player2_uid : player1_uid;
+
+						if (opponentState.get("health") instanceof Number) {
+							int opponentHealth = ((Number) opponentState.get("health")).intValue();
+							((ShipEntity)opponentShip).setCurrentHealth(opponentHealth);
+
+							// 만약 상대방 체력이 0 이하면, 내가 승리!
+							if (opponentHealth <= 0) {
+								SwingUtilities.invokeLater(this::notifyWinPVP);
+								break; // 네트워크 루프 종료
+							}
+						}
+
+						// 2-1. 기존의 상대방 총알들을 모두 제거 목록에 추가
+						for (Entity entity : entities) {
+							if (entity instanceof ShotEntity && opponentUid.equals(((ShotEntity) entity).getOwnerUid())) {
+								removeEntity(entity);
+							}
+						}
+						// 2-2. 새로 받은 총알 정보로 다시 생성
+						if (opponentState.get("shots") instanceof java.util.List) {
+							java.util.List<Map<String, Double>> opponentShotsData = (java.util.List<Map<String, Double>>) opponentState.get("shots");
+							for (Map<String, Double> shotData : opponentShotsData) {
+								ShotEntity shot = new ShotEntity(this, "sprites/shot.gif", shotData.get("x").intValue(), shotData.get("y").intValue(), opponentUid);
+								addEntity(shot);
+							}
+						}
+					}
+
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+			}
+		});
+		networkThread.start();
+	}
 	
 	/**
 	 * Initialise the starting state of the entities (ship and aliens). Each
 	 * entitiy will be added to the overall list of entities in the game.
 	 */
 	private void initEntities() {
+		alienCount = 0;
+
 		// 1. 플레이어 우주선을 생성하고 entities 리스트에 추가합니다.
 		// 이 부분이 누락되면 우주선이 나타나지 않습니다.
 		ship = new ShipEntity(this, "sprites/ship.gif", 370, 550);
+		((ShipEntity)ship).setHealth(1);
 		entities.add(ship);
-
-		// 2. 외계인 수를 초기화합니다.
-		alienCount = 0;
 
 		// 3. 현재 레벨에 맞는 스테이지를 설정합니다.
 		if (currentLevel >= BOSS_LEVEL) {
@@ -317,16 +575,34 @@ public class Game
 	 * Notification that the player has died. 
 	 */
 	public void notifyDeath() {
+		if (currentState == GameState.PLAYING_PVP) {
+			if (waitingForKeyPress) return; // 중복 호출 방지
+			message = "You Lose...";
+			waitingForKeyPress = true;
+			// TODO: PVP 결과 화면을 보여준 뒤 PVP_MENU로 돌아가는 로직 추가
+			return;
+		}
+
 		message = "Oh no! They got you, try again?";
 		waitingForKeyPress = true;
 
-		// ADDED: 랭킹 확인 및 저장 로직
-		if (rankingManager.isHighScore(score)) {
-			String name = JOptionPane.showInputDialog(container, "New High Score! Enter your name:", "Ranking", JOptionPane.PLAIN_MESSAGE);
-			if (name != null && !name.trim().isEmpty()) {
-				rankingManager.addScore(score, name);
+		// CurrentUserManager를 통해 로그인 상태 확인
+		if (CurrentUserManager.getInstance().isLoggedIn()) {
+			// 로그인 상태이면, 현재 닉네임을 가져와서 바로 랭킹에 추가
+			String nickname = CurrentUserManager.getInstance().getNickname();
+			rankingManager.addScore(score, nickname);
+			// "New High Score!" 같은 메시지는 notifyWin/notifyDeath 메시지에 포함시키거나,
+			// GamePlayPanel에서 점수를 그릴 때 특별 효과를 주는 식으로 개선할 수 있습니다.
+		} else {
+			// 비로그인 상태일 때만 이름을 물어봄 (기존 방식)
+			if (rankingManager.isHighScore(score)) {
+				String name = JOptionPane.showInputDialog(container, "New High Score! Enter your name:", "Ranking", JOptionPane.PLAIN_MESSAGE);
+				if (name != null && !name.trim().isEmpty()) {
+					rankingManager.addScore(score, name);
+				}
 			}
 		}
+
 		currentLevel = 1;// 죽으면 레벨 1로 리셋
 		score = 0;
 	}
@@ -349,6 +625,14 @@ public class Game
 			message = "Stage " + (currentLevel - 1) + " Cleared! Prepare for the next stage.";
 			waitingForKeyPress = true;
 		}
+	}
+	// ▼▼▼ PVP 승리/패배 처리 메소드 추가 ▼▼▼
+	public void notifyWinPVP() {
+		if (currentState != GameState.PLAYING_PVP) return; // 중복 호출 방지
+		coins += 30;
+		message = "You win! 30 reward coins";
+		waitingForKeyPress = true;
+		// TODO: PVP 결과 화면을 보여준 뒤 PVP_MENU로 돌아가는 로직 추가
 	}
 
 	public void notifyBossKilled() {
@@ -391,21 +675,6 @@ public class Game
 		// reduce the alient count, if there are none left, the player has won!
 		alienCount--;
 		score += 100;
-		
-		if (alienCount == 0) {
-			notifyWin();
-		}
-		
-		// if there are still some aliens left then they all need to get faster, so
-		// speed up all the existing aliens
-		for (int i=0;i<entities.size();i++) {
-			Entity entity = (Entity) entities.get(i);
-			
-			if (entity instanceof AlienEntity) {
-				// speed up by 2%
-				entity.setHorizontalMovement(entity.getHorizontalMovement() * 1.02);
-			}
-		}
 	}
 	
 	/**
@@ -421,12 +690,13 @@ public class Game
 		
 		// if we waited long enough, create the shot entity, and record the time.
 		lastFire = System.currentTimeMillis();
+		String myUid = CurrentUserManager.getInstance().getUid(); // 내 UID 가져오기
 		int baseX = ship.getX()+10;
 		int baseY = ship.getY()-30;
 		// spread shots slightly when multiple missiles
 		for (int i=0;i<missileCount;i++) {
 			int offset = (i - (missileCount-1)/2) * 10; // centers the spread
-			ShotEntity shot = new ShotEntity(this,"sprites/shot.gif",baseX + offset,baseY);
+			ShotEntity shot = new ShotEntity(this,"sprites/shot.gif",baseX + offset,baseY,myUid);
 			entities.add(shot);
 		}
 	}
@@ -442,98 +712,148 @@ public class Game
 	 * - Checking Input
 	 * <p>
 	 */
+	// Game.java
+
+	// Game.java
+
 	public void gameLoop() {
 		long lastLoopTime = SystemTimer.getTime();
-		
-		// keep looping round til the game ends
 		while (gameRunning) {
-			// work out how long its been since the last update, this
-			// will be used to calculate how far the entities should
-			// move this loop
 			long delta = SystemTimer.getTime() - lastLoopTime;
 			lastLoopTime = SystemTimer.getTime();
 
+			// --- 1. 키 입력 처리 ---
+			// 'waiting' 상태가 아닐 때만 키 입력을 처리합니다.
+			if (!waitingForKeyPress && ship != null) {
+				ship.setHorizontalMovement(0);
+				if (leftPressed && !rightPressed) ship.setHorizontalMovement(-moveSpeed);
+				else if (rightPressed && !leftPressed) ship.setHorizontalMovement(moveSpeed);
+				if (firePressed) tryToFire();
+			}
 
-			if (currentState == GameState.PLAYING) {
-				// update the frame counter
-				lastFpsTime += delta;
-				fps++;
-
-				// update our FPS counter if a second has passed since
-				// we last recorded
-				if (lastFpsTime >= 1000) {
-					container.setTitle(windowTitle + " (FPS: " + fps + ")");
-					lastFpsTime = 0;
-					fps = 0;
-				}
-
-				// cycle round asking each entity to move itself
-				if (!waitingForKeyPress) {
-					for (int i = 0; i < entities.size(); i++) {
-						Entity entity = (Entity) entities.get(i);
-
-						entity.move(delta);
+			// --- 2. 로직 업데이트 (엔티티 이동) ---
+			if (!waitingForKeyPress) {
+				for (Entity entity : new ArrayList<>(entities)) {
+					// PVP 모드에서는 상대방 우주선은 네트워크로만 위치가 설정되므로 move() 생략
+					if (currentState == GameState.PLAYING_PVP && entity == opponentShip) {
+						continue;
 					}
+					entity.move(delta);
 				}
+			}
 
-				// brute force collisions, compare every entity against
-				// every other entity. If any of them collide notify
-				// both entities that the collision has occured
-				for (int p = 0; p < entities.size(); p++) {
-					for (int s = p + 1; s < entities.size(); s++) {
-						Entity me = (Entity) entities.get(p);
-						Entity him = (Entity) entities.get(s);
+			// --- 3. 상태별 로직 처리 ---
+			if (currentState == GameState.PLAYING_SINGLE) {
+				if (!waitingForKeyPress) {
+					// 외계인 방향 전환 로직
+					if (logicRequiredThisLoop) {
+						for (Entity entity : entities) {
+							entity.doLogic();
+						}
+						logicRequiredThisLoop = false;
+					}
 
-						if (me.collidesWith(him)) {
-							me.collidedWith(him);
-							him.collidedWith(me);
+					// --- 싱글 플레이 충돌 판정 ---
+					for (int p = 0; p < entities.size(); p++) {
+						for (int s = p + 1; s < entities.size(); s++) {
+							Entity me = entities.get(p);
+							Entity him = entities.get(s);
+
+							if (me.collidesWith(him)) {
+								// 플레이어 총알 vs 적
+								if (me instanceof ShotEntity && (him instanceof AlienEntity || him instanceof BossEntity)) {
+									if (him instanceof AlienEntity) { removeEntity(him); notifyAlienKilled(); }
+									else { ((BossEntity) him).takeDamage(); }
+									removeEntity(me);
+								} else if (him instanceof ShotEntity && (me instanceof AlienEntity || me instanceof BossEntity)) {
+									if (me instanceof AlienEntity) { removeEntity(me); notifyAlienKilled(); }
+									else { ((BossEntity) me).takeDamage(); }
+									removeEntity(him);
+								}
+								// 적 총알 vs 플레이어
+								else if ((me instanceof AlienShotEntity || me instanceof BossShotEntity) && him == ship) {
+									((ShipEntity) him).takeDamage();
+									removeEntity(me);
+								} else if ((him instanceof AlienShotEntity || him instanceof BossShotEntity) && me == ship) {
+									((ShipEntity) me).takeDamage();
+									removeEntity(him);
+								}
+							}
 						}
 					}
-				}
-
-				// remove any entity that has been marked for clear up
-				entities.removeAll(removeList);
-				removeList.clear();
-
-				// if a game event has indicated that game logic should
-				// be resolved, cycle round every entity requesting that
-				// their personal logic should be considered.
-				if (logicRequiredThisLoop) {
-					for (int i = 0; i < entities.size(); i++) {
-						Entity entity = (Entity) entities.get(i);
-						entity.doLogic();
+					// 🔽 모든 충돌 후, 실제 남은 외계인 수를 다시 세기
+					int aliensRemaining = 0;
+					for (Entity e : entities) {
+						if (e instanceof AlienEntity) aliensRemaining++;
 					}
 
-					logicRequiredThisLoop = false;
-				}
-
-				gamePlayPanel.repaint();
-
-				if(ship!=null) {
-					// resolve the movement of the ship. First assume the ship
-					// isn't moving. If either cursor key is pressed then
-					// update the movement appropraitely
-					ship.setHorizontalMovement(0);
-
-					if ((leftPressed) && (!rightPressed)) {
-						ship.setHorizontalMovement(-moveSpeed);
-					} else if ((rightPressed) && (!leftPressed)) {
-						ship.setHorizontalMovement(moveSpeed);
-					}
-
-					// if we're pressing fire, attempt to fire
-					if (firePressed) {
-						tryToFire();
+					if (aliensRemaining == 0 && !waitingForKeyPress && currentLevel < BOSS_LEVEL) {
+						notifyWin();
 					}
 				}
 			}
-			
-			// we want each frame to take 10 milliseconds, to do this
-			// we've recorded when we started the frame. We add 10 milliseconds
-			// to this and then factor in the current time to give 
-			// us our final value to wait for
-			SystemTimer.sleep(10); // 루프가 너무 빨리 돌지 않도록 잠시 대기
+			else if (currentState == GameState.PLAYING_PVP) {
+				// --- PVP 충돌 판정 (시각적 위치 기준) ---
+				String myUid = CurrentUserManager.getInstance().getUid();
+				for (int p = 0; p < entities.size(); p++) {
+					for (int s = p + 1; s < entities.size(); s++) {
+						Entity me = entities.get(p);
+						Entity him = entities.get(s);
+
+						// 두 엔티티의 '시각적' 위치를 기준으로 충돌 사각형 생성
+						Rectangle meRect = getVisualBounds(me);
+						Rectangle himRect = getVisualBounds(him);
+
+						if (meRect.intersects(himRect)) {
+							// Case 1: 내 총알 vs 상대 우주선
+							if (me instanceof ShotEntity && ((ShotEntity)me).isOwnedBy(myUid) && him == opponentShip) {
+								removeEntity(me); // 내 총알 제거
+							} else if (him instanceof ShotEntity && ((ShotEntity)him).isOwnedBy(myUid) && me == opponentShip) {
+								removeEntity(him);
+							}
+
+							// Case 2: 상대방 총알 vs 내 우주선
+							else if (me instanceof ShotEntity && !((ShotEntity)me).isOwnedBy(myUid) && him == ship) {
+								removeEntity(me); // 상대방 총알 제거
+								((ShipEntity)him).takeDamage(); // 내 우주선 데미지
+							} else if (him instanceof ShotEntity && !((ShotEntity)him).isOwnedBy(myUid) && me == ship) {
+								removeEntity(him);
+								((ShipEntity)me).takeDamage();
+							}
+						}
+					}
+				}
+			}
+
+			// --- 4. 공통 로직 ---
+			entities.removeAll(removeList);
+			removeList.clear();
+			gamePlayPanel.repaint();
+
+			try { SystemTimer.sleep(10); } catch (Exception e) {}
 		}
+	}
+
+	// ▼▼▼ `getVisualBounds` 헬퍼 메소드도 `Game.java`에 추가해주세요. ▼▼▼
+	private Rectangle getVisualBounds(Entity entity) {
+		if (entity == null) return new Rectangle(0,0,0,0);
+		int drawX = entity.getX();
+		int drawY = entity.getY();
+		String myUid = CurrentUserManager.getInstance().getUid();
+
+		boolean isOpponentEntity = false;
+		if (currentState == GameState.PLAYING_PVP) {
+			if (entity == opponentShip ||
+					(entity instanceof ShotEntity && myUid != null && !((ShotEntity)entity).isOwnedBy(myUid))) {
+				isOpponentEntity = true;
+			}
+		}
+
+		if (isOpponentEntity) {
+			drawY = container.getHeight() - entity.getY() - entity.getSpriteHeight();
+		}
+
+		return new Rectangle(drawX, drawY, entity.getSpriteWidth(), entity.getSpriteHeight());
 	}
 
 	public ArrayList<Entity> getEntities() {
@@ -547,7 +867,7 @@ public class Game
 	public String getMessage() {
 		return message;
 	}
-	
+
 	/**
 	 * A class to handle keyboard input from the user. The class
 	 * handles both dynamic input during game play, i.e. left/right 
@@ -560,28 +880,33 @@ public class Game
 	 * 
 	 * @author Kevin Glass
 	 */
+	// Game.java 파일의 KeyInputHandler 클래스 전체를 아래 코드로 교체
+
 	private class KeyInputHandler extends KeyAdapter {
-		/** The number of key presses we've had while waiting for an "any key" press */
-		private int pressCount = 1;
-		
 		/**
-		 * Notification from AWT that a key has been pressed. Note that
-		 * a key being pressed is equal to being pushed down but *NOT*
-		 * released. Thats where keyTyped() comes in.
-		 *
-		 * @param e The details of the key that was pressed 
+		 * 키가 눌렸을 때 호출됩니다.
 		 */
 		public void keyPressed(KeyEvent e) {
-			if (currentState == GameState.PLAYING) {
-				// if we're waiting for an "any key" typed then we don't
-				// want to do anything with just a "press"
+			// 게임 플레이 중(싱글 또는 PVP)일 때만 키 입력을 처리합니다.
+			if (currentState == GameState.PLAYING_SINGLE || currentState == GameState.PLAYING_PVP) {
+
+				// "Press any key" 상태일 때의 특별 처리
 				if (waitingForKeyPress) {
-					waitingForKeyPress = false; // "Press any key" 상태를 해제
-					startGame();
-					return; // 게임 시작 처리 후 다른 키 입력은 무시
+					// 싱글 플레이 종료 후에는 게임 재시작
+					if (currentState == Game.GameState.PLAYING_SINGLE) {
+						waitingForKeyPress = false;
+						startGame();
+					}
+					// PVP 종료 후에는 PVP 메뉴로 이동
+					else if (currentState == Game.GameState.PLAYING_PVP) {
+						// waitingForKeyPress는 다음 화면에서 false로 설정될 것이므로 여기서는 상태만 변경
+						changeState(GameState.PVP_MENU);
+					}
+					return; // 키 입력 처리를 여기서 마침
 				}
 
 
+				// 공통 키 입력 처리
 				if (e.getKeyCode() == KeyEvent.VK_LEFT) {
 					leftPressed = true;
 				}
@@ -592,40 +917,39 @@ public class Game
 					firePressed = true;
 				}
 			}
-		} 
-		
+		}
+
 		/**
-		 * Notification from AWT that a key has been released.
-		 *
-		 * @param e The details of the key that was released 
+		 * 키에서 손을 뗐을 때 호출됩니다.
 		 */
 		public void keyReleased(KeyEvent e) {
-			// if we're waiting for an "any key" typed then we don't 
-			// want to do anything with just a "released"
-			if (waitingForKeyPress) {
-				return;
-			}
-			
-			if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-				leftPressed = false;
-			}
-			if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-				rightPressed = false;
-			}
-			if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-				firePressed = false;
+			// 게임 플레이 중(싱글 또는 PVP)일 때만 키 입력을 처리합니다.
+			if (currentState == GameState.PLAYING_SINGLE || currentState == GameState.PLAYING_PVP) {
+
+				// waitingForKeyPress 상태에서는 키를 떼는 동작은 무시합니다.
+				if (waitingForKeyPress) {
+					return;
+				}
+
+				// 공통 키 입력 처리
+				if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+					leftPressed = false;
+				}
+				if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+					rightPressed = false;
+				}
+				if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+					firePressed = false;
+				}
 			}
 		}
 
 		/**
-		 * Notification from AWT that a key has been typed. Note that
-		 * typing a key means to both press and then release it.
-		 *
-		 * @param e The details of the key that was typed. 
+		 * 키를 타이핑했을 때 호출됩니다. (ESC 키 종료 등)
 		 */
 		public void keyTyped(KeyEvent e) {
-			// if we hit escape, then quit the game
-			if (e.getKeyChar() == 27) {
+			// ESC 키는 언제든지 게임을 종료할 수 있도록 합니다.
+			if (e.getKeyChar() == 27) { // 27은 ESC 키의 아스키 코드
 				System.exit(0);
 			}
 		}

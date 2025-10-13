@@ -38,3 +38,4 @@ build/
 .DS_Store
 /src/main/resources/space-invaders-dd665-firebase-adminsdk-fbsvc-dfecce036c.json
 /ranking.dat
+/ranking.dat.tmp

@@ -85,20 +85,20 @@ public class SignUpPanel extends JPanel {
         }
 
         FirebaseClientService clientService = new FirebaseClientService();
-        boolean success = clientService.signUp(email, password);
+        // 변수 이름을 uid로 변경하여 무엇을 받아오는지 명확하게 합니다.
+        String uid = clientService.signUp(email, password);
 
-        if (success) {
+        // 조건문을 "uid가 null이 아닌 경우" (즉, 성공한 경우)로 변경합니다.
+        if (uid != null) {
+            // 회원가입 성공 로직 (이제 여기서 닉네임 저장 로직을 추가하면 됩니다)
             JOptionPane.showMessageDialog(this, "회원가입 성공! 로그인 화면으로 돌아갑니다.");
             game.changeState(Game.GameState.SIGN_IN);
         } else {
+            // 회원가입 실패 로직
             JOptionPane.showMessageDialog(this, "회원가입 실패. (이미 존재하는 이메일이거나 비밀번호가 너무 짧습니다.)");
         }
 
         System.out.println("회원가입 시도: " + email);
-
-        // 2. TODO: Firebase REST API를 이용한 사용자 생성 요청 로직 구현
-        // 성공 시: JOptionPane.showMessageDialog(this, "회원가입 성공!");
-        //         game.changeState(Game.GameState.SIGN_IN);
     }
 
     @Override
