@@ -34,7 +34,7 @@ public class ShipEntity extends Entity {
 	public void move(long delta) {
 		// compute bounds using the game's dimensions and this sprite's size
 		int leftMargin = 10;
-		int topLimit = game.getHeight() / 2; // restrict movement into upper half
+		int topLimit = game.getHeight() / 3; // 화면의 1/3까지만 위로 이동 가능 
 		int rightLimit = game.getWidth() - sprite.getWidth() - 10;
 		int bottomLimit = game.getHeight() - sprite.getHeight() - 10;
 
