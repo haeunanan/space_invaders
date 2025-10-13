@@ -32,29 +32,30 @@ public class ShipEntity extends Entity {
 	 * @param delta The time that has elapsed since last move (ms)
 	 */
 	public void move(long delta) {
-		// if we're moving left and have reached the left hand side
-		// of the screen, don't move
-		if ((dx < 0) && (x < 10)) {
+		// compute bounds using the game's dimensions and this sprite's size
+		int leftMargin = 10;
+		int topLimit = game.getHeight() / 2; // restrict movement into upper half
+		int rightLimit = game.getWidth() - sprite.getWidth() - 10;
+		int bottomLimit = game.getHeight() - sprite.getHeight() - 10;
+
+		// horizontal bounds
+		if ((dx < 0) && (x < leftMargin)) {
 			return;
 		}
-		// if we're moving right and have reached the right hand side
-		// of the screen, don't move
-		if ((dx > 0) && (x > 750)) {
+		if ((dx > 0) && (x > rightLimit)) {
 			return;
 		}
 
-		// if we're moving up and have reached the top of the screen,
-		// don't move if we've reached the top limit: half the frame height
-		if ((dy < 0) && (y < game.getHeight() / 2)) {
-			return;
-		}
-		// if we're moving down and have reached the bottom of the screen,
-		// don't move
-		if ((dy > 0) && (y > 550)) {
-			return;
-		}
-		
+		// perform the movement
 		super.move(delta);
+
+		// clamp vertical position so the ship stays within the bottom half of the screen
+		if (y < topLimit) {
+			y = topLimit;
+		}
+		if (y > bottomLimit) {
+			y = bottomLimit;
+		}
 	}
 	
 	/**
