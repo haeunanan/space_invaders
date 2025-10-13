@@ -59,14 +59,13 @@ public class Game extends Canvas
 	private String message = "";
 	/** True if we're holding up game play until a key has been pressed */
 	private boolean waitingForKeyPress = true;
-	/** True if the left cursor key is currently pressed */
+	
 	private boolean leftPressed = false;
-	/** True if the right cursor key is currently pressed */
 	private boolean rightPressed = false;
-	/** True if the up cursor key is currently pressed */
 	private boolean upPressed = false;
-	/** True if the down cursor key is currently pressed */
 	private boolean downPressed = false;
+	
+	
 	/** True if we are firing */
 	private boolean firePressed = false;
 	/** True if game logic needs to be applied this loop, normally as a result of a game event */
@@ -104,9 +103,7 @@ public class Game extends Canvas
 		container.pack();
 		container.setResizable(false);
 		container.setVisible(true);
-		
-		// add a listener to respond to the user closing the window. If they
-		// do we'd like to exit the game
+	
 		container.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
 				System.exit(0);
