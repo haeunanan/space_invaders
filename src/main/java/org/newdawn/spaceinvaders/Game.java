@@ -26,6 +26,7 @@ import org.newdawn.spaceinvaders.entity.*;
  * 
  * @author Kevin Glass
  */
+
 public class Game
 {
 	public enum GameState {
@@ -82,8 +83,6 @@ public class Game
 	private volatile String player1_uid;
 	private volatile String player2_uid;
 	private Thread networkThread;
-	private volatile Map<String, Object> lastOpponentState;
-
 	/** The message to display which waiting for a key press */
 	private String message = "";
 	/** True if we're holding up game play until a key has been pressed */
@@ -96,13 +95,6 @@ public class Game
 	private boolean firePressed = false;
 	/** True if game logic needs to be applied this loop, normally as a result of a game event */
 	private boolean logicRequiredThisLoop = false;
-	/** The last time at which we recorded the frame rate */
-	private long lastFpsTime;
-	/** The current number of frames recorded */
-	private int fps;
-	/** The normal title of the game window */
-	private String windowTitle = "Space Invaders 102";
-	/** The game window that we'll update with the frame count */
 	private JFrame container;
 	private CardLayout cardLayout;
 	private JPanel mainPanel;
@@ -118,9 +110,6 @@ public class Game
 	}
 	public Entity getOpponentShip() {
 		return this.opponentShip;
-	}
-	public JFrame getContainer() {
-		return this.container;
 	}
 	public boolean amIPlayer1() {
 		// 현재 로그인한 사용자의 UID를 가져옵니다.
@@ -163,7 +152,6 @@ public class Game
 		pvpMenuPanel = new PvpMenuPanel(this);
 		pvpLobbyPanel = new PvpLobbyPanel(this);
 		myPagePanel = new MyPagePanel(this);
-		// dev 브랜치의 Game() 생성자 안에 추가
 		rankingManager = new RankingManager();
 		score = 0;
 
@@ -257,7 +245,6 @@ public class Game
 	}
 
 	public void changeState(GameState newState) {
-		System.out.println("!!! Changing state from " + currentState + " to " + newState);
 		currentState = newState;
 
 		if (matchmakingThread != null && matchmakingThread.isAlive()) {
@@ -451,7 +438,6 @@ public class Game
 							int opponentHealth = ((Number) opponentState.get("health")).intValue();
 							((ShipEntity)opponentShip).setCurrentHealth(opponentHealth);
 
-							// 만약 상대방 체력이 0 이하면, 내가 승리!
 							if (opponentHealth <= 0) {
 								SwingUtilities.invokeLater(this::notifyWinPVP);
 								break; // 네트워크 루프 종료
@@ -579,7 +565,6 @@ public class Game
 			if (waitingForKeyPress) return; // 중복 호출 방지
 			message = "You Lose...";
 			waitingForKeyPress = true;
-			// TODO: PVP 결과 화면을 보여준 뒤 PVP_MENU로 돌아가는 로직 추가
 			return;
 		}
 
@@ -591,8 +576,6 @@ public class Game
 			// 로그인 상태이면, 현재 닉네임을 가져와서 바로 랭킹에 추가
 			String nickname = CurrentUserManager.getInstance().getNickname();
 			rankingManager.addScore(score, nickname);
-			// "New High Score!" 같은 메시지는 notifyWin/notifyDeath 메시지에 포함시키거나,
-			// GamePlayPanel에서 점수를 그릴 때 특별 효과를 주는 식으로 개선할 수 있습니다.
 		} else {
 			// 비로그인 상태일 때만 이름을 물어봄 (기존 방식)
 			if (rankingManager.isHighScore(score)) {
@@ -712,10 +695,6 @@ public class Game
 	 * - Checking Input
 	 * <p>
 	 */
-	// Game.java
-
-	// Game.java
-
 	public void gameLoop() {
 		long lastLoopTime = SystemTimer.getTime();
 		while (gameRunning) {
@@ -781,7 +760,6 @@ public class Game
 							}
 						}
 					}
-					// 🔽 모든 충돌 후, 실제 남은 외계인 수를 다시 세기
 					int aliensRemaining = 0;
 					for (Entity e : entities) {
 						if (e instanceof AlienEntity) aliensRemaining++;
@@ -833,8 +811,6 @@ public class Game
 			try { SystemTimer.sleep(10); } catch (Exception e) {}
 		}
 	}
-
-	// ▼▼▼ `getVisualBounds` 헬퍼 메소드도 `Game.java`에 추가해주세요. ▼▼▼
 	private Rectangle getVisualBounds(Entity entity) {
 		if (entity == null) return new Rectangle(0,0,0,0);
 		int drawX = entity.getX();
@@ -918,7 +894,6 @@ public class Game
 				}
 			}
 		}
-
 		/**
 		 * 키에서 손을 뗐을 때 호출됩니다.
 		 */
@@ -943,7 +918,6 @@ public class Game
 				}
 			}
 		}
-
 		/**
 		 * 키를 타이핑했을 때 호출됩니다. (ESC 키 종료 등)
 		 */
@@ -954,7 +928,6 @@ public class Game
 			}
 		}
 	}
-	
 	/**
 	 * The entry point into the game. We'll simply create an
 	 * instance of class which will start the display and game

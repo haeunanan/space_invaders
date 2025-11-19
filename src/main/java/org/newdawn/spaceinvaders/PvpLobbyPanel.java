@@ -38,14 +38,12 @@ public class PvpLobbyPanel extends JPanel {
         add(buttonPanel, BorderLayout.SOUTH);
 
         cancelButton.addActionListener(e -> {
-            // TODO: Firebase에서 내 UID를 삭제하는 로직 추가
             stopAnimation(); // 화면 전환 전에 애니메이션 중지
             game.changeState(Game.GameState.PVP_MENU);
         });
 
         startAnimation(); // 패널이 생성될 때 애니메이션 시작
     }
-
     /**
      * '...' 애니메이션을 시작하는 메소드
      */
@@ -64,7 +62,6 @@ public class PvpLobbyPanel extends JPanel {
         });
         animationTimer.start(); // 타이머 시작
     }
-
     /**
      * 애니메이션을 중지하는 메소드
      */

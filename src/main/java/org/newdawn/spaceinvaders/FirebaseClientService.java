@@ -16,7 +16,6 @@ public class FirebaseClientService {
     private static final String SIGN_IN_URL = "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + WEB_API_KEY;
     private static final String FIRESTORE_USERS_URL = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/(default)/documents/users/";
 
-    // OkHttp 클라이언트 인스턴스 생성 (재사용)
     private final OkHttpClient client = new OkHttpClient();
     private final Gson gson = new Gson();
 
@@ -54,7 +53,6 @@ public class FirebaseClientService {
         return false;
     }
 
-    // signIn 메소드도 OkHttp 방식으로 수정 (uid를 반환하도록 변경)
     public String signIn(String email, String password) {
         String json = "{\"email\": \"" + email + "\", \"password\": \"" + password + "\", \"returnSecureToken\": true}";
         RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
@@ -99,15 +97,11 @@ public class FirebaseClientService {
      * @return 등록 성공 시 true, 실패 시 false
      */
     public boolean startMatchmaking(String uid, String nickname) {
-        // Realtime Database의 REST API는 경로 끝에 .json을 붙입니다.
-        // /matchmaking/queue/{uid} 경로에 데이터를 씁니다.
         String url = REALTIME_DB_URL + "matchmaking/queue/" + uid + ".json";
 
-        // 저장할 데이터 (JSON 형식)
         String json = "{\"nickname\": \"" + nickname + "\", \"timestamp\": " + System.currentTimeMillis() + "}";
         RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
 
-        // PUT 요청은 해당 경로의 데이터를 완전히 교체합니다.
         Request request = new Request.Builder()
                 .url(url)
                 .put(body)
@@ -134,8 +128,6 @@ public class FirebaseClientService {
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful()) {
                 String responseBody = response.body().string();
-
-                System.out.println("Response Body from queue: " + responseBody);
 
                 // 간단한 파싱: "큰따옴표로 둘러싸인 키 값"들을 찾습니다.
                 java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\"([a-zA-Z0-9_-]+)\":\\s*\\{");

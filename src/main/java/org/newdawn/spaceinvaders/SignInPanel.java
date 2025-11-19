@@ -19,29 +19,28 @@ public class SignInPanel extends JPanel {
 
         titleLogoSprite = SpriteStore.get().getSprite("sprites/title-logo.png");
 
-        // 1. 이메일 입력창 (JTextField)
+        // 1. 이메일 입력창
         emailField = new JTextField("email");
-        emailField.setBounds(300, 250, 200, 40); // (x, y, 너비, 높이)
-        emailField.setHorizontalAlignment(JTextField.CENTER); // 텍스트 가운데 정렬
+        emailField.setBounds(300, 250, 200, 40);
+        emailField.setHorizontalAlignment(JTextField.CENTER);
         emailField.setBackground(Color.WHITE);
         emailField.setForeground(Color.GRAY);
 
-        // 2. 비밀번호 입력창 (JPasswordField) - 입력 시 ●으로 표시됩니다.
+        // 2. 비밀번호 입력창 - 입력 시 ●으로 표시
         passwordField = new JPasswordField();
         passwordField.setBounds(300, 300, 200, 40);
         passwordField.setHorizontalAlignment(JTextField.CENTER);
 
-        // 3. 로그인 버튼 (JButton)
+        // 3. 로그인 버튼
         signInButton = new JButton("sign in");
         signInButton.setBounds(300, 350, 200, 40);
-        signInButton.setBackground(new Color(36, 41, 86)); // Figma 버튼색과 비슷하게
+        signInButton.setBackground(new Color(36, 41, 86));
         signInButton.setForeground(Color.WHITE); // 글자색
 
-        // 4. 회원가입 하러가기 버튼 (JButton) - 버튼처럼 보이지 않게 스타일링
+        // 4. 회원가입 하러가기 버튼
         goToSignUpButton = new JButton("sign up");
         goToSignUpButton.setBounds(300, 400, 200, 30);
         goToSignUpButton.setForeground(Color.LIGHT_GRAY);
-        // 버튼의 배경과 테두리를 없애서 글자처럼 보이게 만듭니다.
         goToSignUpButton.setBorderPainted(false);
         goToSignUpButton.setContentAreaFilled(false);
         goToSignUpButton.setFocusPainted(false);
@@ -54,12 +53,11 @@ public class SignInPanel extends JPanel {
 
         // "회원가입 하러가기" 버튼 클릭 시
         goToSignUpButton.addActionListener(e -> {
-            game.changeState(Game.GameState.SIGN_UP); // 회원가IP 상태로 전환
+            game.changeState(Game.GameState.SIGN_UP);
         });
 
         // "로그인" 버튼 클릭 시
         signInButton.addActionListener(e -> {
-            // 3단계에서 구현할 Firebase 로그인 로직 호출
             handleSignIn();
         });
     }

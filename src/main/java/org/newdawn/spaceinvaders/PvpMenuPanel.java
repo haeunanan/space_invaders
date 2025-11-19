@@ -13,12 +13,10 @@ public class PvpMenuPanel extends JPanel {
 
     public PvpMenuPanel(Game game) {
         this.game = game;
-        setLayout(null); // 절대 위치 사용
-        setBackground(Color.BLACK); // 배경색을 어둡게 변경
-        // 타이틀 로고 이미지 로드
+        setLayout(null);
+        setBackground(Color.BLACK);
         titleLogoSprite = SpriteStore.get().getSprite("sprites/title-logo.png");
 
-        // --- '환영 메시지' 대신 '마이페이지' 버튼 추가 ---
         myPageButton = createStyledButton("마이페이지");
         myPageButton.setBounds(300, 250, 200, 40);
         add(myPageButton);
