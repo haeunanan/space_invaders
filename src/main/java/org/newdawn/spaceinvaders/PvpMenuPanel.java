@@ -25,31 +25,36 @@ public class PvpMenuPanel extends JPanel {
             game.changeState(Game.GameState.MY_PAGE);
         });
 
-        // --- '혼자하기'와 '대결하기' 버튼 중앙 배치 ---
+        // --- 버튼 3개를 중앙에 일렬로 배치하기 위한 계산 ---
         int buttonWidth = 180;
         int buttonHeight = 50;
-        int gap = 40;
-        int totalWidth = buttonWidth * 2 + gap;
-        int startX = (800 - totalWidth) / 2; // 버튼 그룹의 시작 X 좌표 계산
+        int gap = 20; // 버튼 사이 간격 (3개라 간격을 조금 좁힘)
 
+        // 전체 너비 = (버튼폭 * 3) + (간격 * 2)
+        int totalWidth = (buttonWidth * 3) + (gap * 2);
+        int startX = (800 - totalWidth) / 2; // 전체 그룹의 시작 X 좌표
+
+        // 1. 혼자하기 버튼 (맨 왼쪽)
         soloPlayButton = createStyledButton("혼자하기");
         soloPlayButton.setBounds(startX, 350, buttonWidth, buttonHeight);
         add(soloPlayButton);
 
+        // 2. 대결하기 버튼 (가운데)
         pvpPlayButton = createStyledButton("대결하기");
         pvpPlayButton.setBounds(startX + buttonWidth + gap, 350, buttonWidth, buttonHeight);
         add(pvpPlayButton);
 
-        // --- '로그아웃' 버튼 설정 ---
+        // 3. 협동하기 버튼 (맨 오른쪽)
+        JButton coopPlayButton = createStyledButton("협동하기");
+        coopPlayButton.setBounds(startX + (buttonWidth + gap) * 2, 350, buttonWidth, buttonHeight);
+        add(coopPlayButton);
+
+        // 4. 로그아웃 버튼 (아래쪽 중앙)
         logoutButton = createStyledButton("로그아웃");
         logoutButton.setBounds((800 - buttonWidth) / 2, 450, buttonWidth, buttonHeight);
         add(logoutButton);
 
-        JButton coopPlayButton = createStyledButton("협동하기"); // 버튼 생성
-        coopPlayButton.setBounds(startX + buttonWidth + gap, 420, buttonWidth, buttonHeight); // 위치 적절히 조정 (예시)
-        add(coopPlayButton);
-
-// 리스너 추가
+        // 리스너 추가
         coopPlayButton.addActionListener(e -> {
             // 1. 로그인 정보 확인
             String uid = CurrentUserManager.getInstance().getUid();
