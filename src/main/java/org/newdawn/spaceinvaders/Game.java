@@ -1047,7 +1047,7 @@ public class Game
 		 */
 		public void keyPressed(KeyEvent e) {
 			// 게임 플레이 중(싱글 또는 PVP)일 때만 키 입력을 처리합니다.
-			if (currentState == GameState.PLAYING_SINGLE || currentState == GameState.PLAYING_PVP) {
+			if (currentState == GameState.PLAYING_SINGLE || currentState == GameState.PLAYING_PVP || currentState == GameState.PLAYING_COOP) {
 
 				// "Press any key" 상태일 때의 특별 처리
 				if (waitingForKeyPress) {
@@ -1059,6 +1059,9 @@ public class Game
 					// PVP 종료 후에는 PVP 메뉴로 이동
 					else if (currentState == Game.GameState.PLAYING_PVP) {
 						// waitingForKeyPress는 다음 화면에서 false로 설정될 것이므로 여기서는 상태만 변경
+						changeState(GameState.PVP_MENU);
+					}
+					else if (currentState == Game.GameState.PLAYING_COOP) {
 						changeState(GameState.PVP_MENU);
 					}
 					return; // 키 입력 처리를 여기서 마침
@@ -1082,7 +1085,7 @@ public class Game
 		 */
 		public void keyReleased(KeyEvent e) {
 			// 게임 플레이 중(싱글 또는 PVP)일 때만 키 입력을 처리합니다.
-			if (currentState == GameState.PLAYING_SINGLE || currentState == GameState.PLAYING_PVP) {
+			if (currentState == GameState.PLAYING_SINGLE || currentState == GameState.PLAYING_PVP || currentState == GameState.PLAYING_COOP) {
 
 				// waitingForKeyPress 상태에서는 키를 떼는 동작은 무시합니다.
 				if (waitingForKeyPress) {
