@@ -97,8 +97,11 @@ public class Game
 	private JFrame container;
 	private CardLayout cardLayout;
 	private JPanel mainPanel;
-	
-	/**
+    private StageManager stageManager;
+    private StageData stageData;
+
+
+    /**
 	 * Construct our game and set it running.
 	 */
 	public GameState getCurrentState() {
