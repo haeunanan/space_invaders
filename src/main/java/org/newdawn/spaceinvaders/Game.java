@@ -484,7 +484,6 @@ public class Game
 	// ▼▼▼ 협동용 게임 시작 메소드 ▼▼▼
 	private void startCoopGame() {
 		entities.clear();
-		waitingForKeyPress = false;
 
 		// 내 우주선 (아래쪽)
 		ship = new ShipEntity(this, "sprites/ship.gif", 300, 550); // X좌표를 약간 왼쪽으로
@@ -501,6 +500,9 @@ public class Game
 		initStandardStage(); // 1단계 적들 생성
 
 		startNetworkLoop(); // 네트워크 동기화 시작 (PVP와 같은 루프 사용해도 됨)
+
+		waitingForKeyPress = false;
+
 	}
 
 	private void startCoopMatchmakingLoop() {

@@ -219,6 +219,18 @@ public class GamePlayPanel extends JPanel {
                 fm = g2d.getFontMetrics();
                 g2d.drawString(subMessage, (getWidth() - fm.stringWidth(subMessage)) / 2, getHeight() / 2 + 50);
             }
+            else if (currentState == Game.GameState.PLAYING_COOP) {
+                g2d.setColor(Color.white);
+                g2d.setFont(new Font("Malgun Gothic", Font.BOLD, 40));
+                String message = game.getMessage();
+                FontMetrics fm = g2d.getFontMetrics();
+                g2d.drawString(message, (getWidth() - fm.stringWidth(message)) / 2, getHeight() / 2 - 50);
+
+                g2d.setFont(new Font("Malgun Gothic", Font.PLAIN, 20));
+                String subMessage = "아무 키나 눌러 메뉴 화면으로 돌아가기";
+                fm = g2d.getFontMetrics();
+                g2d.drawString(subMessage, (getWidth() - fm.stringWidth(subMessage)) / 2, getHeight() / 2 + 50);
+            }
         }
     }
 
