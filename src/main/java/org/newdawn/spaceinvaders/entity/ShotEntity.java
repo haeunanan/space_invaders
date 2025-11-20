@@ -13,6 +13,8 @@ public class ShotEntity extends Entity {
 	/** True if this shot has been "used", i.e. its hit something */
 	private boolean used = false;
 	private String ownerUid;
+    private double dx;
+    private double dy;
 	
 	/**
 	 * Create a new shot from the player
@@ -22,12 +24,12 @@ public class ShotEntity extends Entity {
 	 * @param x The initial x location of the shot
 	 * @param y The initial y location of the shot
 	 */
-	public ShotEntity(Game game,String sprite,int x,int y, String ownerUid) {
-		super(sprite,x,y);
-		this.game = game;
-		this.ownerUid = ownerUid;
-		dy = -300;
-	}
+    public ShotEntity(Game game, String sprite, int x, int y, double dx, double dy) {
+        super(sprite, x, y);
+        this.game = game;
+        this.dx = dx;
+        this.dy = dy;
+    }
 
 	public String getOwnerUid() { // <-- Getter 추가
 		return ownerUid;
@@ -43,15 +45,16 @@ public class ShotEntity extends Entity {
 	 * 
 	 * @param delta The time that has elapsed since last move
 	 */
-	public void move(long delta) {
-		// proceed with normal move
-		super.move(delta);
-		
-		// if we shot off the screen, remove ourselfs
-		if (y < -100) {
-			game.removeEntity(this);
-		}
-	}
+    @Override
+    public void move(long delta) {
+        x += dx * delta / 1000.0;
+        y += dy * delta / 1000.0;
+
+        // 화면 밖 나가면 제거
+        if (y < -50 || y > 650) {
+            game.removeEntity(this);
+        }
+    }
 	
 	/**
 	 * Notification that this shot has collided with another
