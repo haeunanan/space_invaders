@@ -135,8 +135,6 @@ public class FirebaseClientService {
             if (response.isSuccessful()) {
                 String responseBody = response.body().string();
 
-                System.out.println("Response Body from queue: " + responseBody);
-
                 // 간단한 파싱: "큰따옴표로 둘러싸인 키 값"들을 찾습니다.
                 java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\"([a-zA-Z0-9_-]+)\":\\s*\\{");
                 java.util.regex.Matcher matcher = pattern.matcher(responseBody);

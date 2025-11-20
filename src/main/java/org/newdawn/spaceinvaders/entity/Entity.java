@@ -20,23 +20,38 @@ import org.newdawn.spaceinvaders.SpriteStore;
  * @author Kevin Glass
  */
 public abstract class Entity {
-	/** The current x location of this entity */ 
+	/**
+	 * The current x location of this entity
+	 */
 	protected double x;
-	/** The current y location of this entity */
+	/**
+	 * The current y location of this entity
+	 */
 	protected double y;
-	/** The sprite that represents this entity */
+	/**
+	 * The sprite that represents this entity
+	 */
 	protected Sprite sprite;
-	/** The current speed of this entity horizontally (pixels/sec) */
+	/**
+	 * The current speed of this entity horizontally (pixels/sec)
+	 */
 	protected double dx;
-	/** The current speed of this entity vertically (pixels/sec) */
+	/**
+	 * The current speed of this entity vertically (pixels/sec)
+	 */
 	protected double dy;
-	/** The rectangle used for this entity during collisions  resolution */
+	/**
+	 * The rectangle used for this entity during collisions  resolution
+	 */
 	private Rectangle me = new Rectangle();
-	/** The rectangle used for other entities during collision resolution */
+	/**
+	 * The rectangle used for other entities during collision resolution
+	 */
 	private Rectangle him = new Rectangle();
 
 	/**
 	 * Sets the location of this entity.
+	 *
 	 * @param x The new x coordinate
 	 * @param y The new y coordinate
 	 */
@@ -44,23 +59,24 @@ public abstract class Entity {
 		this.x = x;
 		this.y = y;
 	}
+
 	/**
 	 * Construct a entity based on a sprite image and a location.
-	 * 
+	 *
 	 * @param ref The reference to the image to be displayed for this entity
- 	 * @param x The initial x location of this entity
-	 * @param y The initial y location of this entity
+	 * @param x   The initial x location of this entity
+	 * @param y   The initial y location of this entity
 	 */
-	public Entity(String ref,int x,int y) {
+	public Entity(String ref, int x, int y) {
 		this.sprite = SpriteStore.get().getSprite(ref);
 		this.x = x;
 		this.y = y;
 	}
-	
+
 	/**
 	 * Request that this entity move itself based on a certain ammount
 	 * of time passing.
-	 * 
+	 *
 	 * @param delta The ammount of time that has passed in milliseconds
 	 */
 	public void move(long delta) {
@@ -68,8 +84,10 @@ public abstract class Entity {
 		x += (delta * dx) / 1000;
 		y += (delta * dy) / 1000;
 	}
+
 	/**
 	 * Get the width of the sprite representing this entity
+	 *
 	 * @return The width in pixels of this entity
 	 */
 	public int getSpriteWidth() {
@@ -81,9 +99,10 @@ public abstract class Entity {
 		if (sprite == null) return 0;
 		return sprite.getHeight();
 	}
+
 	/**
 	 * Set the horizontal speed of this entity
-	 * 
+	 *
 	 * @param dx The horizontal speed of this entity (pixels/sec)
 	 */
 	public void setHorizontalMovement(double dx) {
@@ -91,34 +110,8 @@ public abstract class Entity {
 	}
 
 	/**
-	 * Set the vertical speed of this entity
-	 * 
-	 * @param dy The vertical speed of this entity (pixels/sec)
-	 */
-	public void setVerticalMovement(double dy) {
-		this.dy = dy;
-	}
-	
-	/**
-	 * Get the horizontal speed of this entity
-	 * 
-	 * @return The horizontal speed of this entity (pixels/sec)
-	 */
-	public double getHorizontalMovement() {
-		return dx;
-	}
-
-	/**
-	 * Get the vertical speed of this entity
-	 * 
-	 * @return The vertical speed of this entity (pixels/sec)
-	 */
-	public double getVerticalMovement() {
-		return dy;
-	}
-
-	/**
 	 * 이 엔티티를 지정된 좌표에 그립니다.
+	 *
 	 * @param g 그래픽 컨텍스트
 	 * @param x 화면에 그릴 x 좌표
 	 * @param y 화면에 그릴 y 좌표
@@ -129,22 +122,23 @@ public abstract class Entity {
 
 	/**
 	 * 이 엔티티를 자신의 내부 좌표에 그립니다. (기존 코드 호환용)
+	 *
 	 * @param g 그래픽 컨텍스트
 	 */
 	public void draw(Graphics g) {
 		draw(g, (int) x, (int) y);
 	}
-	
+
 	/**
 	 * Do the logic associated with this entity. This method
 	 * will be called periodically based on game events
 	 */
 	public void doLogic() {
 	}
-	
+
 	/**
 	 * Get the x location of this entity
-	 * 
+	 *
 	 * @return The x location of this entity
 	 */
 	public int getX() {
@@ -153,22 +147,22 @@ public abstract class Entity {
 
 	/**
 	 * Get the y location of this entity
-	 * 
+	 *
 	 * @return The y location of this entity
 	 */
 	public int getY() {
 		return (int) y;
 	}
-	
+
 	/**
 	 * Check if this entity collised with another.
-	 * 
+	 *
 	 * @param other The other entity to check collision against
 	 * @return True if the entities collide with each other
 	 */
 	public boolean collidesWith(Entity other) {
-		me.setBounds((int) x,(int) y,sprite.getWidth(),sprite.getHeight());
-		him.setBounds((int) other.x,(int) other.y,other.sprite.getWidth(),other.sprite.getHeight());
+		me.setBounds((int) x, (int) y, sprite.getWidth(), sprite.getHeight());
+		him.setBounds((int) other.x, (int) other.y, other.sprite.getWidth(), other.sprite.getHeight());
 
 		return me.intersects(him);
 	}
