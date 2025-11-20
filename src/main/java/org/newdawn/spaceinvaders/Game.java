@@ -37,7 +37,9 @@ public class Game
 		PVP_LOBBY,  // 매치메이킹 대기 화면
 		PLAYING_SINGLE,    // 기존 혼자하기 모드
 		PLAYING_PVP, // PvP 게임 플레이 중
-		MY_PAGE
+		MY_PAGE,
+		COOP_LOBBY,
+		PLAYING_COOP
 	}
 	private GameState currentState;
 
@@ -288,6 +290,16 @@ public class Game
 				cardLayout.show(mainPanel, "MY_PAGE");
 				myPagePanel.updateUser();
 				break;
+			case COOP_LOBBY:
+				cardLayout.show(mainPanel, "PVP_LOBBY"); // UI는 PVP 로비 재사용 (텍스트만 바꾸면 됨)
+				startCoopMatchmakingLoop(); // 협동 매칭 루프 시작
+				break;
+			case PLAYING_COOP: // 협동 게임 시작
+				waitingForKeyPress = false;
+				cardLayout.show(mainPanel, "PLAYING_SINGLE"); // 게임 화면 재사용
+				SwingUtilities.invokeLater(() -> gamePlayPanel.requestFocusInWindow());
+				startCoopGame(); // 협동 게임 초기화
+				break;
 		}
 	}
 	
@@ -467,6 +479,77 @@ public class Game
 			}
 		});
 		networkThread.start();
+	}
+
+	// ▼▼▼ 협동용 게임 시작 메소드 ▼▼▼
+	private void startCoopGame() {
+		entities.clear();
+		waitingForKeyPress = false;
+
+		// 내 우주선 (아래쪽)
+		ship = new ShipEntity(this, "sprites/ship.gif", 300, 550); // X좌표를 약간 왼쪽으로
+		((ShipEntity) ship).setHealth(3);
+		entities.add(ship);
+
+		// 상대방 우주선 (같은 편! 아래쪽)
+		opponentShip = new ShipEntity(this, "sprites/ship.gif", 500, 550); // X좌표를 약간 오른쪽으로, 이미지는 ship.gif 사용
+		((ShipEntity) opponentShip).setHealth(3);
+		entities.add(opponentShip);
+
+		// 외계인 생성 (싱글 플레이처럼 적들도 생성해야 함!)
+		alienCount = 0;
+		initStandardStage(); // 1단계 적들 생성
+
+		startNetworkLoop(); // 네트워크 동기화 시작 (PVP와 같은 루프 사용해도 됨)
+	}
+
+	private void startCoopMatchmakingLoop() {
+		matchmakingThread = new Thread(() -> {
+			FirebaseClientService clientService = new FirebaseClientService();
+			String myUid = CurrentUserManager.getInstance().getUid();
+
+			while (!Thread.currentThread().isInterrupted()) {
+				try {
+					System.out.println("협동 상대 찾는 중...");
+					String opponentUid = clientService.findCoopOpponent(myUid); // Coop 메소드 사용
+
+					if (opponentUid != null) {
+						// 방장 로직
+						if (myUid.compareTo(opponentUid) < 0) {
+							String matchId = clientService.createMatch(myUid, opponentUid);
+							if (matchId != null) {
+								this.currentMatchId = matchId;
+								this.player1_uid = myUid;
+								this.player2_uid = opponentUid;
+								clientService.deleteFromCoopQueue(myUid);       // Coop 큐에서 삭제
+								clientService.deleteFromCoopQueue(opponentUid); // Coop 큐에서 삭제
+								SwingUtilities.invokeLater(() -> changeState(GameState.PLAYING_COOP));
+								break;
+							}
+						}
+					} else {
+						// 참가자 로직
+						if (!clientService.isUserInCoopQueue(myUid)) { // Coop 큐 확인
+							String matchId = clientService.findMyMatch(myUid); // 매치 찾는건 동일 (matches 경로는 공유)
+							if (matchId != null) {
+								this.currentMatchId = matchId;
+								Map<String, Object> matchData = clientService.getMatchData(matchId);
+								if (matchData != null) {
+									this.player1_uid = (String) matchData.get("player1");
+									this.player2_uid = (String) matchData.get("player2");
+									SwingUtilities.invokeLater(() -> changeState(GameState.PLAYING_COOP));
+									break;
+								}
+							}
+						}
+					}
+					Thread.sleep(2000);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+			}
+		});
+		matchmakingThread.start();
 	}
 	
 	/**
@@ -801,6 +884,93 @@ public class Game
 						}
 					}
 				}
+			}
+
+			else if (currentState == GameState.PLAYING_COOP) {
+				if (ship == null || opponentShip == null) continue;
+
+				// 1. 내 입력 처리
+				ship.setHorizontalMovement(0);
+				if (leftPressed && !rightPressed) ship.setHorizontalMovement(-moveSpeed);
+				else if (rightPressed && !leftPressed) ship.setHorizontalMovement(moveSpeed);
+				if (firePressed) tryToFire();
+
+				// 2. 모든 엔티티 이동 (적들도 움직여야 함!)
+				for (Entity entity : new ArrayList<>(entities)) {
+					if (entity == opponentShip) continue; // 상대방만 네트워크로 이동
+					entity.move(delta);
+				}
+
+				// 3. 로직 업데이트 (외계인 방향 전환 등)
+				if (logicRequiredThisLoop) {
+					for (Entity entity : entities) entity.doLogic();
+					logicRequiredThisLoop = false;
+				}
+
+				// 4. 충돌 판정 (협동 모드 규칙)
+				String myUid = CurrentUserManager.getInstance().getUid();
+				for (int p = 0; p < entities.size(); p++) {
+					for (int s = p + 1; s < entities.size(); s++) {
+						Entity me = entities.get(p);
+						Entity him = entities.get(s);
+
+						if (me.collidesWith(him)) {
+							// (1) 아군(나 또는 동료)의 총알이 적(외계인/보스)을 맞췄을 때
+							// 누가 쐈든 상관없이 적은 죽습니다.
+							if (me instanceof ShotEntity && (him instanceof AlienEntity || him instanceof BossEntity)) {
+								removeEntity(me); // 총알 제거
+								if (him instanceof AlienEntity) {
+									removeEntity(him);
+									notifyAlienKilled(); // 점수 증가
+								} else if (him instanceof BossEntity) {
+									((BossEntity) him).takeDamage(); // 보스 체력 감소
+								}
+							} else if (him instanceof ShotEntity && (me instanceof AlienEntity || me instanceof BossEntity)) {
+								removeEntity(him); // 총알 제거
+								if (me instanceof AlienEntity) {
+									removeEntity(me);
+									notifyAlienKilled();
+								} else if (me instanceof BossEntity) {
+									((BossEntity) me).takeDamage();
+								}
+							}
+
+							// (2) 적의 총알이 '나(ship)'에게 맞았을 때
+							// 내 데미지는 내가 계산합니다.
+							else if ((me instanceof AlienShotEntity || me instanceof BossShotEntity) && him == ship) {
+								removeEntity(me); // 총알 제거
+								((ShipEntity) him).takeDamage(); // 내 체력 감소 -> 네트워크로 전송됨
+							} else if ((him instanceof AlienShotEntity || him instanceof BossShotEntity) && me == ship) {
+								removeEntity(him); // 총알 제거
+								((ShipEntity) me).takeDamage();
+							}
+
+							// (3) 적의 총알이 '동료(opponentShip)'에게 맞았을 때
+							// 동료의 체력은 동료 컴퓨터가 계산해서 보내주므로, 여기서는 총알만 지워줍니다(시각적 처리).
+							else if ((me instanceof AlienShotEntity || me instanceof BossShotEntity) && him == opponentShip) {
+								removeEntity(me);
+							} else if ((him instanceof AlienShotEntity || him instanceof BossShotEntity) && me == opponentShip) {
+								removeEntity(him);
+							}
+
+							// (4) 적(몸체)이 '나(ship)'와 부딪혔을 때 (게임오버급 충돌)
+							else if ((me instanceof AlienEntity || me instanceof BossEntity) && him == ship) {
+								((ShipEntity) him).takeDamage(); // 혹은 즉사 처리
+							} else if ((him instanceof AlienEntity || him instanceof BossEntity) && me == ship) {
+								((ShipEntity) me).takeDamage();
+							}
+						}
+					}
+				}
+			}
+			// --- 5. 스테이지 클리어 확인 ---
+			// 싱글 플레이와 동일하게 남은 적을 확인합니다.
+			int aliensRemaining = 0;
+			for (Entity e : entities) {
+				if (e instanceof AlienEntity) aliensRemaining++;
+			}
+			if (aliensRemaining == 0 && !waitingForKeyPress && currentLevel < BOSS_LEVEL) {
+				notifyWin(); // 다음 스테이지로
 			}
 
 			// --- 4. 공통 로직 ---

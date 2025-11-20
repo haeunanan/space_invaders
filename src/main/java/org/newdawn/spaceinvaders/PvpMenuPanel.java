@@ -45,6 +45,29 @@ public class PvpMenuPanel extends JPanel {
         logoutButton.setBounds((800 - buttonWidth) / 2, 450, buttonWidth, buttonHeight);
         add(logoutButton);
 
+        JButton coopPlayButton = createStyledButton("협동하기"); // 버튼 생성
+        coopPlayButton.setBounds(startX + buttonWidth + gap, 420, buttonWidth, buttonHeight); // 위치 적절히 조정 (예시)
+        add(coopPlayButton);
+
+// 리스너 추가
+        coopPlayButton.addActionListener(e -> {
+            // 1. 로그인 정보 확인
+            String uid = CurrentUserManager.getInstance().getUid();
+            String nickname = CurrentUserManager.getInstance().getNickname();
+            if (uid == null) { JOptionPane.showMessageDialog(this, "로그인 정보가 없습니다."); return; }
+
+            // 2. 협동 모드 매치메이킹 시작
+            FirebaseClientService clientService = new FirebaseClientService();
+            boolean success = clientService.startCoopMatchmaking(uid, nickname); // coop 메소드 호출
+
+            // 3. 로비로 이동
+            if (success) {
+                game.changeState(Game.GameState.COOP_LOBBY); // COOP_LOBBY로 이동
+            } else {
+                JOptionPane.showMessageDialog(this, "서버 접속 실패");
+            }
+        });
+
         // --- 버튼 클릭 이벤트 리스너 ---
         soloPlayButton.addActionListener(e -> {
             // PLAYING_SINGLE 대신 PLAYING_SINGLE로 상태 변경

@@ -285,4 +285,75 @@ public class FirebaseClientService {
         }
         return null;
     }
+
+    // FirebaseClientService.java 에 추가
+
+    // 1. 협동 모드 대기열 등록
+    public boolean startCoopMatchmaking(String uid, String nickname) {
+        String url = REALTIME_DB_URL + "matchmaking/coop_queue/" + uid + ".json"; // coop_queue 사용
+        String json = "{\"nickname\": \"" + nickname + "\", \"timestamp\": " + System.currentTimeMillis() + "}";
+        RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
+        Request request = new Request.Builder().url(url).put(body).build();
+
+        try (Response response = client.newCall(request).execute()) {
+            return response.isSuccessful();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // 2. 협동 모드 상대 찾기
+    public String findCoopOpponent(String myUid) {
+        String url = REALTIME_DB_URL + "matchmaking/coop_queue.json"; // coop_queue 사용
+        Request request = new Request.Builder().url(url).get().build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                String responseBody = response.body().string();
+                java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\"([a-zA-Z0-9_-]+)\":\\s*\\{");
+                java.util.regex.Matcher matcher = pattern.matcher(responseBody);
+
+                while (matcher.find()) {
+                    String opponentUid = matcher.group(1);
+                    if (!opponentUid.equals(myUid)) {
+                        return opponentUid;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // 3. 협동 모드 대기열에서 삭제
+    public boolean deleteFromCoopQueue(String uid) {
+        String url = REALTIME_DB_URL + "matchmaking/coop_queue/" + uid + ".json"; // coop_queue 사용
+        Request request = new Request.Builder().url(url).delete().build();
+
+        try (Response response = client.newCall(request).execute()) {
+            return response.isSuccessful();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // 4. 협동 모드 대기열 확인 (참가자용)
+    public boolean isUserInCoopQueue(String myUid) {
+        String url = REALTIME_DB_URL + "matchmaking/coop_queue/" + myUid + ".json";
+        Request request = new Request.Builder().url(url).get().build();
+
+        try (Response response = client.newCall(request).execute()) {
+            ResponseBody body = response.body();
+            if (body != null) {
+                String bodyString = body.string();
+                return !bodyString.equalsIgnoreCase("null");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }
