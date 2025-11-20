@@ -404,7 +404,7 @@ public class Game
 			FirebaseClientService clientService = new FirebaseClientService();
 			String myUid = CurrentUserManager.getInstance().getUid();
 
-			while (currentState == GameState.PLAYING_PVP && !Thread.currentThread().isInterrupted()) {
+			while ((currentState == GameState.PLAYING_PVP || currentState == GameState.PLAYING_COOP) && !Thread.currentThread().isInterrupted()) {
 				try {
 					// --- 내 상태 전송 ---
 					Map<String, Object> myState = new java.util.HashMap<>();
@@ -983,12 +983,12 @@ public class Game
 						notifyWin();
 					}
 				}
-
-				// 6. 공통 정리 및 그리기
-				entities.removeAll(removeList);
-				removeList.clear();
-				gamePlayPanel.repaint();
 			}
+			// 6. 공통 정리 및 그리기
+			entities.removeAll(removeList);
+			removeList.clear();
+			gamePlayPanel.repaint();
+
 			try { SystemTimer.sleep(10); } catch (Exception e) {}
 		}
 	}
