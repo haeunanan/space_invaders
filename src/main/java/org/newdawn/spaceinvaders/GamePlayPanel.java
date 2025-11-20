@@ -98,6 +98,17 @@ public class GamePlayPanel extends JPanel {
         else if (game.getCurrentState() == Game.GameState.PLAYING_PVP){
             drawHealthHearts(g2d);
         }
+        else if (currentState == Game.GameState.PLAYING_COOP) {
+            // 협동 모드에서는 점수와 체력을 모두 보여줍니다.
+
+            // 점수 UI
+            g2d.setColor(Color.white);
+            g2d.setFont(new Font("Arial", Font.BOLD, 16));
+            g2d.drawString("Co-op Score: " + game.score, 160, 45);
+
+            // 체력 하트 UI (나와 동료 모두 표시)
+            drawHealthHearts(g2d);
+        }
 
         // --- 4. 오버레이 UI(상점 또는 랭킹) 그리기 (가장 마지막) ---
         if (game.shopOpen) {

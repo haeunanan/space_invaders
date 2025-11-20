@@ -885,47 +885,56 @@ public class Game
 					}
 				}
 			}
-
 			else if (currentState == GameState.PLAYING_COOP) {
-				if (ship == null || opponentShip == null) continue;
+				if (ship == null || opponentShip == null) {
+					try { Thread.sleep(10); } catch (InterruptedException e) {}
+					continue;
+				}
 
 				// 1. 내 입력 처리
 				ship.setHorizontalMovement(0);
-				if (leftPressed && !rightPressed) ship.setHorizontalMovement(-moveSpeed);
-				else if (rightPressed && !leftPressed) ship.setHorizontalMovement(moveSpeed);
+				if ((leftPressed) && (!rightPressed)) ship.setHorizontalMovement(-moveSpeed);
+				else if ((rightPressed) && (!leftPressed)) ship.setHorizontalMovement(moveSpeed);
 				if (firePressed) tryToFire();
 
-				// 2. 모든 엔티티 이동 (적들도 움직여야 함!)
+				// 2. 엔티티 이동 (적군 + 내 우주선 + 총알들)
+				// 상대방 우주선(opponentShip)은 네트워크 스레드가 움직이므로 여기서 건너뜁니다.
 				for (Entity entity : new ArrayList<>(entities)) {
-					if (entity == opponentShip) continue; // 상대방만 네트워크로 이동
+					if (entity == opponentShip) continue;
 					entity.move(delta);
 				}
 
-				// 3. 로직 업데이트 (외계인 방향 전환 등)
+				// 3. 외계인 방향 전환 로직 (싱글 플레이와 동일)
 				if (logicRequiredThisLoop) {
-					for (Entity entity : entities) entity.doLogic();
+					for (Entity entity : entities) {
+						entity.doLogic();
+					}
 					logicRequiredThisLoop = false;
 				}
 
-				// 4. 충돌 판정 (협동 모드 규칙)
+				// 4. 협동 모드 충돌 판정
 				String myUid = CurrentUserManager.getInstance().getUid();
-				for (int p = 0; p < entities.size(); p++) {
-					for (int s = p + 1; s < entities.size(); s++) {
-						Entity me = entities.get(p);
-						Entity him = entities.get(s);
+
+				// 충돌 계산을 위한 복사본 생성
+				ArrayList<Entity> currentEntities = new ArrayList<>(entities);
+
+				for (int p = 0; p < currentEntities.size(); p++) {
+					for (int s = p + 1; s < currentEntities.size(); s++) {
+						Entity me = currentEntities.get(p);
+						Entity him = currentEntities.get(s);
 
 						if (me.collidesWith(him)) {
 							// (1) 아군(나 또는 동료)의 총알이 적(외계인/보스)을 맞췄을 때
-							// 누가 쐈든 상관없이 적은 죽습니다.
 							if (me instanceof ShotEntity && (him instanceof AlienEntity || him instanceof BossEntity)) {
 								removeEntity(me); // 총알 제거
 								if (him instanceof AlienEntity) {
 									removeEntity(him);
 									notifyAlienKilled(); // 점수 증가
 								} else if (him instanceof BossEntity) {
-									((BossEntity) him).takeDamage(); // 보스 체력 감소
+									((BossEntity) him).takeDamage();
 								}
-							} else if (him instanceof ShotEntity && (me instanceof AlienEntity || me instanceof BossEntity)) {
+							}
+							else if (him instanceof ShotEntity && (me instanceof AlienEntity || me instanceof BossEntity)) {
 								removeEntity(him); // 총알 제거
 								if (me instanceof AlienEntity) {
 									removeEntity(me);
@@ -935,49 +944,51 @@ public class Game
 								}
 							}
 
-							// (2) 적의 총알이 '나(ship)'에게 맞았을 때
-							// 내 데미지는 내가 계산합니다.
+							// (2) 적의 총알이 '나(ship)'에게 맞았을 때 -> 내 체력 감소
 							else if ((me instanceof AlienShotEntity || me instanceof BossShotEntity) && him == ship) {
-								removeEntity(me); // 총알 제거
-								((ShipEntity) him).takeDamage(); // 내 체력 감소 -> 네트워크로 전송됨
-							} else if ((him instanceof AlienShotEntity || him instanceof BossShotEntity) && me == ship) {
-								removeEntity(him); // 총알 제거
+								removeEntity(me);
+								((ShipEntity) him).takeDamage();
+							}
+							else if ((him instanceof AlienShotEntity || him instanceof BossShotEntity) && me == ship) {
+								removeEntity(him);
 								((ShipEntity) me).takeDamage();
 							}
 
-							// (3) 적의 총알이 '동료(opponentShip)'에게 맞았을 때
-							// 동료의 체력은 동료 컴퓨터가 계산해서 보내주므로, 여기서는 총알만 지워줍니다(시각적 처리).
+							// (3) 적의 총알이 '동료(opponentShip)'에게 맞았을 때 -> 시각적으로 총알만 제거
 							else if ((me instanceof AlienShotEntity || me instanceof BossShotEntity) && him == opponentShip) {
 								removeEntity(me);
-							} else if ((him instanceof AlienShotEntity || him instanceof BossShotEntity) && me == opponentShip) {
+							}
+							else if ((him instanceof AlienShotEntity || him instanceof BossShotEntity) && me == opponentShip) {
 								removeEntity(him);
 							}
 
-							// (4) 적(몸체)이 '나(ship)'와 부딪혔을 때 (게임오버급 충돌)
+							// (4) 적 몸체 충돌
 							else if ((me instanceof AlienEntity || me instanceof BossEntity) && him == ship) {
-								((ShipEntity) him).takeDamage(); // 혹은 즉사 처리
-							} else if ((him instanceof AlienEntity || him instanceof BossEntity) && me == ship) {
+								((ShipEntity) him).takeDamage();
+							}
+							else if ((him instanceof AlienEntity || him instanceof BossEntity) && me == ship) {
 								((ShipEntity) me).takeDamage();
 							}
 						}
 					}
 				}
-			}
-			// --- 5. 스테이지 클리어 확인 ---
-			// 싱글 플레이와 동일하게 남은 적을 확인합니다.
-			int aliensRemaining = 0;
-			for (Entity e : entities) {
-				if (e instanceof AlienEntity) aliensRemaining++;
-			}
-			if (aliensRemaining == 0 && !waitingForKeyPress && currentLevel < BOSS_LEVEL) {
-				notifyWin(); // 다음 스테이지로
-			}
 
-			// --- 4. 공통 로직 ---
-			entities.removeAll(removeList);
-			removeList.clear();
-			gamePlayPanel.repaint();
+				// 5. 스테이지 클리어 확인
+				if (currentLevel < BOSS_LEVEL) {
+					int aliensRemaining = 0;
+					for (Entity e : entities) {
+						if (e instanceof AlienEntity) aliensRemaining++;
+					}
+					if (aliensRemaining == 0 && !waitingForKeyPress) {
+						notifyWin();
+					}
+				}
 
+				// 6. 공통 정리 및 그리기
+				entities.removeAll(removeList);
+				removeList.clear();
+				gamePlayPanel.repaint();
+			}
 			try { SystemTimer.sleep(10); } catch (Exception e) {}
 		}
 	}
