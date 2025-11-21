@@ -707,20 +707,25 @@ public class Game
         int baseX = ship.getX() + 10;
         int baseY = ship.getY() - 30;
 
-        double shotDX = 0;       // 플레이어 탄은 수평 이동 없음
-        double shotDY = -300;    // 위로 빠르게 날아감
+        double shotDX = 0;
+
+        // [수정] 스테이지별 탄속 적용 (기본 -300, 화성 -150 등)
+        double shotDY = -300; // 기본값
+        if (currentStage != null) {
+            shotDY = currentStage.getPlayerShotVelocity();
+        }
 
         // 여러 발 미사일 처리
         for (int i = 0; i < missileCount; i++) {
             int offset = (i - (missileCount - 1) / 2) * 10;
-
+            // ... (나머지 코드는 동일) ...
             ShotEntity shot = new ShotEntity(
                     this,
                     "sprites/shot.gif",
                     baseX + offset,
                     baseY,
                     shotDX,
-                    shotDY
+                    shotDY // 수정된 속도 변수 사용
             );
             entities.add(shot);
         }
@@ -941,50 +946,13 @@ public class Game
 
     private class KeyInputHandler extends KeyAdapter {
 
+        // Game.java 내부의 KeyInputHandler 클래스 -> keyPressed 메소드
+
         @Override
         public void keyPressed(KeyEvent e) {
+            // ... (ESC 처리 등 기존 코드) ...
 
-            /* ===============================
-             *   1. ESC → 게임 종료
-             * =============================== */
-            if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-                System.exit(0);
-            }
-
-            /* ===============================
-             *   2. GLOBAL: "Press any key"
-             * =============================== */
-            if (waitingForKeyPress) {
-
-                /* ---- 싱글 플레이 다음 스테이지 ---- */
-                if (currentState == GameState.PLAYING_SINGLE) {
-
-                    waitingForKeyPress = false;
-
-                    // 다음 스테이지 로드
-                    currentStage = loadStage(stageIndex);
-
-                    if (currentStage != null) {
-                        currentStage.init();
-                    } else {
-                        // 모든 스테이지 클리어
-                        message = "ALL STAGES CLEAR!";
-                        waitingForKeyPress = true;
-                    }
-                    return;
-                }
-
-                /* ---- PVP 게임 종료 → PVP 메뉴 ---- */
-                else if (currentState == GameState.PLAYING_PVP) {
-                    waitingForKeyPress = false;
-                    changeState(GameState.PVP_MENU);
-                    return;
-                }
-            }
-
-            /* ===============================
-             *   3. GAMEPLAY KEY
-             * =============================== */
+            // GAMEPLAY KEY 부분에 추가
             if (currentState == GameState.PLAYING_SINGLE ||
                     currentState == GameState.PLAYING_PVP) {
 
@@ -996,6 +964,13 @@ public class Game
                 }
                 if (e.getKeyCode() == KeyEvent.VK_SPACE) {
                     firePressed = true;
+                }
+
+                // [추가] 'S' 키를 누르면 아이템(중력 안정제) 효과 발동 테스트
+                if (e.getKeyCode() == KeyEvent.VK_S) {
+                    if (currentStage != null) {
+                        currentStage.activateStabilizer();
+                    }
                 }
             }
         }

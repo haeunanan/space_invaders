@@ -85,6 +85,15 @@ public class ShotEntity extends Entity {
 				// notify the game that the alien has been killed
 				game.notifyAlienKilled();
 				used = true;
+                if (Math.random() < 0.1) {
+                    ItemEntity item = new ItemEntity(
+                            game,
+                            "sprites/item_stabilizer.png", // 아이템 이미지 경로
+                            other.getX(),
+                            other.getY()
+                    );
+                    game.addEntity(item);
+                }
 			}
 		} else if (game.getCurrentState() == Game.GameState.PLAYING_PVP) {
 			if (other == game.getOpponentShip()) {

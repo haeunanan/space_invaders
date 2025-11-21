@@ -4,10 +4,24 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1ae5a004-a1ec-43a7-a784-ade46d788f45" name="변경" comment="화성~블랙홀(보스)스테이지 행성 컨셉 추가(배경,효과음 추가 필요)">
+    <list default="true" id="1ae5a004-a1ec-43a7-a784-ade46d788f45" name="변경" comment="스테이지별 배경 추가, 화성 적 이미지 추가, 키 입력 안되는 오류 수정">
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ItemEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/Game.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/Game.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/RankingManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/RankingManager.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/AlienEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/AlienEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShotEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShotEntity.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/MarsStage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/MarsStage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/Stage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/Stage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/sprites/mars_enemy_0.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/sprites/mars_enemy_0.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/sprites/mars_enemy_1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/sprites/mars_enemy_2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/sprites/mars_enemy_3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/sprites/mars_enemy_4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/sprites/mars_enemy_5.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/sprites/mars_enemy_6.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/sprites/mars_enemy_7.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/sprites/mars_enemy_8.png" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -88,7 +102,7 @@
       <workItem from="1763627426981" duration="3623000" />
       <workItem from="1763631143244" duration="4159000" />
       <workItem from="1763638707602" duration="7839000" />
-      <workItem from="1763690414293" duration="4426000" />
+      <workItem from="1763690414293" duration="7805000" />
     </task>
     <task id="LOCAL-00001" summary="game.java 수정">
       <option name="closed" value="true" />
@@ -106,7 +120,15 @@
       <option name="project" value="LOCAL" />
       <updated>1763646190855</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="스테이지별 배경 추가, 화성 적 이미지 추가, 키 입력 안되는 오류 수정">
+      <option name="closed" value="true" />
+      <created>1763708140328</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1763708140328</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -115,6 +137,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="game.java 수정" />
     <MESSAGE value="화성~블랙홀(보스)스테이지 행성 컨셉 추가(배경,효과음 추가 필요)" />
-    <option name="LAST_COMMIT_MESSAGE" value="화성~블랙홀(보스)스테이지 행성 컨셉 추가(배경,효과음 추가 필요)" />
+    <MESSAGE value="스테이지별 배경 추가, 화성 적 이미지 추가, 키 입력 안되는 오류 수정" />
+    <option name="LAST_COMMIT_MESSAGE" value="스테이지별 배경 추가, 화성 적 이미지 추가, 키 입력 안되는 오류 수정" />
   </component>
 </project>

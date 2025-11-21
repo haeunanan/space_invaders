@@ -5,104 +5,84 @@ import org.newdawn.spaceinvaders.Sprite;
 import org.newdawn.spaceinvaders.SpriteStore;
 
 public class AlienEntity extends Entity {
-	// === dev 브랜치와 boss 브랜치의 모든 변수를 통합 ===
-	private Game game;
-	private double moveSpeed = 75;
-	private double firingChance; // boss 브랜치의 발사 확률 변수
+    private Game game;
+    private double moveSpeed = 75;
+    private double firingChance;
+    private boolean alive = true;
 
-	// dev 브랜치의 생존 상태 변수
-	private boolean alive = true;
-
-	// dev 브랜치의 애니메이션 관련 변수
-    private Sprite[] frames = new Sprite[9]; // 3x3 = 9프레임
+    // 애니메이션 프레임 배열은 유지하되, 내용은 동일한 이미지로 채웁니다.
+    private Sprite[] frames = new Sprite[4];
     private long lastFrameChange;
-	private long frameDuration = 180;
-	private int frameNumber;
+    private long frameDuration = 250;
+    private int frameNumber;
 
-	/**
-	 * 최종 통합된 생성자 (boss 브랜치 기반)
-	 * 6개의 인자를 모두 받아 처리합니다.
-	 */
-	public AlienEntity(Game game, String ref, int x, int y, double moveSpeed, double firingChance) {
-		super(ref, x, y); // Entity의 생성자 호출
-
-		// 애니메이션 프레임 초기화 (dev 브랜치 로직)
-        frames[0] = SpriteStore.get().getSprite("sprites/mars_enemy_0.png");
-        frames[1] = SpriteStore.get().getSprite("sprites/mars_enemy_1.png");
-        frames[2] = SpriteStore.get().getSprite("sprites/mars_enemy_2.png");
-        frames[3] = SpriteStore.get().getSprite("sprites/mars_enemy_3.png");
-        frames[4] = SpriteStore.get().getSprite("sprites/mars_enemy_4.png");
-        frames[5] = SpriteStore.get().getSprite("sprites/mars_enemy_5.png");
-        frames[6] = SpriteStore.get().getSprite("sprites/mars_enemy_6.png");
-        frames[7] = SpriteStore.get().getSprite("sprites/mars_enemy_7.png");
-        frames[8] = SpriteStore.get().getSprite("sprites/mars_enemy_8.png");
-
+    public AlienEntity(Game game, String ref, int x, int y, double moveSpeed, double firingChance) {
+        super(ref, x, y);
 
         this.game = game;
-		this.moveSpeed = moveSpeed;
-		this.firingChance = firingChance;
-		this.dx = -this.moveSpeed; // 초기 이동 방향 설정
-	}
+        this.moveSpeed = moveSpeed;
+        this.firingChance = firingChance;
+        this.dx = -this.moveSpeed;
 
-	/**
-	 * move 메소드 통합
-	 * dev의 애니메이션 로직과 boss의 발사 로직을 모두 포함합니다.
-	 */
-	@Override
-	public void move(long delta) {
-		// 애니메이션 프레임 변경 로직 (from dev)
-		lastFrameChange += delta;
-		if (lastFrameChange > frameDuration) {
-			lastFrameChange = 0;
-			frameNumber++;
-			if (frameNumber >= frames.length) {
-				frameNumber = 0;
-			}
-			sprite = frames[frameNumber];
-		}
+        // [수정] 복잡한 애니메이션 로직 제거
+        // 전달받은 이미지(ref -> sprite)를 모든 프레임에 동일하게 적용하여 이미지가 바뀌지 않게 합니다.
+        // 이렇게 하면 alien_mars.gif 하나만 계속 떠 있게 됩니다.
+        frames[0] = sprite;
+        frames[1] = sprite;
+        frames[2] = sprite;
+        frames[3] = sprite;
+    }
 
-		// 화면 경계 체크 로직 (양쪽 공통)
-		if ((dx < 0) && (x < 10)) {
-			game.updateLogic();
-		}
-		if ((dx > 0) && (x > 750)) {
-			game.updateLogic();
-		}
+    @Override
+    public void move(long delta) {
+        // 프레임 변경 로직은 유지하지만, 모든 프레임이 같은 이미지이므로 겉보기엔 변화가 없습니다.
+        lastFrameChange += delta;
+        if (lastFrameChange > frameDuration) {
+            lastFrameChange = 0;
+            frameNumber++;
+            if (frameNumber >= frames.length) {
+                frameNumber = 0;
+            }
+            sprite = frames[frameNumber];
+        }
 
-		// 총알 발사 로직 (from boss)
-		if (Math.random() < firingChance) {
-			fire();
-		}
+        // 화면 경계 체크
+        if ((dx < 0) && (x < 10)) {
+            game.updateLogic();
+        }
+        if ((dx > 0) && (x > 750)) {
+            game.updateLogic();
+        }
 
-		// 최종 이동 처리
-		super.move(delta);
-	}
+        // 총알 발사
+        if (Math.random() < firingChance) {
+            fire();
+        }
 
-	// fire 메소드 (from boss)
-	private void fire() {
-		game.addEntity(new AlienShotEntity(game, "sprites/alien_shot.gif", getX() + 10, getY() + 20));
-	}
+        super.move(delta);
+    }
 
-	// doLogic 메소드 (양쪽 공통)
-	public void doLogic() {
-		dx = -dx;
-		y += 10;
-		if (y > 570) {
-			game.notifyDeath();
-		}
-	}
+    private void fire() {
+        game.addEntity(new AlienShotEntity(game, "sprites/alien_shot.gif", getX() + 10, getY() + 20));
+    }
 
-	// 생존 상태 관련 메소드 (from dev)
-	public boolean isAlive() {
-		return alive;
-	}
+    public void doLogic() {
+        dx = -dx;
+        y += 10;
+        if (y > 570) {
+            game.notifyDeath();
+        }
+    }
 
-	public void markDead() {
-		this.alive = false;
-	}
+    public boolean isAlive() {
+        return alive;
+    }
 
-	// collidedWith 메소드 (양쪽 공통)
-	public void collidedWith(Entity other) {
-		// 충돌 처리는 다른 곳에서 하므로 비워둡니다.
-	}
+    public void markDead() {
+        this.alive = false;
+    }
+
+    public void collidedWith(Entity other) {
+        // 충돌 처리
+    }
 }
