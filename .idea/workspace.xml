@@ -4,16 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1ae5a004-a1ec-43a7-a784-ade46d788f45" name="변경" comment="목성 스테이지 수정완료">
+    <list default="true" id="1ae5a004-a1ec-43a7-a784-ade46d788f45" name="변경" comment="토성 스테이지 수정중">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/Game.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/Game.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/GamePlayPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/GamePlayPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/AlienEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/AlienEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ItemEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ItemEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShotEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShotEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/MarsStage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/MarsStage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/SaturnStage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/SaturnStage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/Stage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/Stage.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -94,7 +87,7 @@
       <workItem from="1763627426981" duration="3623000" />
       <workItem from="1763631143244" duration="4159000" />
       <workItem from="1763638707602" duration="7839000" />
-      <workItem from="1763690414293" duration="15139000" />
+      <workItem from="1763690414293" duration="17648000" />
     </task>
     <task id="LOCAL-00001" summary="game.java 수정">
       <option name="closed" value="true" />
@@ -136,7 +129,15 @@
       <option name="project" value="LOCAL" />
       <updated>1763713586638</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="토성 스테이지 수정중">
+      <option name="closed" value="true" />
+      <created>1763728994526</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1763728994526</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -148,6 +149,7 @@
     <MESSAGE value="스테이지별 배경 추가, 화성 적 이미지 추가, 키 입력 안되는 오류 수정" />
     <MESSAGE value="화성 스테이지 수정완료" />
     <MESSAGE value="목성 스테이지 수정완료" />
-    <option name="LAST_COMMIT_MESSAGE" value="목성 스테이지 수정완료" />
+    <MESSAGE value="토성 스테이지 수정중" />
+    <option name="LAST_COMMIT_MESSAGE" value="토성 스테이지 수정중" />
   </component>
 </project>

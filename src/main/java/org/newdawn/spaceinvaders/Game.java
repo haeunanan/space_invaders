@@ -336,33 +336,40 @@ public class Game
     /**
      * 다음 스테이지로 안전하게 전환하는 메소드
      */
+    /**
+     * 다음 스테이지로 안전하게 전환하는 메소드
+     */
+    // Game.java 내부
+
     public void nextStage() {
         waitingForKeyPress = false;
-        entities.clear(); // 기존 엔티티 모두 제거
 
-        // 천왕성(4단계) 이후는 아직 미구현이므로 게임 클리어 처리
-        if (stageIndex > 3) {
+        // [중요] 엔티티 리스트뿐만 아니라 '삭제 대기 목록'도 반드시 비워야 합니다.
+        entities.clear();
+        removeList.clear();
+
+        // [추가] 입력 상태 초기화 (키가 눌린 채로 시작하는 것 방지)
+        leftPressed = false;
+        rightPressed = false;
+        firePressed = false;
+
+        // 스테이지 제한 확인 (예: 6단계)
+        if (stageIndex > MAX_STAGE) {
             message = "ALL STAGES CLEAR! Returning to Menu...";
             waitingForKeyPress = true;
             changeState(GameState.PVP_MENU);
             return;
         }
 
-        // 다음 스테이지 로드
         currentStage = loadStage(stageIndex);
-
-        // 플레이어 재생성 (위치 초기화)
         initPlayer();
 
-        // 스테이지 초기화 (적 생성)
         if (currentStage != null) {
             currentStage.init();
         } else {
-            // 스테이지 로드 실패 시 메뉴로
             changeState(GameState.PVP_MENU);
         }
     }
-
 
     private void startMatchmakingLoop() {
         matchmakingThread = new Thread(() -> {
@@ -827,16 +834,14 @@ public class Game
 
                     if (currentStage.isCompleted()) {
                         waitingForKeyPress = true;
-                        // 1단계만 반복 테스트하려면 아래 주석 해제
-                        // message = "Mars Stage Clear! Restarting...";
-                        // stageIndex = 1;
 
-                        // 정상 진행
+                        // [수정] 메시지를 먼저 설정하고, 그 다음에 단계를 올립니다.
                         message = "Stage " + stageIndex + " Clear!";
                         stageIndex++;
+
+                        // (참고) notifyWin()은 사용하지 않고 이 로직으로 통일하는 것이 깔끔합니다.
                     }
                 }
-
                 // (4) "Press any key" 대기 중이 아닐 때만 이동 및 충돌 처리
                 if (!waitingForKeyPress) {
                     // 엔티티 이동
@@ -919,14 +924,14 @@ public class Game
 
     private Stage loadStage(int index) {
         switch (index) {
-            case 1: return new SaturnStage(this);
-            case 2: return new JupiterStage(this);
-            case 3: return new MarsStage(this);
-            case 4: return new UranusStage(this);
-            case 5: return new NeptuneStage(this);
-            case 6: return new BlackHoleBossStage(this);
+            case 1: return new MarsStage(this);      // 1: 화성
+            case 2: return new JupiterStage(this);   // 2: 목성
+            case 3: return new SaturnStage(this);    // 3: 토성 (고리)
+            case 4: return new UranusStage(this);    // 4: 천왕성
+            case 5: return new NeptuneStage(this);   // 5: 해왕성
+            case 6: return new BlackHoleBossStage(this); // 6: 보스
+            default: return null;
         }
-        return null; // 끝난 경우
     }
 
     public String getBackgroundForLevel() {
