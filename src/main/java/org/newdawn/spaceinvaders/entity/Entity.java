@@ -108,7 +108,9 @@ public abstract class Entity {
 	public void setHorizontalMovement(double dx) {
 		this.dx = dx;
 	}
-
+	public void setVerticalMovement(double dy) {
+		this.dy = dy;
+	}
 	/**
 	 * 이 엔티티를 지정된 좌표에 그립니다.
 	 *

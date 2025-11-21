@@ -93,6 +93,10 @@ public class Game
 	private boolean leftPressed = false;
 	/** True if the right cursor key is currently pressed */
 	private boolean rightPressed = false;
+	/** True if the up cursor key is currently pressed */
+	private boolean upPressed = false;
+	/** True if the down cursor key is currently pressed */
+	private boolean downPressed = false;
 	/** True if we are firing */
 	private boolean firePressed = false;
 	/** True if game logic needs to be applied this loop, normally as a result of a game event */
@@ -316,6 +320,8 @@ public class Game
 		// blank out any keyboard settings we might currently have
 		leftPressed = false;
 		rightPressed = false;
+		upPressed = false;
+		downPressed = false;
 		firePressed = false;
 
 		waitingForKeyPress = false;
@@ -385,6 +391,11 @@ public class Game
 	private void startPvpGame() {
 		entities.clear();
 		waitingForKeyPress = false;
+		leftPressed = false;
+		rightPressed = false;
+		upPressed = false;
+		downPressed = false;
+		firePressed = false;
 
 		// 언제나 '나'는 아래쪽에 생성
 		ship = new ShipEntity(this, "sprites/ship.gif", 370, 550);
@@ -484,6 +495,11 @@ public class Game
 	// ▼▼▼ 협동용 게임 시작 메소드 ▼▼▼
 	private void startCoopGame() {
 		entities.clear();
+		leftPressed = false;
+		rightPressed = false;
+		upPressed = false;
+		downPressed = false;
+		firePressed = false;
 
 		// 내 우주선 (아래쪽)
 		ship = new ShipEntity(this, "sprites/ship.gif", 300, 550); // X좌표를 약간 왼쪽으로
@@ -790,8 +806,14 @@ public class Game
 			// 'waiting' 상태가 아닐 때만 키 입력을 처리합니다.
 			if (!waitingForKeyPress && ship != null) {
 				ship.setHorizontalMovement(0);
+				ship.setVerticalMovement(0);
+
 				if (leftPressed && !rightPressed) ship.setHorizontalMovement(-moveSpeed);
 				else if (rightPressed && !leftPressed) ship.setHorizontalMovement(moveSpeed);
+
+				if (upPressed && !downPressed) ship.setVerticalMovement(-moveSpeed);
+				else if (downPressed && !upPressed) ship.setVerticalMovement(moveSpeed);
+
 				if (firePressed) tryToFire();
 			}
 
@@ -1051,6 +1073,9 @@ public class Game
 
 				// "Press any key" 상태일 때의 특별 처리
 				if (waitingForKeyPress) {
+					if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+						return; // 스페이스는 무시
+					}
 					// 싱글 플레이 종료 후에는 게임 재시작
 					if (currentState == Game.GameState.PLAYING_SINGLE) {
 						waitingForKeyPress = false;
@@ -1098,6 +1123,12 @@ public class Game
 				}
 				if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
 					rightPressed = false;
+				}
+				if (e.getKeyCode() == KeyEvent.VK_UP) {
+					upPressed = false;
+				}
+				if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+					downPressed = false;
 				}
 				if (e.getKeyCode() == KeyEvent.VK_SPACE) {
 					firePressed = false;
