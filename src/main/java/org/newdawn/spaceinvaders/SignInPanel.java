@@ -2,6 +2,7 @@ package org.newdawn.spaceinvaders;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 
 public class SignInPanel extends JPanel {
     private Game game;
@@ -20,16 +21,19 @@ public class SignInPanel extends JPanel {
         titleLogoSprite = SpriteStore.get().getSprite("sprites/title-logo.png");
 
         // 1. 이메일 입력창 (JTextField)
-        emailField = new JTextField("email");
+        emailField = new JTextField();
         emailField.setBounds(300, 250, 200, 40); // (x, y, 너비, 높이)
         emailField.setHorizontalAlignment(JTextField.CENTER); // 텍스트 가운데 정렬
         emailField.setBackground(Color.WHITE);
-        emailField.setForeground(Color.GRAY);
 
         // 2. 비밀번호 입력창 (JPasswordField) - 입력 시 ●으로 표시됩니다.
         passwordField = new JPasswordField();
         passwordField.setBounds(300, 300, 200, 40);
         passwordField.setHorizontalAlignment(JTextField.CENTER);
+
+        // placeholder 적용
+        addTextPlaceholder(emailField, "email");
+        addPasswordPlaceholder(passwordField, "password");
 
         // 3. 로그인 버튼 (JButton)
         signInButton = new JButton("sign in");
@@ -61,6 +65,58 @@ public class SignInPanel extends JPanel {
         signInButton.addActionListener(e -> {
             // 3단계에서 구현할 Firebase 로그인 로직 호출
             handleSignIn();
+        });
+    }
+
+    private void addTextPlaceholder(JTextField field, String placeholder) {
+        field.setText(placeholder);
+        field.setForeground(Color.GRAY);
+
+        field.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (field.getText().equals(placeholder)) {
+                    field.setText("");
+                    field.setForeground(Color.BLACK);
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (field.getText().isEmpty()) {
+                    field.setText(placeholder);
+                    field.setForeground(Color.GRAY);
+                }
+            }
+        });
+    }
+
+    private void addPasswordPlaceholder(JPasswordField field, String placeholder) {
+        char defaultEcho = field.getEchoChar();
+        field.setText(placeholder);
+        field.setForeground(Color.GRAY);
+        field.setEchoChar((char) 0);
+
+        field.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                String text = new String(field.getPassword());
+                if (text.equals(placeholder)) {
+                    field.setText("");
+                    field.setForeground(Color.BLACK);
+                    field.setEchoChar(defaultEcho == 0 ? '*' : defaultEcho);
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                String text = new String(field.getPassword());
+                if (text.isEmpty()) {
+                    field.setText(placeholder);
+                    field.setForeground(Color.GRAY);
+                    field.setEchoChar((char) 0);
+                }
+            }
         });
     }
 
