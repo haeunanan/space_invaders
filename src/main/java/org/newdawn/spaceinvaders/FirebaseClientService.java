@@ -71,19 +71,38 @@ public class FirebaseClientService {
             int responseCode = conn.getResponseCode();
             System.out.println("Sign In Response Code :: " + responseCode);
 
+            // 응답 본문(JSON) 읽기 (성공/실패 모두 로깅)
+            InputStreamReader isr;
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                // 응답 본문(JSON) 읽기
-                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
-                StringBuilder response = new StringBuilder();
-                String responseLine;
-                while ((responseLine = br.readLine()) != null) {
-                    response.append(responseLine.trim());
-                }
+                isr = new InputStreamReader(conn.getInputStream(), "utf-8");
+            } else {
+                isr = new InputStreamReader(conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream(), "utf-8");
+            }
 
-                // 응답에서 idToken 값만 추출 (간단한 방식)
-                String responseBody = response.toString();
-                String idToken = responseBody.split("\"idToken\"\\s*:\\s*\"")[1].split("\"")[0];
-                return idToken;
+            BufferedReader br = new BufferedReader(isr);
+            StringBuilder response = new StringBuilder();
+            String responseLine;
+            while ((responseLine = br.readLine()) != null) {
+                response.append(responseLine.trim());
+            }
+
+            String responseBody = response.toString();
+            System.out.println("Sign In Response Body :: " + responseBody);
+
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                // 안전하게 idToken 추출
+                if (responseBody.contains("\"idToken\"")) {
+                    try {
+                        String idToken = responseBody.split("\"idToken\"\\s*:\\s*\"")[1].split("\"")[0];
+                        return idToken;
+                    } catch (Exception ex) {
+                        System.err.println("idToken 파싱 실패: " + ex.getMessage());
+                        return null;
+                    }
+                } else {
+                    System.err.println("idToken 필드가 응답에 없습니다.");
+                    return null;
+                }
             } else {
                 return null;
             }

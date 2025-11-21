@@ -78,6 +78,10 @@ public class Game
 	private boolean leftPressed = false;
 	/** True if the right cursor key is currently pressed */
 	private boolean rightPressed = false;
+	/** True if the up cursor key is currently pressed */
+	private boolean upPressed = false;
+	/** True if the down cursor key is currently pressed */
+	private boolean downPressed = false;
 	/** True if we are firing */
 	private boolean firePressed = false;
 	/** True if game logic needs to be applied this loop, normally as a result of a game event */
@@ -221,6 +225,8 @@ public class Game
 		leftPressed = false;
 		rightPressed = false;
 		firePressed = false;
+		upPressed = false;
+		downPressed = false;
 
 		waitingForKeyPress = false;
 	}
@@ -525,6 +531,14 @@ public class Game
 					if (firePressed) {
 						tryToFire();
 					}
+
+					// vertical movement handling
+					ship.setVerticalMovement(0);
+					if ((upPressed) && (!downPressed)) {
+						ship.setVerticalMovement(-moveSpeed);
+					} else if ((downPressed) && (!upPressed)) {
+						ship.setVerticalMovement(moveSpeed);
+					}
 				}
 			}
 			
@@ -592,6 +606,12 @@ public class Game
 				if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
 					rightPressed = true;
 				}
+				if (e.getKeyCode() == KeyEvent.VK_UP) {
+					upPressed = true;
+				}
+				if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+					downPressed = true;
+				}
 				if (e.getKeyCode() == KeyEvent.VK_SPACE) {
 					firePressed = true;
 				}
@@ -615,6 +635,12 @@ public class Game
 			}
 			if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
 				rightPressed = false;
+			}
+			if (e.getKeyCode() == KeyEvent.VK_UP) {
+				upPressed = false;
+			}
+			if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+				downPressed = false;
 			}
 			if (e.getKeyCode() == KeyEvent.VK_SPACE) {
 				firePressed = false;
