@@ -87,6 +87,50 @@ public class GamePlayPanel extends JPanel {
                 }
             }
         }
+        /* ===============================
+         * [추가] 토성 스테이지 운석 고리 그리기
+         * =============================== */
+        /* ===============================
+         * [수정] 토성 스테이지 운석 고리 그리기 (시각 효과 강화)
+         * =============================== */
+        if (game.getCurrentStage() instanceof org.newdawn.spaceinvaders.stage.SaturnStage) {
+            org.newdawn.spaceinvaders.stage.SaturnStage ss =
+                    (org.newdawn.spaceinvaders.stage.SaturnStage) game.getCurrentStage();
+
+            // 반사 효과가 활성화되어 있을 때만 그리기
+            if (ss.isReflectionActive()) {
+                int ry = ss.getRingY();
+                int rh = ss.getRingThickness();
+                int width = getWidth();
+
+                // 1. 배경 띠 (반투명 갈색)
+                g2d.setColor(new Color(100, 60, 20, 80));
+                g2d.fillRect(0, ry, width, rh);
+
+                // 2. 운석 입자 효과 (랜덤한 점들 그리기)
+                // 매 프레임마다 랜덤하게 그리면 '지지직'거리는 노이즈 효과처럼 보여 역동적입니다.
+                g2d.setColor(new Color(160, 120, 80, 180)); // 운석 색상
+
+                // 고리 내부에 약 100개의 작은 점(운석)을 무작위로 찍습니다.
+                java.util.Random rand = new java.util.Random();
+                // (주의: 성능을 위해 Random 객체는 멤버 변수로 빼는 게 정석이지만, 여기선 간단히 처리)
+
+                for (int i = 0; i < 150; i++) {
+                    int rx = rand.nextInt(width);
+                    int r_offset = rand.nextInt(rh);
+                    int size = rand.nextInt(3) + 2; // 2~4 크기의 점
+
+                    g2d.fillOval(rx, ry + r_offset, size, size);
+                }
+
+                // 3. 경계선 및 경고 문구
+                g2d.setColor(new Color(200, 100, 50, 200)); // 밝은 주황색
+                g2d.drawRect(0, ry, width, rh);
+
+                g2d.setFont(new Font("Arial", Font.BOLD, 12));
+                g2d.drawString("WARNING: METEOR RING FIELD", 20, ry - 5);
+            }
+        }
 
         /* ===============================
          * 4) SHOP/코인 UI

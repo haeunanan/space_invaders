@@ -29,6 +29,10 @@ public abstract class Stage {
     /** 매 프레임 기믹 업데이트 */
     public void update(long delta) {}
 
+    public String getItemSpriteRef() {
+        return "sprites/item_stabilizer.png"; // 기본값 (화성 등)
+    }
+
     /** 스테이지 클리어 조건 */
     public abstract boolean isCompleted();
 
@@ -56,6 +60,8 @@ public abstract class Stage {
     public double getPlayerShotVelocity() {
         return -300;
     }
-    public void activateStabilizer() {}
+    public void activateItem() {
+        // 기본적으로 아무 효과 없음 (오버라이드용)
+    }
 
 }

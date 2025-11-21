@@ -91,12 +91,15 @@ public class ShotEntity extends Entity {
                     game.removeEntity(alien);    // 적을 화면에서 제거
                     game.notifyAlienKilled();    // 점수 획득 알림
 
-                    // [추가] 아이템 드랍 로직 (확률 10%)
-                    // 현재 스테이지가 아이템 생성을 허용하는지(isItemAllowed) 확인
+                    // [수정] 아이템 드랍 로직
                     if (Math.random() < 0.1 && game.getCurrentStage() != null && game.getCurrentStage().isItemAllowed()) {
+
+                        // 현재 스테이지에 설정된 아이템 이미지 가져오기
+                        String itemRef = game.getCurrentStage().getItemSpriteRef();
+
                         ItemEntity item = new ItemEntity(
                                 game,
-                                "sprites/item_stabilizer.png", // 아이템 이미지 경로
+                                itemRef, // 변수로 변경됨
                                 alien.getX(),
                                 alien.getY()
                         );

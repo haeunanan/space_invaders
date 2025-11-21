@@ -78,11 +78,11 @@ public class MarsStage extends Stage {
         }
     }
 
-    // --- 아이템: 중력 안정제 활성화 ---
+    // [수정] 메소드 이름 변경 (activateStabilizer -> activateItem)
     @Override
-    public void activateStabilizer() {
+    public void activateItem() {
         this.stabilizerActive = true;
-        System.out.println("Gravity Stabilizer Activated! Bullet speed normalized.");
+        System.out.println("Gravity Stabilizer Activated!");
     }
 
     @Override

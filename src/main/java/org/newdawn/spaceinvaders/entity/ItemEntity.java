@@ -22,16 +22,17 @@ public class ItemEntity extends Entity {
         }
     }
 
+    // collidedWith 메소드 내부 수정
     @Override
     public void collidedWith(Entity other) {
-        // 플레이어와 충돌 시 효과 발동
         if (other instanceof ShipEntity) {
-            game.removeEntity(this); // 아이템 제거
+            game.removeEntity(this);
 
-            // 현재 스테이지의 안정제 효과 발동
             Stage currentStage = game.getCurrentStage();
             if (currentStage != null) {
-                currentStage.activateStabilizer();
+                // [수정] 스테이지별 고유 아이템 효과 발동
+                currentStage.activateItem();
+                System.out.println("Item acquired! Stage effect activated.");
             }
         }
     }

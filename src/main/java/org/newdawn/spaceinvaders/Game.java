@@ -333,7 +333,35 @@ public class Game
         leftPressed = rightPressed = firePressed = false;
         waitingForKeyPress = false;
     }
+    /**
+     * 다음 스테이지로 안전하게 전환하는 메소드
+     */
+    public void nextStage() {
+        waitingForKeyPress = false;
+        entities.clear(); // 기존 엔티티 모두 제거
 
+        // 천왕성(4단계) 이후는 아직 미구현이므로 게임 클리어 처리
+        if (stageIndex > 3) {
+            message = "ALL STAGES CLEAR! Returning to Menu...";
+            waitingForKeyPress = true;
+            changeState(GameState.PVP_MENU);
+            return;
+        }
+
+        // 다음 스테이지 로드
+        currentStage = loadStage(stageIndex);
+
+        // 플레이어 재생성 (위치 초기화)
+        initPlayer();
+
+        // 스테이지 초기화 (적 생성)
+        if (currentStage != null) {
+            currentStage.init();
+        } else {
+            // 스테이지 로드 실패 시 메뉴로
+            changeState(GameState.PVP_MENU);
+        }
+    }
 
 
     private void startMatchmakingLoop() {
@@ -891,9 +919,9 @@ public class Game
 
     private Stage loadStage(int index) {
         switch (index) {
-            case 1: return new MarsStage(this);
+            case 1: return new SaturnStage(this);
             case 2: return new JupiterStage(this);
-            case 3: return new SaturnStage(this);
+            case 3: return new MarsStage(this);
             case 4: return new UranusStage(this);
             case 5: return new NeptuneStage(this);
             case 6: return new BlackHoleBossStage(this);
@@ -950,9 +978,26 @@ public class Game
 
         @Override
         public void keyPressed(KeyEvent e) {
-            // ... (ESC 처리 등 기존 코드) ...
+            // 1. ESC -> 게임 종료
+            if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                System.exit(0);
+            }
 
-            // GAMEPLAY KEY 부분에 추가
+            // 2. 대기 상태에서 키 입력 -> 다음 스테이지 또는 메뉴로
+            if (waitingForKeyPress) {
+                if (currentState == GameState.PLAYING_SINGLE) {
+                    // [수정] 복잡한 로직 대신 메소드 호출로 변경
+                    nextStage();
+                    return;
+                }
+                else if (currentState == GameState.PLAYING_PVP) {
+                    waitingForKeyPress = false;
+                    changeState(GameState.PVP_MENU);
+                    return;
+                }
+            }
+
+            // 3. 게임 플레이 키 입력
             if (currentState == GameState.PLAYING_SINGLE ||
                     currentState == GameState.PLAYING_PVP) {
 
@@ -966,15 +1011,10 @@ public class Game
                     firePressed = true;
                 }
 
-                // [추가] 'S' 키를 누르면 아이템(중력 안정제) 효과 발동 테스트
-                if (e.getKeyCode() == KeyEvent.VK_S) {
-                    if (currentStage != null) {
-                        currentStage.activateStabilizer();
-                    }
-                }
+                // [삭제] 테스트용 'S' 키 코드 제거됨
+                // 아이템을 먹어야만 효과가 발동됩니다.
             }
         }
-
 
         @Override
         public void keyReleased(KeyEvent e) {
