@@ -120,8 +120,11 @@ public class SignInPanel extends JPanel {
             g.fillRect(0, 0, getWidth(), getHeight());
         }
 
+        // 2. 로고 이미지 그리기 (상단 중앙 정렬)
         if (titleLogoSprite != null) {
-            titleLogoSprite.draw(g, 130, 30);
+            int x = (getWidth() - titleLogoSprite.getWidth()) / 2;
+            int y = -115; // 상단 여백
+            titleLogoSprite.draw(g, x, y);
         }
     }
 }

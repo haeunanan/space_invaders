@@ -23,7 +23,7 @@ public class PvpMenuPanel extends JPanel {
 
 
         myPageButton = createStyledButton("마이페이지");
-        myPageButton.setBounds(300, 250, 200, 40);
+        myPageButton.setBounds(300, 300, 200, 40);
         add(myPageButton);
 
         myPageButton.addActionListener(e -> {
@@ -41,17 +41,17 @@ public class PvpMenuPanel extends JPanel {
 
         // 1. 혼자하기 버튼 (맨 왼쪽)
         soloPlayButton = createStyledButton("혼자하기");
-        soloPlayButton.setBounds(startX, 350, buttonWidth, buttonHeight);
+        soloPlayButton.setBounds(startX, 365, buttonWidth, buttonHeight);
         add(soloPlayButton);
 
         // 2. 대결하기 버튼 (가운데)
         pvpPlayButton = createStyledButton("대결하기");
-        pvpPlayButton.setBounds(startX + buttonWidth + gap, 350, buttonWidth, buttonHeight);
+        pvpPlayButton.setBounds(startX + buttonWidth + gap, 365, buttonWidth, buttonHeight);
         add(pvpPlayButton);
 
         // 3. 협동하기 버튼 (맨 오른쪽)
         JButton coopPlayButton = createStyledButton("협동하기");
-        coopPlayButton.setBounds(startX + (buttonWidth + gap) * 2, 350, buttonWidth, buttonHeight);
+        coopPlayButton.setBounds(startX + (buttonWidth + gap) * 2, 365, buttonWidth, buttonHeight);
         add(coopPlayButton);
 
         // 4. 로그아웃 버튼 (아래쪽 중앙)
@@ -131,9 +131,11 @@ public class PvpMenuPanel extends JPanel {
             g.setColor(Color.BLACK);
             g.fillRect(0, 0, getWidth(), getHeight());
         }
-        // 2. 타이틀 로고 그리기
+        // 2. 타이틀 로고 그리기 (상단 중앙 정렬)
         if (titleLogoSprite != null) {
-            titleLogoSprite.draw(g, 130, 30);
+            int x = (getWidth() - titleLogoSprite.getWidth()) / 2;
+            int y = -115; // 상단 여백
+            titleLogoSprite.draw(g, x, y);
         }
     }
 }

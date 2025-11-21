@@ -46,9 +46,12 @@ public class StartMenuPanel extends JPanel {
             g.fillRect(0, 0, getWidth(), getHeight());
         }
 
-        // 로드한 이미지 그리기
+        // 2. 로고 이미지 그리기 (상단 중앙 정렬)
         if (titleLogoSprite != null) {
-            titleLogoSprite.draw(g, 130, 100);
+            // 화면 너비의 절반에서 이미지 너비의 절반을 뺍니다.
+            int x = (getWidth() - titleLogoSprite.getWidth()) / 2;
+            int y = -115; // 상단 여백 (필요에 따라 조절하세요)
+            titleLogoSprite.draw(g, x, y);
         }
         if (shipImageSprite != null) {
             shipImageSprite.draw(g, 30, 250);
