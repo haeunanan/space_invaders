@@ -53,4 +53,16 @@ public class Sprite {
 	public void draw(Graphics g,int x,int y) {
 		g.drawImage(image,x,y,null);
 	}
+	/**
+	 * 지정된 너비와 높이로 스프라이트를 그립니다 (배경화면용).
+	 *
+	 * @param g 그래픽 컨텍스트
+	 * @param x 그릴 x 위치
+	 * @param y 그릴 y 위치
+	 * @param width 그릴 너비
+	 * @param height 그릴 높이
+	 */
+	public void draw(Graphics g, int x, int y, int width, int height) {
+		g.drawImage(image, x, y, width, height, null);
+	}
 }

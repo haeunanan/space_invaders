@@ -7,6 +7,8 @@ public class SignInPanel extends JPanel {
     private Game game;
 
     private Sprite titleLogoSprite;
+    private Sprite backgroundSprite;
+
     private JTextField emailField;
     private JPasswordField passwordField;
     private JButton signInButton;
@@ -15,9 +17,9 @@ public class SignInPanel extends JPanel {
     public SignInPanel(Game game) {
         this.game = game;
         setLayout(null);
-        setBackground(Color.BLACK);
 
         titleLogoSprite = SpriteStore.get().getSprite("sprites/title-logo.png");
+        backgroundSprite = SpriteStore.get().getSprite("sprites/main_background.jpg");
 
         // 1. 이메일 입력창
         emailField = new JTextField("email");
@@ -109,6 +111,14 @@ public class SignInPanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+
+        // 1. 배경 이미지 그리기 (가장 먼저)
+        if (backgroundSprite != null) {
+            backgroundSprite.draw(g, 0, 0, getWidth(), getHeight());
+        } else {
+            g.setColor(Color.BLACK);
+            g.fillRect(0, 0, getWidth(), getHeight());
+        }
 
         if (titleLogoSprite != null) {
             titleLogoSprite.draw(g, 130, 30);

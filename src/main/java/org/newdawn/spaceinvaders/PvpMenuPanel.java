@@ -6,6 +6,8 @@ import java.awt.*;
 public class PvpMenuPanel extends JPanel {
     private Game game;
     private Sprite titleLogoSprite;
+    private Sprite backgroundSprite;
+
     private JButton myPageButton;
     private JButton soloPlayButton;
     private JButton pvpPlayButton;
@@ -14,8 +16,11 @@ public class PvpMenuPanel extends JPanel {
     public PvpMenuPanel(Game game) {
         this.game = game;
         setLayout(null);
-        setBackground(Color.BLACK);
+        // setBackground(Color.BLACK);
         titleLogoSprite = SpriteStore.get().getSprite("sprites/title-logo.png");
+
+        backgroundSprite = SpriteStore.get().getSprite("sprites/main_background.jpg");
+
 
         myPageButton = createStyledButton("마이페이지");
         myPageButton.setBounds(300, 250, 200, 40);
@@ -119,6 +124,14 @@ public class PvpMenuPanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        // 1. 배경 이미지 그리기
+        if (backgroundSprite != null) {
+            backgroundSprite.draw(g, 0, 0, getWidth(), getHeight());
+        } else {
+            g.setColor(Color.BLACK);
+            g.fillRect(0, 0, getWidth(), getHeight());
+        }
+        // 2. 타이틀 로고 그리기
         if (titleLogoSprite != null) {
             titleLogoSprite.draw(g, 130, 30);
         }

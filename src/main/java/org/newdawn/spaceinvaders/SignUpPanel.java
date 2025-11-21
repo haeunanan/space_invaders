@@ -15,15 +15,15 @@ public class SignUpPanel extends JPanel {
     private JButton signUpButton;
     private JButton goToSignInButton;
     private Sprite titleLogoSprite;
+    private Sprite backgroundSprite;
 
     public SignUpPanel(Game game) {
         this.game = game;
         setLayout(null);
-        setBackground(Color.BLACK);
 
         // 로고 이미지 로드
         titleLogoSprite = SpriteStore.get().getSprite("sprites/title-logo.png");
-
+        backgroundSprite = SpriteStore.get().getSprite("sprites/main_background.jpg");
         // --- UI 요소 생성 및 설정 ---
         emailField = new JTextField("email");
         emailField.setBounds(300, 220, 200, 40);
@@ -104,6 +104,15 @@ public class SignUpPanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+
+        // 1. 배경 이미지 그리기 (가장 먼저)
+        if (backgroundSprite != null) {
+            backgroundSprite.draw(g, 0, 0, getWidth(), getHeight());
+        } else {
+            g.setColor(Color.BLACK);
+            g.fillRect(0, 0, getWidth(), getHeight());
+        }
+
         if (titleLogoSprite != null) {
             titleLogoSprite.draw(g, 130, 30);
         }
