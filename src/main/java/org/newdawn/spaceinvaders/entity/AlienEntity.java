@@ -14,9 +14,9 @@ public class AlienEntity extends Entity {
 	private boolean alive = true;
 
 	// dev 브랜치의 애니메이션 관련 변수
-	private Sprite[] frames = new Sprite[4];
-	private long lastFrameChange;
-	private long frameDuration = 250;
+    private Sprite[] frames = new Sprite[9]; // 3x3 = 9프레임
+    private long lastFrameChange;
+	private long frameDuration = 180;
 	private int frameNumber;
 
 	/**
@@ -27,12 +27,18 @@ public class AlienEntity extends Entity {
 		super(ref, x, y); // Entity의 생성자 호출
 
 		// 애니메이션 프레임 초기화 (dev 브랜치 로직)
-		frames[0] = sprite;
-		frames[1] = SpriteStore.get().getSprite("sprites/alien2.gif");
-		frames[2] = sprite;
-		frames[3] = SpriteStore.get().getSprite("sprites/alien3.gif");
+        frames[0] = SpriteStore.get().getSprite("sprites/mars_enemy_0.png");
+        frames[1] = SpriteStore.get().getSprite("sprites/mars_enemy_1.png");
+        frames[2] = SpriteStore.get().getSprite("sprites/mars_enemy_2.png");
+        frames[3] = SpriteStore.get().getSprite("sprites/mars_enemy_3.png");
+        frames[4] = SpriteStore.get().getSprite("sprites/mars_enemy_4.png");
+        frames[5] = SpriteStore.get().getSprite("sprites/mars_enemy_5.png");
+        frames[6] = SpriteStore.get().getSprite("sprites/mars_enemy_6.png");
+        frames[7] = SpriteStore.get().getSprite("sprites/mars_enemy_7.png");
+        frames[8] = SpriteStore.get().getSprite("sprites/mars_enemy_8.png");
 
-		this.game = game;
+
+        this.game = game;
 		this.moveSpeed = moveSpeed;
 		this.firingChance = firingChance;
 		this.dx = -this.moveSpeed; // 초기 이동 방향 설정

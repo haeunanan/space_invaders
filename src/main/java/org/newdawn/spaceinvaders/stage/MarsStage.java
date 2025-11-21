@@ -32,7 +32,7 @@ public class MarsStage extends Stage {
             for (int x = 0; x < 10; x++) {
                 AlienEntity alien = new AlienEntity(
                         game,
-                        "sprites/alien_mars.gif",
+                        "sprites/mars_enemy_0.png",
                         120 + (x * 50),
                         startY + row * 35,
                         moveSpeed,
@@ -49,16 +49,15 @@ public class MarsStage extends Stage {
     public void update(long delta) {
         elapsedTime += delta;
 
-        double phase = elapsedTime / 400.0; // 천천히 움직임
-        List<Entity> list = getEntities();
-
-        for (Entity e : list) {
+        double phase = elapsedTime / 200.0;
+        for (Entity e : getEntities()) {
             if (e instanceof AlienEntity) {
-                int baseY = e.getY();
-                int offset = (int)(Math.sin(phase + baseY * 0.01) * 3); // ±3px 흔들기
-                e.setLocation(e.getX(), baseY + offset);
+                int originalY = e.getY();
+                int offset = (int)(Math.sin(phase + originalY * 0.05) * 3);
+                e.setLocation(e.getX(), originalY + offset);
             }
         }
+
     }
 
 

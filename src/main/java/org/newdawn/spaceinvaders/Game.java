@@ -739,6 +739,9 @@ public class Game
      * - Checking Input
      * <p>
      */
+    /**
+     * The main game loop.
+     */
     public void gameLoop() {
         long lastLoopTime = System.currentTimeMillis();
 
@@ -747,118 +750,102 @@ public class Game
             long delta = now - lastLoopTime;
             lastLoopTime = now;
 
-            Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
-
-            /* ===========================
-             *   1. 배경 렌더링
-             * =========================== */
-            if (currentState == GameState.PLAYING_SINGLE &&
-                    currentStage != null &&
-                    currentStage.getBackground() != null) {
-                g.drawImage(currentStage.getBackground(), 0, 0, 800, 600, null);
-            } else {
-                g.setColor(Color.black);
-                g.fillRect(0, 0, 800, 600);
-            }
-
-            /* ===========================
-             *   2. PVP 모드는 별도 처리
-             * =========================== */
+            // ===========================
+            //   1. PVP 모드 처리
+            // ===========================
             if (currentState == GameState.PLAYING_PVP) {
                 updatePvpGameplay(delta);
-                g.dispose();
-                strategy.show();
+                gamePlayPanel.repaint(); // 화면 갱신 요청
                 try { Thread.sleep(10); } catch (Exception e) {}
                 continue;
             }
 
-            /* ===========================
-             *   3. 싱글 플레이 상태 처리
-             * =========================== */
-
+            // ===========================
+            //   2. 싱글 플레이 로직
+            // ===========================
             if (currentState == GameState.PLAYING_SINGLE) {
 
-                // ---- 스테이지 기믹 업데이트 ----
+                // (1) 플레이어 이동 속도 설정 (키 입력 반영) - [누락되었던 부분 추가]
+                if (!waitingForKeyPress && ship != null) {
+                    ship.setHorizontalMovement(0); // 키를 안 누르면 멈춤
+
+                    if (leftPressed && !rightPressed) {
+                        ship.setHorizontalMovement(-moveSpeed);
+                    } else if (rightPressed && !leftPressed) {
+                        ship.setHorizontalMovement(moveSpeed);
+                    }
+
+                    if (firePressed) {
+                        tryToFire();
+                    }
+                }
+
+                // (2) 외계인 방향 전환 로직 (벽에 닿았을 때) - [누락되었던 부분 추가]
+                if (logicRequiredThisLoop) {
+                    for (Entity entity : entities) {
+                        entity.doLogic();
+                    }
+                    logicRequiredThisLoop = false;
+                }
+
+                // (3) 스테이지 기믹 업데이트
                 if (!waitingForKeyPress && currentStage != null) {
                     currentStage.update(delta);
 
-                    // ---- 스테이지 클리어 체크 ----
                     if (currentStage.isCompleted()) {
                         waitingForKeyPress = true;
+                        // 1단계만 반복 테스트하려면 아래 주석 해제
+                        // message = "Mars Stage Clear! Restarting...";
+                        // stageIndex = 1;
+
+                        // 정상 진행
                         message = "Stage " + stageIndex + " Clear!";
                         stageIndex++;
                     }
                 }
 
-                // ---- "Press any key" 대기 상태에서 다음 스테이지 로딩 ----
-                if (waitingForKeyPress && currentStage != null) {
-                    g.setColor(Color.white);
-                    g.setFont(new Font("Arial", Font.BOLD, 22));
-                    g.drawString(message, 250, 200);
-                    g.drawString("Press any key...", 260, 250);
-
-                    g.dispose();
-                    strategy.show();
-                    try { Thread.sleep(10); } catch (Exception e) {}
-                    continue;
-                }
-
-                // ---- 다음 스테이지 로드 ----
-                if (!waitingForKeyPress && currentStage == null) {
-                    currentStage = loadStage(stageIndex);
-
-                    if (currentStage == null) {
-                        message = "ALL STAGES CLEAR!";
-                        waitingForKeyPress = true;
-                        continue;
+                // (4) "Press any key" 대기 중이 아닐 때만 이동 및 충돌 처리
+                if (!waitingForKeyPress) {
+                    // 엔티티 이동
+                    for (int i = 0; i < entities.size(); i++) {
+                        Entity entity = entities.get(i);
+                        entity.move(delta);
                     }
 
-                    currentStage.init();
-                }
-            }
+                    // 충돌 체크
+                    for (int p = 0; p < entities.size(); p++) {
+                        for (int s = p + 1; s < entities.size(); s++) {
+                            Entity me = entities.get(p);
+                            Entity him = entities.get(s);
 
-            /* ===========================
-             *   4. 엔티티 이동
-             * =========================== */
-            if (!waitingForKeyPress) {
-                for (int i = 0; i < entities.size(); i++) {
-                    Entity entity = entities.get(i);
-                    entity.move(delta);
-                }
-            }
+                            if (me.collidesWith(him)) {
+                                me.collidedWith(him);
+                                him.collidedWith(me);
+                            }
+                        }
+                    }
 
-            /* ===========================
-             *   5. 충돌 체크
-             * =========================== */
-            if (!waitingForKeyPress) {
-                for (int p = 0; p < entities.size(); p++) {
-                    for (int s = p + 1; s < entities.size(); s++) {
-                        Entity me = entities.get(p);
-                        Entity him = entities.get(s);
+                    // 삭제된 엔티티 제거
+                    entities.removeAll(removeList);
+                    removeList.clear();
 
-                        if (me.collidesWith(him)) {
-                            me.collidedWith(him);
-                            him.collidedWith(me);
+                    // 다음 스테이지 로딩 로직 (엔티티가 다 사라졌을 때 등)
+                    if (currentStage == null) { // 스테이지가 없으면 로드 시도
+                        currentStage = loadStage(stageIndex);
+                        if (currentStage != null) {
+                            currentStage.init();
                         }
                     }
                 }
+
+                // (5) 화면 그리기 (repaint 호출)
+                gamePlayPanel.repaint();
             }
 
-            /* ===========================
-             *   6. 삭제 큐 처리
-             * =========================== */
-            entities.removeAll(removeList);
-            removeList.clear();
-
-            /* ===========================
-             *   7. 엔티티 렌더링
-             * =========================== */
-            for (Entity entity : entities) {
-                entity.draw(g);
+            // 메뉴 화면 등에서도 repaint 필요 시 호출
+            if (currentState != GameState.PLAYING_SINGLE && currentState != GameState.PLAYING_PVP) {
+                mainPanel.repaint();
             }
-
-            g.dispose();
-            strategy.show();
 
             try { Thread.sleep(10); } catch (Exception e) {}
         }
