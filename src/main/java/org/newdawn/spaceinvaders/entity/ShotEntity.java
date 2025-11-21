@@ -55,52 +55,65 @@ public class ShotEntity extends Entity {
             game.removeEntity(this);
         }
     }
-	
-	/**
-	 * Notification that this shot has collided with another
-	 * entity
-	 * 
-	 * @parma other The other entity with which we've collided
-	 */
-	public void collidedWith(Entity other) {
-		// prevents double kills, if we've already hit something,
-		// don't collide
-		if (used) {
-			return;
-		}
-		if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE) {
-			// if we've hit an alien, kill it!
-			if (other instanceof AlienEntity) {
-				AlienEntity alien = (AlienEntity) other;
-				// only handle if alien still alive
-				if (!alien.isAlive()) {
-					return;
-				}
-				// mark as dead to prevent other shots from double-counting
-				alien.markDead();
-				// remove the affected entities
-				game.removeEntity(this);
-				game.removeEntity(other);
 
-				// notify the game that the alien has been killed
-				game.notifyAlienKilled();
-				used = true;
-                if (Math.random() < 0.1) {
-                    ItemEntity item = new ItemEntity(
-                            game,
-                            "sprites/item_stabilizer.png", // 아이템 이미지 경로
-                            other.getX(),
-                            other.getY()
-                    );
-                    game.addEntity(item);
+    /**
+     * Notification that this shot has collided with another entity
+     *
+     * @param other The other entity with which we've collided
+     */
+    @Override
+    public void collidedWith(Entity other) {
+        // 1. 이미 어딘가에 부딪힌 총알이라면 중복 처리 방지
+        if (used) {
+            return;
+        }
+
+        // 2. 싱글 플레이 모드 로직
+        if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE) {
+            // 적(Alien)과 충돌했는지 확인
+            if (other instanceof AlienEntity) {
+                AlienEntity alien = (AlienEntity) other;
+
+                // 이미 죽은 적이면 무시
+                if (!alien.isAlive()) {
+                    return;
                 }
-			}
-		} else if (game.getCurrentState() == Game.GameState.PLAYING_PVP) {
-			if (other == game.getOpponentShip()) {
-				used = true;
-				game.removeEntity(this);
-				// 데미지 처리는 상대방 클라이언트가 스스로 하므로, 여기서는 총알만 제거합니다.
-			}
-		}
-	}
+
+                // [수정] 총알은 명중했으므로 무조건 화면에서 제거하고 사용됨 처리
+                game.removeEntity(this);
+                used = true;
+
+                // [수정] 적에게 1의 데미지를 입힘
+                // takeDamage(1)이 true(사망)를 반환할 때만 킬 처리를 수행
+                // false(생존)를 반환하면 체력만 깎이고 피격 애니메이션이 재생됨
+                if (alien.takeDamage(1)) {
+                    alien.markDead();            // 적 상태를 '죽음'으로 변경
+                    game.removeEntity(alien);    // 적을 화면에서 제거
+                    game.notifyAlienKilled();    // 점수 획득 알림
+
+                    // [추가] 아이템 드랍 로직 (확률 10%)
+                    // 현재 스테이지가 아이템 생성을 허용하는지(isItemAllowed) 확인
+                    if (Math.random() < 0.1 && game.getCurrentStage() != null && game.getCurrentStage().isItemAllowed()) {
+                        ItemEntity item = new ItemEntity(
+                                game,
+                                "sprites/item_stabilizer.png", // 아이템 이미지 경로
+                                alien.getX(),
+                                alien.getY()
+                        );
+                        game.addEntity(item);
+                    }
+                }
+            }
+        }
+        // 3. PVP 모드 로직
+        else if (game.getCurrentState() == Game.GameState.PLAYING_PVP) {
+            // 상대방 플레이어와 충돌했는지 확인
+            if (other == game.getOpponentShip()) {
+                used = true;
+                game.removeEntity(this); // 총알 제거
+                // PVP 모드에서는 상대방 클라이언트가 데미지를 처리하므로,
+                // 여기서는 내 화면의 총알만 지워주면 됩니다.
+            }
+        }
+    }
 }

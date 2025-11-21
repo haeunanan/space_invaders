@@ -10,11 +10,13 @@ public class AlienEntity extends Entity {
     private double firingChance;
     private boolean alive = true;
 
-    // 애니메이션 프레임 배열은 유지하되, 내용은 동일한 이미지로 채웁니다.
-    private Sprite[] frames = new Sprite[4];
-    private long lastFrameChange;
-    private long frameDuration = 250;
-    private int frameNumber;
+    // [추가] 체력 시스템
+    private int hp = 1;
+
+    // [추가] 피격 애니메이션용 변수
+    private Sprite normalSprite; // 평상시 모습
+    private Sprite hitSprite;    // 맞았을 때 모습 (아파하는 표정 or 붉은색 등)
+    private long hitTimer = 0;   // 피격 상태 지속 시간 타이머
 
     public AlienEntity(Game game, String ref, int x, int y, double moveSpeed, double firingChance) {
         super(ref, x, y);
@@ -24,26 +26,54 @@ public class AlienEntity extends Entity {
         this.firingChance = firingChance;
         this.dx = -this.moveSpeed;
 
-        // [수정] 복잡한 애니메이션 로직 제거
-        // 전달받은 이미지(ref -> sprite)를 모든 프레임에 동일하게 적용하여 이미지가 바뀌지 않게 합니다.
-        // 이렇게 하면 alien_mars.gif 하나만 계속 떠 있게 됩니다.
-        frames[0] = sprite;
-        frames[1] = sprite;
-        frames[2] = sprite;
-        frames[3] = sprite;
+        // 1. 기본 스프라이트 저장
+        this.normalSprite = this.sprite;
+
+        // 2. 피격 스프라이트 로드
+        // 파일명 규칙: "이름.png" -> "이름_hit.png"
+        // 확장자(.gif, .png) 앞부분에 _hit를 붙여서 로드합니다.
+        String hitRef = ref.replace(".", "_hit.");
+        try {
+            this.hitSprite = SpriteStore.get().getSprite(hitRef);
+        } catch (Exception e) {
+            // 만약 _hit 이미지가 없으면 그냥 기본 이미지를 씁니다.
+            this.hitSprite = this.normalSprite;
+            System.out.println("Warning: Hit sprite not found for " + ref);
+        }
+    }
+
+    public void setHp(int hp) {
+        this.hp = hp;
+    }
+
+    /**
+     * 데미지를 입는 메소드
+     * @return 체력이 0 이하가 되어 죽었으면 true, 살았으면 false
+     */
+    public boolean takeDamage(int damage) {
+        this.hp -= damage;
+
+        // [추가] 피격 애니메이션 발동!
+        // 100ms(0.1초) 동안 피격 이미지를 보여줍니다.
+        this.hitTimer = 100;
+        this.sprite = this.hitSprite; // 즉시 이미지 교체
+
+        if (this.hp <= 0) {
+            this.alive = false;
+            return true; // 사망
+        }
+        return false; // 생존
     }
 
     @Override
     public void move(long delta) {
-        // 프레임 변경 로직은 유지하지만, 모든 프레임이 같은 이미지이므로 겉보기엔 변화가 없습니다.
-        lastFrameChange += delta;
-        if (lastFrameChange > frameDuration) {
-            lastFrameChange = 0;
-            frameNumber++;
-            if (frameNumber >= frames.length) {
-                frameNumber = 0;
+        // [추가] 피격 타이머 업데이트
+        if (hitTimer > 0) {
+            hitTimer -= delta;
+            if (hitTimer <= 0) {
+                // 시간이 다 되면 원래 이미지로 복구
+                this.sprite = this.normalSprite;
             }
-            sprite = frames[frameNumber];
         }
 
         // 화면 경계 체크

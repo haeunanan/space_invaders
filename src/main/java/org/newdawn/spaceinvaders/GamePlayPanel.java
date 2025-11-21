@@ -1,11 +1,10 @@
 package org.newdawn.spaceinvaders;
 
 import org.newdawn.spaceinvaders.entity.Entity;
-import org.newdawn.spaceinvaders.stage.Stage;
+import org.newdawn.spaceinvaders.stage.JupiterStage; // 목성 스테이지 참조를 위해 필요
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
 
 public class GamePlayPanel extends JPanel {
     private Game game; // 게임 데이터에 접근하기 위한 Game 객체
@@ -55,7 +54,42 @@ public class GamePlayPanel extends JPanel {
         }
 
         /* ===============================
-         * 4) SHOP/코인 UI 그대로
+         * [추가] 목성 스테이지 번개 효과 그리기 (시야 방해)
+         * =============================== */
+        // 현재 스테이지가 목성(JupiterStage)인지 확인
+        if (game.getCurrentStage() instanceof JupiterStage) {
+            JupiterStage js = (JupiterStage) game.getCurrentStage();
+
+            // 번개가 활성화된 상태일 때만 그리기
+            if (js.isLightningActive()) {
+
+                // 리얼함을 위해 50ms(0.05초)마다 깜빡거리게 만듭니다 (Strobe Effect)
+                long time = System.currentTimeMillis();
+
+                // 짝수 타이밍에만 그려서 깜빡임 구현
+                if ((time / 50) % 2 == 0) {
+
+                    // 1. 전체 화면에 옅은 섬광을 주어 번쩍이는 느낌 강조 (Alpha 60)
+                    g2d.setColor(new Color(255, 255, 255, 60));
+                    g2d.fillRect(0, 0, getWidth(), getHeight());
+
+                    // 2. 시야 방해 영역 (더 진하게 설정: Alpha 220)
+                    g2d.setColor(new Color(255, 255, 255, 220));
+
+                    int type = js.getLightningType();
+                    if (type == 1) {
+                        // 상단 절반 가리기
+                        g2d.fillRect(0, 0, getWidth(), getHeight() / 2);
+                    } else if (type == 2) {
+                        // 하단 절반 가리기
+                        g2d.fillRect(0, getHeight() / 2, getWidth(), getHeight() / 2);
+                    }
+                }
+            }
+        }
+
+        /* ===============================
+         * 4) SHOP/코인 UI
          * =============================== */
         // --- 코인 뱃지 ---
         int badgeX = 20, badgeY = 20;
@@ -95,6 +129,8 @@ public class GamePlayPanel extends JPanel {
         }
     }
 
+    // --- Helper Methods (기존 유지) ---
+
     private void drawWrappedString(Graphics2D g, String text, int x, int y, int maxWidth, int lineHeight) {
         if (text == null || text.length() == 0) return;
         java.awt.FontMetrics fm = g.getFontMetrics();
@@ -119,6 +155,7 @@ public class GamePlayPanel extends JPanel {
             g.drawString(line.toString(), x, curY);
         }
     }
+
     private void drawShopOverlay(Graphics2D g2d) {
         int overlayX = 40;
         int overlayY = 40;
@@ -178,6 +215,7 @@ public class GamePlayPanel extends JPanel {
         g2d.setColor(Color.white);
         g2d.drawString("Coins: " + game.coins, overlayX + 20, overlayY + 30);
     }
+
     private void drawStageClearMessage(Graphics2D g2d) {
         g2d.setColor(Color.white);
         g2d.setFont(new Font("Arial", Font.BOLD, 24));
@@ -199,5 +237,4 @@ public class GamePlayPanel extends JPanel {
                 260
         );
     }
-
 }

@@ -50,8 +50,12 @@ public abstract class Stage {
         }
         return true;
     }
+    public boolean isItemAllowed() {
+        return true;
+    }
     public double getPlayerShotVelocity() {
         return -300;
     }
     public void activateStabilizer() {}
+
 }
