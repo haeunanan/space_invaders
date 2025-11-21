@@ -576,6 +576,10 @@ public class Game
 				// if we're waiting for an "any key" typed then we don't
 				// want to do anything with just a "press"
 				if (waitingForKeyPress) {
+					// 스페이스바는 다음 스테이지로 넘어가는 "any key" 동작에서 제외
+					if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+						return; // 스페이스는 무시
+					}
 					waitingForKeyPress = false; // "Press any key" 상태를 해제
 					startGame();
 					return; // 게임 시작 처리 후 다른 키 입력은 무시
