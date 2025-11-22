@@ -13,8 +13,7 @@ public class ShotEntity extends Entity {
 	/** True if this shot has been "used", i.e. its hit something */
 	private boolean used = false;
 	private String ownerUid;
-    private double dx;
-    private double dy;
+
 	
 	/**
 	 * Create a new shot from the player
@@ -45,17 +44,39 @@ public class ShotEntity extends Entity {
 	 * 
 	 * @param delta The time that has elapsed since last move
 	 */
+    // src/main/java/org/newdawn/spaceinvaders/entity/ShotEntity.java
+
     @Override
     public void move(long delta) {
-        x += dx * delta / 1000.0;
-        y += dy * delta / 1000.0;
+        // 1. 기본 이동 (수직)
+        super.move(delta); // y축 이동은 여기서 처리됨 (dy)
 
-        // 화면 밖 나가면 제거
+        // [추가] 해왕성 바람 효과 (미사일 휘어짐)
+        // 싱글 플레이이고, 플레이어가 쏜 미사일(dy < 0)인 경우에만 적용
+        if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE && dy < 0) {
+
+            if (game.getCurrentStage() instanceof org.newdawn.spaceinvaders.stage.NeptuneStage) {
+                org.newdawn.spaceinvaders.stage.NeptuneStage ns =
+                        (org.newdawn.spaceinvaders.stage.NeptuneStage) game.getCurrentStage();
+
+                double wind = ns.getCurrentWindForce();
+
+                // 부스터 아이템을 먹었다면 미사일도 바람 영향을 안 받게 설정 (선택 사항)
+                // 여기서는 "플레이어 기체 제어"만 쉬워지고 미사일은 여전히 휘는 게 난이도상 좋으므로
+                // 부스터 체크 없이 무조건 휘게 하겠습니다. (원하면 !isBoosterActive 추가)
+
+                if (wind != 0) {
+                    // x좌표를 바람 방향으로 이동시킴
+                    x += wind * delta / 1000.0;
+                }
+            }
+        }
+
+        // 화면 밖 제거
         if (y < -50 || y > 650) {
             game.removeEntity(this);
         }
     }
-
     /**
      * Notification that this shot has collided with another entity
      *

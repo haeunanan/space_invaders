@@ -132,6 +132,16 @@ public class GamePlayPanel extends JPanel {
             }
         }
 
+        if (game.getCurrentStage() instanceof org.newdawn.spaceinvaders.stage.NeptuneStage) {
+            org.newdawn.spaceinvaders.stage.NeptuneStage ns =
+                    (org.newdawn.spaceinvaders.stage.NeptuneStage) game.getCurrentStage();
+
+            // 바람이 불고 있을 때만 그리기
+            if (ns.isWindy()) {
+                drawWindEffect(g2d, ns.getCurrentWindForce());
+            }
+        }
+
         /* ===============================
          * 4) SHOP/코인 UI
          * =============================== */
@@ -171,6 +181,48 @@ public class GamePlayPanel extends JPanel {
         if (game.isWaitingForKeyPress()) {
             drawStageClearMessage(g2d);
         }
+    }
+
+    private void drawWindEffect(Graphics2D g2d, double windForce) {
+        // 1. 바람 이미지 로드 (반투명 PNG여야 자연스럽습니다)
+        Sprite windSprite = SpriteStore.get().getSprite("sprites/wind_effect.png");
+        Image windImage = windSprite.getImage();
+
+        int width = getWidth();
+        int height = getHeight();
+        int imgWidth = windImage.getWidth(null);
+
+        // 2. 시간 기반으로 오프셋 계산 (이미지가 흘러가는 효과)
+        long time = System.currentTimeMillis();
+        // 속도 조절: 나누는 숫자가 작을수록 빠름 (30 -> 빠름, 100 -> 느림)
+        int offset = (int) (time / 10) % width;
+
+        // 3. 바람 방향에 따라 그리기
+        // Composite를 사용하여 전체적으로 투명도 조절 (너무 진하면 방해되므로)
+        Composite originalComposite = g2d.getComposite();
+        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.3f)); // 30% 불투명도
+
+        if (windForce > 0) {
+            // 오른쪽 바람 ( >>> )
+            // 이미지가 왼쪽에서 오른쪽으로 이동하는 것처럼 보이게 그리기
+            int x = offset - width;
+            // 화면을 덮을 때까지 반복해서 그리기 (타일링)
+            while (x < width) {
+                g2d.drawImage(windImage, x, 0, width, height, null);
+                x += width;
+            }
+        } else {
+            // 왼쪽 바람 ( <<< )
+            // 이미지가 오른쪽에서 왼쪽으로 이동
+            int x = width - offset;
+            while (x > -width) {
+                g2d.drawImage(windImage, x, 0, width, height, null);
+                x -= width;
+            }
+        }
+
+        // 투명도 원상복구
+        g2d.setComposite(originalComposite);
     }
 
     // --- Helper Methods (기존 유지) ---

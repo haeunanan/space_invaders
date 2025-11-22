@@ -109,6 +109,8 @@ public class Game
     private int stageIndex = 1;
     private Stage currentStage;
     private final int MAX_STAGE = 6;   // 총 스테이지 수 (Mars~BlackHole)   // Mars~BlackHole 총 6개라고 가정
+    private boolean transitionRequested = false;
+    private long slowTimer = 0;
 
 
     /**
@@ -317,6 +319,8 @@ public class Game
         // 모든 엔티티 초기화
         entities.clear();
         removeList.clear();
+
+        slowTimer = 0;
 
         // 스테이지 기본값 초기화
         stageIndex = 1;
@@ -554,6 +558,7 @@ public class Game
     private void initPlayer() {
         ship = new ShipEntity(this, "sprites/ship.gif", 370, 550);
         ((ShipEntity) ship).setHealth(3);
+        this.slowTimer = 0;
         entities.add(ship);
     }
 
@@ -765,6 +770,10 @@ public class Game
             entities.add(shot);
         }
     }
+    public void applySlow(long duration) {
+        this.slowTimer = duration;
+        System.out.println("Player Slowed!");
+    }
 
 
 
@@ -790,6 +799,17 @@ public class Game
             long delta = now - lastLoopTime;
             lastLoopTime = now;
 
+            if (slowTimer > 0) {
+                slowTimer -= delta;
+            }
+
+            if (transitionRequested) {
+                nextStage();
+                transitionRequested = false; // 요청 처리 완료 후 초기화
+                // 전환 직후에는 델타 타임이 튀거나 로직이 꼬일 수 있으므로 이번 루프는 건너뜁니다.
+                continue;
+            }
+
             // ===========================
             //   1. PVP 모드 처리
             // ===========================
@@ -809,10 +829,27 @@ public class Game
                 if (!waitingForKeyPress && ship != null) {
                     ship.setHorizontalMovement(0); // 키를 안 누르면 멈춤
 
+                    double currentSpeed = moveSpeed;
+                    if (slowTimer > 0) {
+                        currentSpeed = moveSpeed * 0.5;
+                    }
+
                     if (leftPressed && !rightPressed) {
-                        ship.setHorizontalMovement(-moveSpeed);
+                        ship.setHorizontalMovement(-currentSpeed);
                     } else if (rightPressed && !leftPressed) {
-                        ship.setHorizontalMovement(moveSpeed);
+                        ship.setHorizontalMovement(currentSpeed);
+                    }
+
+                    if (currentStage instanceof NeptuneStage) {
+                        NeptuneStage ns = (NeptuneStage) currentStage;
+                        double wind = ns.getCurrentWindForce();
+
+                        // 부스터가 꺼져있고, 바람이 불고 있다면
+                        if (wind != 0 && !((ShipEntity)ship).isBoosterActive()) {
+                            // 기존 움직임에 바람 속도를 더함 (밀려나는 효과)
+                            // 키를 안 눌러도 바람 때문에 움직이게 됨
+                            ship.setHorizontalMovement(ship.getDX() + wind);
+                        }
                     }
 
                     if (firePressed) {
@@ -991,8 +1028,7 @@ public class Game
             // 2. 대기 상태에서 키 입력 -> 다음 스테이지 또는 메뉴로
             if (waitingForKeyPress) {
                 if (currentState == GameState.PLAYING_SINGLE) {
-                    // [수정] 복잡한 로직 대신 메소드 호출로 변경
-                    nextStage();
+                    transitionRequested = true; // [수정] 직접 호출 대신 플래그 설정
                     return;
                 }
                 else if (currentState == GameState.PLAYING_PVP) {

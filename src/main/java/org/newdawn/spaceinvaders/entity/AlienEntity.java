@@ -9,6 +9,11 @@ public class AlienEntity extends Entity {
     private double moveSpeed = 75;
     private double firingChance;
     private boolean alive = true;
+    private String bulletType = "NORMAL"; // 총알 타입 (NORMAL, ICE)
+    private String spriteRef;
+    private boolean isNeptuneMob = false;
+    private boolean isDashing = false;
+    private long dashTimer = 0;
 
     // [복구] 기본 애니메이션(움직임)을 위한 변수들
     private Sprite[] frames = new Sprite[4]; // 4프레임 배열
@@ -24,8 +29,12 @@ public class AlienEntity extends Entity {
     private Sprite hitSprite;    // 맞았을 때 모습
     private long hitTimer = 0;   // 피격 상태 지속 시간
 
+    // AlienEntity 생성자 내부
+
     public AlienEntity(Game game, String ref, int x, int y, double moveSpeed, double firingChance) {
         super(ref, x, y);
+
+        this.spriteRef = ref; // 이미지 경로 저장 (나중에 갑옷 깨질 때 씀)
 
         this.game = game;
         this.moveSpeed = moveSpeed;
@@ -33,33 +42,41 @@ public class AlienEntity extends Entity {
         this.dx = -this.moveSpeed;
 
         // ==========================================
-        // 1. 기본 애니메이션 설정 (토성 스테이지 등)
+        // 1. 기본 애니메이션 설정
         // ==========================================
-        // 일단 모든 프레임을 기본 이미지로 초기화
+        // 일단 모든 프레임을 기본 이미지로 초기화 (움직임 없음)
         frames[0] = sprite;
         frames[1] = sprite;
         frames[2] = sprite;
         frames[3] = sprite;
 
-        // "_2" 이미지가 있는지 확인 (토성 적의 고리 회전용)
-        String ref2 = ref.replace(".", "_2.");
-        java.net.URL url = this.getClass().getClassLoader().getResource(ref2);
+        // [핵심 로직] 천왕성(uranus)이 아닐 때만 움직임 애니메이션(_2)을 적용합니다.
+        // -> 토성(saturn)은 여기에 걸려서 애니메이션이 적용됩니다.
+        if (!ref.contains("uranus")) {
+            String ref2 = ref.replace(".", "_2.");
+            java.net.URL url = this.getClass().getClassLoader().getResource(ref2);
 
-        if (url != null) {
-            // 파일이 있으면 1, 3번 프레임에 적용 (0, 2번은 기본 이미지)
-            Sprite sprite2 = SpriteStore.get().getSprite(ref2);
-            frames[1] = sprite2;
-            frames[3] = sprite2;
+            if (url != null) {
+                Sprite sprite2 = SpriteStore.get().getSprite(ref2);
+                // 1, 3번 프레임 교체 -> 움직이는 효과 발생
+                frames[1] = sprite2;
+                frames[3] = sprite2;
+            }
+        }
+        if (ref.contains("neptune")) {
+            this.isNeptuneMob = true;
         }
 
+
+        // [삭제 완료] 여기에 있던 중복 코드는 지워졌습니다.
+
         // ==========================================
-        // 2. 피격(Hit) 스프라이트 설정 (목성 스테이지 등)
+        // 2. 피격(Hit) 스프라이트 설정
         // ==========================================
-        this.normalSprite = this.sprite; // 초기 상태 저장
+        this.normalSprite = this.sprite;
 
         String hitRef = ref.replace(".", "_hit.");
         try {
-            // _hit 이미지가 있으면 로드, 없으면 기본 이미지 사용
             java.net.URL hitUrl = this.getClass().getClassLoader().getResource(hitRef);
             if (hitUrl != null) {
                 this.hitSprite = SpriteStore.get().getSprite(hitRef);
@@ -75,12 +92,38 @@ public class AlienEntity extends Entity {
         this.hp = hp;
     }
 
+    public void setBulletType(String type) {
+        this.bulletType = type;
+    }
+
     /**
      * 데미지 처리 메소드
      * @return 죽었으면 true
      */
     public boolean takeDamage(int damage) {
         this.hp -= damage;
+
+        // [추가] 천왕성 적 기믹: 체력이 1이 남으면(갑옷이 깨지면) 이미지 변경
+        if (this.hp == 1 && this.spriteRef != null && this.spriteRef.contains("uranus")) {
+            // alien_uranus.gif -> alien_uranus_2.gif 로 경로 변경
+            String brokenRef = this.spriteRef.replace(".", "_2.");
+
+            try {
+                // 새 이미지 로드
+                Sprite brokenSprite = SpriteStore.get().getSprite(brokenRef);
+
+                // 현재 모습과 평상시 모습(normalSprite)을 모두 깨진 상태로 변경
+                this.sprite = brokenSprite;
+                this.normalSprite = brokenSprite;
+
+                // 애니메이션 프레임도 모두 깨진 상태로 고정 (움직여도 갑옷 안 생기게)
+                for (int i = 0; i < frames.length; i++) {
+                    frames[i] = brokenSprite;
+                }
+            } catch (Exception e) {
+                System.err.println("Broken armor sprite not found: " + brokenRef);
+            }
+        }
 
         // 피격 애니메이션 발동 (0.1초간)
         this.hitTimer = 100;
@@ -96,6 +139,25 @@ public class AlienEntity extends Entity {
 
     @Override
     public void move(long delta) {
+        if (isNeptuneMob && alive) {
+            if (isDashing) {
+                // 대시 중: 속도를 매우 빠르게!
+                // 원래 dx(좌우) 움직임은 유지하되, y축으로 빠르게 내려오게 할 수도 있고
+                // 여기서는 dy(수직) 속도를 강제로 부여하겠습니다.
+                y += (moveSpeed * 3) * delta / 1000.0; // 평소보다 3배 빠르게 하강
+
+                dashTimer -= delta;
+                if (dashTimer <= 0) {
+                    isDashing = false; // 대시 끝
+                }
+            } else {
+                // 평상시: 아주 낮은 확률로 대시 시작 (0.1% 확률)
+                if (Math.random() < 0.0002) {
+                    isDashing = true;
+                    dashTimer = 500; // 0.5초간 돌진
+                }
+            }
+        }
         // 1. 피격 타이머 업데이트 (피격 상태 복구)
         if (hitTimer > 0) {
             hitTimer -= delta;
@@ -139,8 +201,15 @@ public class AlienEntity extends Entity {
     }
 
     private void fire() {
-        game.addEntity(new AlienShotEntity(game, "sprites/alien_shot.gif", getX() + 10, getY() + 20));
+        if ("ICE".equals(bulletType)) {
+            // 얼음탄 발사 (새로 만들 클래스)
+            game.addEntity(new AlienIceShotEntity(game, "sprites/ice_shot.png", getX() + 10, getY() + 20));
+        } else {
+            // 일반탄 발사
+            game.addEntity(new AlienShotEntity(game, "sprites/alien_shot.gif", getX() + 10, getY() + 20));
+        }
     }
+
 
     public void doLogic() {
         dx = -dx;

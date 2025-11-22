@@ -23,6 +23,8 @@ public class SaturnStage extends Stage {
     // 한 번 튕긴 탄환 관리 (중복 튕김 방지)
     private final Set<ShotEntity> bouncedShots = new HashSet<>();
 
+    private long itemTimer = 0;
+
     public SaturnStage(Game game) {
         super(game, 3);
     }
@@ -61,6 +63,13 @@ public class SaturnStage extends Stage {
 
     @Override
     public void update(long delta) {
+        if (reflectionControlActive) {
+            itemTimer -= delta;
+            if (itemTimer <= 0) {
+                reflectionControlActive = false;
+                System.out.println("Reflection Control Deactivated.");
+            }
+        }
         // [기믹 1] 운석 고리 반사 시스템
         // 아이템(반사 제어기)을 먹으면 반사 효과가 사라짐!
         if (!reflectionControlActive) {
@@ -117,6 +126,7 @@ public class SaturnStage extends Stage {
     @Override
     public void activateItem() {
         this.reflectionControlActive = true;
+        this.itemTimer = 2000; // 2초 설정
         System.out.println("Reflection Controller Activated! The ring is now safe.");
     }
     // [추가] 토성 스테이지 전용 아이템 이미지

@@ -11,6 +11,7 @@ public class MarsStage extends Stage {
 
     private long elapsedTime;
     private boolean stabilizerActive = false; // 아이템 효과 활성화 여부
+    private long itemTimer = 0;
 
     public MarsStage(Game game) {
         super(game, 1);
@@ -48,6 +49,14 @@ public class MarsStage extends Stage {
     @Override
     public void update(long delta) {
         elapsedTime += delta;
+
+        if (stabilizerActive) {
+            itemTimer -= delta;
+            if (itemTimer <= 0) {
+                stabilizerActive = false;
+                System.out.println("Stabilizer Deactivated.");
+            }
+        }
 
         // --- 기믹: 저중력 부유 효과 (Floating) ---
         // 주기를 길게(slow) 하고 진폭을 키워서(large amplitude) '둥둥' 떠다니는 느낌 구현
