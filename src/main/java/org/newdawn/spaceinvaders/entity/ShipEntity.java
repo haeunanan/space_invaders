@@ -1,6 +1,7 @@
 package org.newdawn.spaceinvaders.entity;
 
 import org.newdawn.spaceinvaders.Game;
+import org.newdawn.spaceinvaders.SoundManager;
 
 /**
  * The entity that represents the players ship
@@ -43,6 +44,8 @@ public class ShipEntity extends Entity {
 	 * 데미지를 입었을 때 호출됩니다.
 	 */
 	public void takeDamage() {
+        // [추가] 피격 효과음 재생
+        SoundManager.get().playSound("sounds/hit.wav");
 		currentHealth--;
 		if (currentHealth <= 0) {
 			game.notifyDeath(); // 체력이 0이 되면 게임 오버 처리

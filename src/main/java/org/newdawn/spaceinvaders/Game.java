@@ -324,6 +324,7 @@ public class Game
         removeList.clear();
 
         slowTimer = 0;
+        reverseControls = false;
 
         // 스테이지 기본값 초기화
         stageIndex = 6;
@@ -355,10 +356,13 @@ public class Game
         entities.clear();
         removeList.clear();
 
-        // [추가] 입력 상태 초기화 (키가 눌린 채로 시작하는 것 방지)
+        // [수정] 스테이지 전환/재시작 시 조작 반전 및 키 입력 상태 초기화
+        reverseControls = false;
         leftPressed = false;
         rightPressed = false;
         firePressed = false;
+        upPressed = false;   // 혹시 눌린 상태로 시작되는 것 방지
+        downPressed = false;
 
         // 스테이지 제한 확인 (예: 6단계)
         if (stageIndex > MAX_STAGE) {
@@ -560,7 +564,7 @@ public class Game
      */
     private void initPlayer() {
         ship = new ShipEntity(this, "sprites/ship.gif", 370, 550);
-        ((ShipEntity) ship).setHealth(3);
+        ((ShipEntity) ship).setHealth(10);
         this.slowTimer = 0;
         entities.add(ship);
     }
@@ -746,6 +750,9 @@ public class Game
         }
 
         lastFire = System.currentTimeMillis();
+
+        // [추가] 발사 효과음 재생
+        SoundManager.get().playSound("sounds/shoot.wav");
 
         int baseX = ship.getX() + 10;
         int baseY = ship.getY() - 30;

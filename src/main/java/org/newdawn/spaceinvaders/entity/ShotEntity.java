@@ -1,6 +1,7 @@
 package org.newdawn.spaceinvaders.entity;
 
 import org.newdawn.spaceinvaders.Game;
+import org.newdawn.spaceinvaders.SoundManager;
 
 /**
  * An entity representing a shot fired by the player's ship
@@ -111,6 +112,8 @@ public class ShotEntity extends Entity {
                     alien.markDead();            // 적 상태를 '죽음'으로 변경
                     game.removeEntity(alien);    // 적을 화면에서 제거
                     game.notifyAlienKilled();    // 점수 획득 알림
+
+                    SoundManager.get().playSound("sounds/explosion.wav");
 
                     // [수정] 아이템 드랍 로직
                     if (Math.random() < 0.1 && game.getCurrentStage() != null && game.getCurrentStage().isItemAllowed()) {
