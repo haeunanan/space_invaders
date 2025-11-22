@@ -4,22 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1ae5a004-a1ec-43a7-a784-ade46d788f45" name="변경" comment="토성 스테이지 수정중">
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/AlienIceShotEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/IceShardEntity.java" afterDir="false" />
+    <list default="true" id="1ae5a004-a1ec-43a7-a784-ade46d788f45" name="변경" comment="토성, 천왕성, 해왕성 스테이지 수정완료">
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/DebrisEntity.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/GammaRayEntity.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/Game.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/Game.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/GamePlayPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/GamePlayPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/AlienEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/AlienEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/BossEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/BossEntity.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShipEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShipEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShotEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShotEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/MarsStage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/MarsStage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/NeptuneStage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/NeptuneStage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/SaturnStage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/SaturnStage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/UranusStage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/UranusStage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/sprites/alien_shot.gif" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/sprites/alien_shot.gif" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/sprites/mars_enemy_0.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/sprites/shot.gif" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/sprites/shot.gif" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/BlackHoleBossStage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/BlackHoleBossStage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/sprites/boss.gif" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/sprites/boss.gif" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -101,7 +95,7 @@
       <workItem from="1763631143244" duration="4159000" />
       <workItem from="1763638707602" duration="7839000" />
       <workItem from="1763690414293" duration="18538000" />
-      <workItem from="1763788854961" duration="10232000" />
+      <workItem from="1763788854961" duration="15212000" />
     </task>
     <task id="LOCAL-00001" summary="game.java 수정">
       <option name="closed" value="true" />
@@ -167,7 +161,15 @@
       <option name="project" value="LOCAL" />
       <updated>1763731578155</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="토성, 천왕성, 해왕성 스테이지 수정완료">
+      <option name="closed" value="true" />
+      <created>1763801690716</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1763801690716</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -203,6 +205,7 @@
     <MESSAGE value="화성 스테이지 수정완료" />
     <MESSAGE value="목성 스테이지 수정완료" />
     <MESSAGE value="토성 스테이지 수정중" />
-    <option name="LAST_COMMIT_MESSAGE" value="토성 스테이지 수정중" />
+    <MESSAGE value="토성, 천왕성, 해왕성 스테이지 수정완료" />
+    <option name="LAST_COMMIT_MESSAGE" value="토성, 천왕성, 해왕성 스테이지 수정완료" />
   </component>
 </project>

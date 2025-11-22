@@ -1,7 +1,9 @@
 package org.newdawn.spaceinvaders;
 
 import org.newdawn.spaceinvaders.entity.Entity;
+import org.newdawn.spaceinvaders.entity.ShipEntity;
 import org.newdawn.spaceinvaders.stage.JupiterStage; // 목성 스테이지 참조를 위해 필요
+import org.newdawn.spaceinvaders.entity.BossEntity;
 
 import javax.swing.*;
 import java.awt.*;
@@ -51,6 +53,74 @@ public class GamePlayPanel extends JPanel {
             for (Entity entity : game.getEntities()) {
                 entity.draw(g2d);
             }
+        }
+        /* ===============================
+         * [추가] 플레이어 체력(Heart) 그리기
+         * =============================== */
+        if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE && game.getShip() instanceof ShipEntity) {
+            int hp = ((ShipEntity) game.getShip()).getCurrentHealth();
+
+            // 하트 이미지 로드
+            Image heartFull = SpriteStore.get().getSprite("sprites/heart_full.png").getImage();
+            Image heartEmpty = SpriteStore.get().getSprite("sprites/heart_empty.png").getImage();
+
+            // 왼쪽 상단에 하트 3개 그리기
+            for (int i = 0; i < 3; i++) {
+                if (i < hp) {
+                    g.drawImage(heartFull, 20 + (i * 35), 60, null);
+                } else {
+                    g.drawImage(heartEmpty, 20 + (i * 35), 60, null);
+                }
+            }
+        }
+        /* ===============================
+         * [추가] 보스 체력바 그리기
+         * =============================== */
+        // 현재 게임에 보스가 존재하는지 확인
+        BossEntity boss = null;
+        for (Entity e : game.getEntities()) {
+            if (e instanceof BossEntity) {
+                boss = (BossEntity) e;
+                break;
+            }
+        }
+
+        if (boss != null) {
+            // 1. 체력바 위치 및 크기 설정
+            int barWidth = 300;  // 화면 가로 800 중 600 사용
+            int barHeight = 15;
+            int barX = (getWidth() - barWidth) / 2; // 중앙 정렬
+            int barY = 50; // 화면 상단
+
+            // 2. 체력 비율 계산
+            double hpRatio = (double) boss.getHP() / boss.getMaxHP();
+            // 음수 방지 (0 이하로 떨어져도 바가 역주행하지 않게)
+            if (hpRatio < 0) hpRatio = 0;
+
+            // 3. 배경(빈 게이지) 그리기 - 어두운 회색
+            g2d.setColor(new Color(50, 50, 50));
+            g2d.fillRect(barX, barY, barWidth, barHeight);
+
+            // 4. 현재 체력 그리기 - 체력 상황에 따라 색상 변경
+            if (hpRatio > 0.5) {
+                g2d.setColor(new Color(138, 43, 226)); // 보라색 (초반: 여유)
+            } else if (hpRatio > 0.2) {
+                g2d.setColor(new Color(255, 140, 0)); // 주황색 (중반: 경고)
+            } else {
+                g2d.setColor(Color.RED); // 빨간색 (딸피: 위험)
+            }
+            g2d.fillRect(barX, barY, (int)(barWidth * hpRatio), barHeight);
+
+            // 5. 테두리 그리기 - 흰색
+            g2d.setColor(Color.WHITE);
+            g2d.setStroke(new BasicStroke(2)); // 선 두께 2
+            g2d.drawRect(barX, barY, barWidth, barHeight);
+
+            // 6. 보스 이름 텍스트
+            g2d.setFont(new Font("Arial", Font.BOLD, 16));
+            String bossName = "THE VOID CORE";
+            int textWidth = g2d.getFontMetrics().stringWidth(bossName);
+            g2d.drawString(bossName, barX + (barWidth - textWidth) / 2, barY - 10);
         }
 
         /* ===============================

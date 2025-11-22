@@ -118,9 +118,10 @@ public class ShipEntity extends Entity {
 	 * @param delta The time that has elapsed since last move (ms)
 	 */
     // [수정] move 메소드에 타이머 로직 추가
+    // [수정] move 메소드 전체 교체 (가장 확실한 방법)
     @Override
     public void move(long delta) {
-        // 1. 부스터 타이머 체크 및 감소
+        // 1. 부스터 타이머 로직 (기존 유지)
         if (boosterActive) {
             boosterTimer -= delta;
             if (boosterTimer <= 0) {
@@ -130,17 +131,20 @@ public class ShipEntity extends Entity {
             }
         }
 
-        // 2. 기존 화면 경계 체크 로직 (원래 있던 코드 유지)
-        if ((dx < 0) && (x < 10)) {
-            return;
-        }
-        if ((dx > 0) && (x > 750)) {
-            return;
-        }
-
+        // 2. 일단 이동 시킵니다. (부모 클래스의 이동 로직 수행)
         super.move(delta);
-    }
 
+        // 3. 화면 밖으로 나갔다면 강제로 안으로 끌어옵니다 (Clamping)
+        // 이렇게 하면 키 입력이 무시되는 일이 없습니다.
+
+        // 좌우 보정
+        if (x < 10) x = 10;
+        if (x > 750) x = 750;
+
+        // 상하 보정
+        if (y < 10) y = 10;
+        if (y > 550) y = 550;
+    }
     /**
 	 * Notification that the player's ship has collided with something
 	 * 

@@ -111,6 +111,9 @@ public class Game
     private final int MAX_STAGE = 6;   // 총 스테이지 수 (Mars~BlackHole)   // Mars~BlackHole 총 6개라고 가정
     private boolean transitionRequested = false;
     private long slowTimer = 0;
+    public boolean reverseControls = false; // 조작 반전 상태 플래그
+    private boolean upPressed = false;
+    private boolean downPressed = false;
 
 
     /**
@@ -323,7 +326,7 @@ public class Game
         slowTimer = 0;
 
         // 스테이지 기본값 초기화
-        stageIndex = 1;
+        stageIndex = 6;
         currentStage = loadStage(stageIndex);
 
         // 플레이어 배 초기화 (스테이지보다 먼저 생성)
@@ -772,7 +775,7 @@ public class Game
     }
     public void applySlow(long duration) {
         this.slowTimer = duration;
-        System.out.println("Player Slowed!");
+
     }
 
 
@@ -828,16 +831,43 @@ public class Game
                 // (1) 플레이어 이동 속도 설정 (키 입력 반영) - [누락되었던 부분 추가]
                 if (!waitingForKeyPress && ship != null) {
                     ship.setHorizontalMovement(0); // 키를 안 누르면 멈춤
+                    ship.setDY(0); // [추가] 수직 속도 초기화 (안 하면 계속 미끄러짐)
 
+                    // 1. 속도 계산 (기존 슬로우 로직 유지)
                     double currentSpeed = moveSpeed;
-                    if (slowTimer > 0) {
-                        currentSpeed = moveSpeed * 0.5;
+                    if (slowTimer > 0) currentSpeed *= 0.5;
+
+                    // [수정] 조작 반전 여부에 따른 입력 처리
+                    boolean moveLeft = leftPressed;
+                    boolean moveRight = rightPressed;
+
+                    if (reverseControls) {
+                        // 조작이 반대로 바뀜
+                        moveLeft = rightPressed;
+                        moveRight = leftPressed;
                     }
 
-                    if (leftPressed && !rightPressed) {
+                    if (moveLeft && !moveRight) {
                         ship.setHorizontalMovement(-currentSpeed);
-                    } else if (rightPressed && !leftPressed) {
+                    } else if (moveRight && !moveLeft) {
                         ship.setHorizontalMovement(currentSpeed);
+                    }
+
+                    // 4. [추가] 상하 이동 처리
+                    boolean moveUp = upPressed;
+                    boolean moveDown = downPressed;
+
+                    if (reverseControls) {
+                        moveUp = downPressed;
+                        moveDown = upPressed;
+                    }
+
+                    if (moveUp && !moveDown) {
+                        ship.setDY(-currentSpeed); // 위로 이동
+                    } else if (moveDown && !moveUp) {
+                        ship.setDY(currentSpeed);  // 아래로 이동
+                    } else {
+                        ship.setDY(0); // [중요] 키를 안 누르면 멈춰야 합니다!
                     }
 
                     if (currentStage instanceof NeptuneStage) {
@@ -1048,9 +1078,10 @@ public class Game
                 if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
                     rightPressed = true;
                 }
-                if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-                    firePressed = true;
-                }
+                if (e.getKeyCode() == KeyEvent.VK_UP) upPressed = true;
+                if (e.getKeyCode() == KeyEvent.VK_DOWN) downPressed = true;
+
+                if (e.getKeyCode() == KeyEvent.VK_SPACE) firePressed = true;
 
                 // [삭제] 테스트용 'S' 키 코드 제거됨
                 // 아이템을 먹어야만 효과가 발동됩니다.
@@ -1070,9 +1101,11 @@ public class Game
                 if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
                     rightPressed = false;
                 }
-                if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-                    firePressed = false;
-                }
+                if (e.getKeyCode() == KeyEvent.VK_UP) upPressed = false;
+                if (e.getKeyCode() == KeyEvent.VK_DOWN) downPressed = false;
+
+                if (e.getKeyCode() == KeyEvent.VK_SPACE) firePressed = false;
+
             }
         }
 
