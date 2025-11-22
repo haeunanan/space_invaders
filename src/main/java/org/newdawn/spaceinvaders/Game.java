@@ -327,7 +327,7 @@ public class Game
         reverseControls = false;
 
         // 스테이지 기본값 초기화
-        stageIndex = 6;
+        stageIndex = 1;
         currentStage = loadStage(stageIndex);
 
         // 플레이어 배 초기화 (스테이지보다 먼저 생성)
@@ -564,7 +564,7 @@ public class Game
      */
     private void initPlayer() {
         ship = new ShipEntity(this, "sprites/ship.gif", 370, 550);
-        ((ShipEntity) ship).setHealth(10);
+        ((ShipEntity) ship).setHealth(3);
         this.slowTimer = 0;
         entities.add(ship);
     }

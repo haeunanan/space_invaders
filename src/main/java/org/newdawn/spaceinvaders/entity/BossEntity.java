@@ -57,13 +57,14 @@ public class BossEntity extends Entity {
             game.reverseControls = true; // [기믹] 조작 반전
         } else {
             currentPhase = 3; // 체력 30% 이하: 페이즈 3 (궁극기)
-            game.reverseControls = false; // 조작 정상 복구 (피해야 하므로)
-        }
-        // [추가] 3페이즈 진입 시 이미지 교체 (한 번만 실행)
-        if (!spriteChanged) {
-            changeSprite("sprites/boss_phase3.gif"); // 3페이즈 이미지 파일명
-            spriteChanged = true;
-            System.out.println("Boss entered Phase 3: Visual Changed!");
+            game.reverseControls = false; // 조작 정상 복구
+
+            // [수정] 3페이즈 진입 시 이미지 교체 (조건문 안으로 이동)
+            if (!spriteChanged) {
+                changeSprite("sprites/boss_phase3.gif"); // 3페이즈 이미지 파일명
+                spriteChanged = true;
+                System.out.println("Boss entered Phase 3: Visual Changed!");
+            }
         }
     }
 
