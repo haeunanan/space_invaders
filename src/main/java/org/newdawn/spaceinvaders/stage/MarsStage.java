@@ -87,10 +87,10 @@ public class MarsStage extends Stage {
         }
     }
 
-    // [수정] 메소드 이름 변경 (activateStabilizer -> activateItem)
     @Override
     public void activateItem() {
         this.stabilizerActive = true;
+        this.itemTimer = 2000; // [수정] 아이템 지속 시간을 5초(5000ms)로 설정
         System.out.println("Gravity Stabilizer Activated!");
     }
 
