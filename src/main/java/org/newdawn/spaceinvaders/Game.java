@@ -565,10 +565,8 @@ public class Game
                             for (Map<String, Double> shotData : opponentShotsData) {
 
                                 double shotDX = 0;
-                                double shotDY = 300;
-								if (currentState == GameState.PLAYING_COOP) {
-									shotDY = -300;
-								}
+                                double shotDY = -300;
+
                                 ShotEntity shot = new ShotEntity(
                                         this,
                                         "sprites/shot.gif",

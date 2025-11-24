@@ -26,7 +26,7 @@ public class AlienShotEntity extends Entity {
         // 플레이어와 충돌하면 플레이어 사망 처리
         if (other instanceof ShipEntity) {
             game.removeEntity(this);
-            game.notifyDeath();
+            ((ShipEntity) other).takeDamage();
         }
     }
 }

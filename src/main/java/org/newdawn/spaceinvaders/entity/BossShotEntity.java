@@ -28,7 +28,7 @@ public class BossShotEntity extends Entity {
         // 플레이어와 충돌 시
         if (other instanceof ShipEntity) {
             game.removeEntity(this); // 총알 제거
-            game.notifyDeath(); // 플레이어 사망 처리
+            ((ShipEntity) other).takeDamage();
         }
     }
 }
