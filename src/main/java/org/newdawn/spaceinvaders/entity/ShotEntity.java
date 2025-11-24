@@ -1,126 +1,123 @@
 package org.newdawn.spaceinvaders.entity;
 
+import org.newdawn.spaceinvaders.CurrentUserManager;
 import org.newdawn.spaceinvaders.Game;
 import org.newdawn.spaceinvaders.SoundManager;
 import org.newdawn.spaceinvaders.stage.Stage;
-import org.newdawn.spaceinvaders.entity.ItemEntity;
+
 /**
  * An entity representing a shot fired by the player's ship
- * 
- * @author Kevin Glass
  */
 public class ShotEntity extends Entity {
-	/** The game in which this entity exists */
 	private Game game;
-	/** True if this shot has been "used", i.e. its hit something */
 	private boolean used = false;
 	private String ownerUid;
-    private double dx;
-    private double dy;
-	
-	/**
-	 * Create a new shot from the player
-	 * 
-	 * @param game The game in which the shot has been created
-	 * @param sprite The sprite representing this shot
-	 * @param x The initial x location of the shot
-	 * @param y The initial y location of the shot
-	 */
-    public ShotEntity(Game game, String sprite, int x, int y, double dx, double dy) {
-        super(sprite, x, y);
-        this.game = game;
-        this.dx = dx;
-        this.dy = dy;
-    }
 
-	public String getOwnerUid() { // <-- Getter 추가
-		return ownerUid;
+	public ShotEntity(Game game, String sprite, int x, int y, double dx, double dy) {
+		super(sprite, x, y);
+		this.game = game;
+		this.dx = dx;
+		this.dy = dy;
 	}
-	// 내가 쏜 총알인지 확인하는 헬퍼 메소드
-	public boolean isOwnedBy(String uid) {
-		if (uid == null || ownerUid == null) return false;
-		return ownerUid.equals(uid);
+
+	public String getOwnerUid() {
+		return ownerUid;
 	}
 
 	public void setOwnerUid(String uid) {
 		this.ownerUid = uid;
 	}
 
-	/**
-	 * Request that this shot moved based on time elapsed
-	 * 
-	 * @param delta The time that has elapsed since last move
-	 */
-    @Override
-    public void move(long delta) {
-        x += dx * delta / 1000.0;
-        y += dy * delta / 1000.0;
+	public boolean isOwnedBy(String uid) {
+		if (uid == null || ownerUid == null) return false;
+		return ownerUid.equals(uid);
+	}
 
-        // 화면 밖 나가면 제거
-        if (y < -50 || y > 650) {
-            game.removeEntity(this);
-        }
-    }
-	
-	/**
-	 * Notification that this shot has collided with another
-	 * entity
-	 * 
-	 * @parma other The other entity with which we've collided
-	 */
 	@Override
-	public void collidedWith(Entity other) {
-		// 1. 이미 어딘가에 부딪힌 총알이라면 중복 처리 방지
-		if (used) {
-			return;
+	public void move(long delta) {
+		super.move(delta); // 기본 이동 처리
+
+		// [추가] 해왕성 바람 효과 (싱글 플레이어 미사일만 해당)
+		if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE && dy < 0) {
+			if (game.getCurrentStage() instanceof org.newdawn.spaceinvaders.stage.NeptuneStage) {
+				org.newdawn.spaceinvaders.stage.NeptuneStage ns =
+						(org.newdawn.spaceinvaders.stage.NeptuneStage) game.getCurrentStage();
+				double wind = ns.getCurrentWindForce();
+				if (wind != 0) {
+					x += wind * delta / 1000.0;
+				}
+			}
 		}
 
-		// 2. 싱글 플레이 모드 로직
-		if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE) {
-			// 적(Alien)과 충돌했는지 확인
+		// 화면 밖 제거
+		if (y < -50 || y > 650) {
+			game.removeEntity(this);
+		}
+	}
+
+	@Override
+	public void collidedWith(Entity other) {
+		if (used) return;
+
+		// =============================================================
+		// [수정] 1. 외계인 충돌 처리 (싱글 및 협동 모드 공통)
+		// =============================================================
+		if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE ||
+				game.getCurrentState() == Game.GameState.PLAYING_COOP) {
+
 			if (other instanceof AlienEntity) {
 				AlienEntity alien = (AlienEntity) other;
+				if (!alien.isAlive()) return;
 
-				// 이미 죽은 적이면 무시
-				if (!alien.isAlive()) {
-					return;
-				}
-
-				// [수정] 총알은 명중했으므로 무조건 화면에서 제거하고 사용됨 처리
 				game.removeEntity(this);
 				used = true;
 
-				// [수정] 적에게 1의 데미지를 입힘
-				// takeDamage(1)이 true(사망)를 반환할 때만 킬 처리를 수행
-				// false(생존)를 반환하면 체력만 깎이고 피격 애니메이션이 재생됨
 				if (alien.takeDamage(1)) {
-					alien.markDead();            // 적 상태를 '죽음'으로 변경
-					game.removeEntity(alien);    // 적을 화면에서 제거
-					game.notifyAlienKilled();    // 점수 획득 알림
+					alien.markDead();
+					game.removeEntity(alien);
+					game.notifyAlienKilled();
+					SoundManager.get().playSound("sounds/explosion.wav");
 
-					SoundManager.get().playSound("sounds/explosion.wav"); // <--- SoundManager 사용 지점
-
-					// [수정] 아이템 드랍 로직
-					if (Math.random() < 0.1 && game.getCurrentStage() != null && game.getCurrentStage().isItemAllowed()) {
-
-						// 현재 스테이지에 설정된 아이템 이미지 가져오기
-						String itemRef = game.getCurrentStage().getItemSpriteRef();
-
-						ItemEntity item = new ItemEntity(
-								game,
-								itemRef, // 변수로 변경됨
-								alien.getX(),
-								alien.getY()
-						);
-						game.addEntity(item);
+					// 아이템 드랍 (싱글 모드에서만 혹은 협동에서도 허용 가능)
+					if (game.getCurrentStage() != null && game.getCurrentStage().isItemAllowed()) {
+						if (Math.random() < 0.1) {
+							String itemRef = game.getCurrentStage().getItemSpriteRef();
+							ItemEntity item = new ItemEntity(game, itemRef, alien.getX(), alien.getY());
+							game.addEntity(item);
+						}
 					}
 				}
 			}
-		} else if (game.getCurrentState() == Game.GameState.PLAYING_PVP) {
+		}
+
+		// =============================================================
+		// [수정] 2. PVP 플레이어 충돌 처리
+		// =============================================================
+		else if (game.getCurrentState() == Game.GameState.PLAYING_PVP) {
+			String myUid = CurrentUserManager.getInstance().getUid();
+
+			// (A) 내가 쏜 총알이 상대방을 맞췄을 때 -> 내 화면에서 총알 제거 (데미지는 상대방이 처리)
 			if (other == game.getOpponentShip()) {
-				used = true;
-				game.removeEntity(this);
-				// 데미지 처리는 상대방 클라이언트가 스스로 하므로, 여기서는 총알만 제거합니다.
+				if (this.isOwnedBy(myUid)) {
+					used = true;
+					game.removeEntity(this);
+				}
+			}
+			// (B) 상대방 총알이 나를 맞췄을 때 -> 데미지 처리
+			else if (other == game.getShip()) {
+				if (!this.isOwnedBy(myUid)) { // 내 총알이 아닐 경우
+					used = true;
+					game.removeEntity(this);
+
+					// 쉴드 체크 및 체력 감소 로직
+					ShipEntity myShip = (ShipEntity) other;
+					if (myShip.isShieldActive()) {
+						myShip.takeDamage(); // 쉴드만 제거됨
+					} else {
+						myShip.takeDamage(); // 체력 감소
+						// HP 동기화는 GameLoop의 NetworkThread에서 처리됨
+					}
+				}
 			}
 		}
 	}

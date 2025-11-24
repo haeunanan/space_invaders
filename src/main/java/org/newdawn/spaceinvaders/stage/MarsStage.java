@@ -10,22 +10,23 @@ import java.util.List;
 public class MarsStage extends Stage {
 
     private long elapsedTime;
+    private boolean stabilizerActive = false; // 아이템 효과 활성화 여부
+    private long itemTimer = 0;
 
     public MarsStage(Game game) {
-        super(game, 1);   // Stage(Game, int) 생성자에 정확히 맞춰 호출
+        super(game, 1);
     }
 
     @Override
     public void init() {
-        // --- 1) 화성 배경 로드 ---
         background = SpriteStore.get()
                 .getSprite(getBackgroundSpriteRef())
                 .getImage();
 
-        // --- 2) 외계인 배치 ---
-        double moveSpeed = 90;
+        // 저중력이므로 적의 기본 이동 속도도 약간 느리게 설정
+        double moveSpeed = 70;
         int alienRows = 3;
-        double firingChance = 0.0;
+        double firingChance = 0.0; // 1스테이지라 공격 안 함
         int startY = 60;
 
         for (int row = 0; row < alienRows; row++) {
@@ -41,39 +42,65 @@ public class MarsStage extends Stage {
                 game.addEntity(alien);
             }
         }
-
         elapsedTime = 0;
+        stabilizerActive = false;
     }
 
     @Override
     public void update(long delta) {
         elapsedTime += delta;
 
-        double phase = elapsedTime / 400.0; // 천천히 움직임
-        List<Entity> list = getEntities();
+        if (stabilizerActive) {
+            itemTimer -= delta;
+            if (itemTimer <= 0) {
+                stabilizerActive = false;
+                System.out.println("Stabilizer Deactivated.");
+            }
+        }
 
+        // --- 기믹: 저중력 부유 효과 (Floating) ---
+        // 위치를 직접 수정하는 것이 아니라 속도(DY)를 조절하여 물리 엔진이 처리하도록 함
+        double frequency = 800.0;
+        double amplitude = 50.0;
+
+        List<Entity> list = getEntities();
         for (Entity e : list) {
             if (e instanceof AlienEntity) {
-                int baseY = e.getY();
-                int offset = (int)(Math.sin(phase + baseY * 0.01) * 3); // ±3px 흔들기
-                e.setLocation(e.getX(), baseY + offset);
+                double phase = (elapsedTime / frequency) + (e.getX() * 0.005);
+                e.setDY(amplitude * Math.sin(phase));
             }
         }
     }
 
+    // --- 기믹: 탄환 속도 조절 ---
+    @Override
+    public double getPlayerShotVelocity() {
+        // 안정제가 활성화되면 정상 속도(-300), 아니면 저중력 저항으로 느림(-150)
+        if (stabilizerActive) {
+            return -300;
+        } else {
+            return -150;
+        }
+    }
+
+    @Override
+    public void activateItem() {
+        this.stabilizerActive = true;
+        this.itemTimer = 5000; // 아이템 지속 5초
+        System.out.println("Gravity Stabilizer Activated!");
+    }
 
     @Override
     public boolean isCompleted() {
         for (Entity e : getEntities()) {
-            if (e instanceof AlienEntity)
-                return false;
+            if (e instanceof AlienEntity) return false;
         }
         return true;
     }
 
     @Override
     public String getDisplayName() {
-        return "Mars – Low Gravity";
+        return stabilizerActive ? "Mars – Stabilized Gravity" : "Mars – Low Gravity Warning!";
     }
 
     @Override

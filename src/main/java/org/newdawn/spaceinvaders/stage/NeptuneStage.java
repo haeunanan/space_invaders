@@ -1,6 +1,4 @@
-// 파일: haeunanan/space_invaders/space_invaders-Planet-Stages/src/main/java/org/newdawn/spaceinvaders/stage/NeptuneStage.java
-
-// 이 파일의 전체 내용을 아래 코드로 교체하세요.
+// src/main/java/org/newdawn/spaceinvaders/stage/NeptuneStage.java
 
 package org.newdawn.spaceinvaders.stage;
 
@@ -72,7 +70,7 @@ public class NeptuneStage extends Stage {
     }
 
     // 다른 클래스(Game, ShotEntity)에서 바람 세기를 가져갈 수 있게 Getter 제공
-    public double getCurrentWindForce() { // <--- 이 메서드가 필요합니다!
+    public double getCurrentWindForce() {
         return currentWindForce;
     }
 

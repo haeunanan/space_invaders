@@ -11,21 +11,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * 3단계 – 토성
- * - 운석 고리(링)에 탄환이 닿으면 튕겨 나가는 느낌을 간단히 구현
- *   (실제 운석 Entity 없이, 특정 y 구간을 "링"으로 가정)
- * - 적들은 링 근처에서 일렬 대형 유지
- */
 public class SaturnStage extends Stage {
 
-    // "운석 고리"가 존재하는 y 구간
+    // 운석 고리(링) 설정
     private final int ringY = 250;
     private final int ringThickness = 40;
-    private double slideFactor = 0.92;
 
-    // 한 번 튕긴 탄환은 다시 튕기지 않도록 관리
+    // 아이템 효과 상태 (반사 제어기)
+    private boolean reflectionControlActive = false;
+
+    // 한 번 튕긴 탄환 관리 (중복 튕김 방지)
     private final Set<ShotEntity> bouncedShots = new HashSet<>();
+
+    private long itemTimer = 0;
 
     public SaturnStage(Game game) {
         super(game, 3);
@@ -39,14 +37,17 @@ public class SaturnStage extends Stage {
 
         double moveSpeed = 130;
         int alienRows = 4;
-        double firingChance = 0.0004;
+        double firingChance = 0.0004; // 적당한 공격 빈도
         int startY = 80;
+
+        // 토성 적 이미지 설정 (파일이 없다면 alien.gif 사용)
+        String spriteRef = "sprites/alien_saturn.gif";
 
         for (int row = 0; row < alienRows; row++) {
             for (int x = 0; x < 10; x++) {
                 AlienEntity alien = new AlienEntity(
                         game,
-                        "sprites/alien_saturn.gif",
+                        spriteRef,
                         110 + (x * 45),
                         startY + row * 30,
                         moveSpeed,
@@ -55,52 +56,85 @@ public class SaturnStage extends Stage {
                 game.addEntity(alien);
             }
         }
+
+        reflectionControlActive = false;
+        bouncedShots.clear();
     }
 
     @Override
     public void update(long delta) {
-
-        // 1) 플레이어 미끄러짐(이미 구현한 부분 유지)
-        ShipEntity ship = (ShipEntity) game.getShip();
-        if (ship != null) {
-            double dx = ship.getDX();
-            dx *= slideFactor;
-            ship.setDX(dx);
+        if (reflectionControlActive) {
+            itemTimer -= delta;
+            if (itemTimer <= 0) {
+                reflectionControlActive = false;
+                System.out.println("Reflection Control Deactivated.");
+            }
+        }
+        // [기믹 1] 운석 고리 반사 시스템
+        // 아이템(반사 제어기)을 먹으면 반사 효과가 사라짐!
+        if (!reflectionControlActive) {
+            handleMeteorRingReflection();
         }
 
-        // 2) 운석 고리 반사 (탄환 튕김)
+        // 삭제된 탄환은 관리 목록에서도 제거 (메모리 관리)
+        List<Entity> currentEntities = getEntities();
+        bouncedShots.removeIf(shot -> !currentEntities.contains(shot));
+    }
+
+    // handleMeteorRingReflection 메서드 수정
+    // handleMeteorRingReflection 메소드 전체 교체
+    private void handleMeteorRingReflection() {
         List<Entity> list = getEntities();
 
         for (Entity e : list) {
             if (e instanceof ShotEntity) {
                 ShotEntity shot = (ShotEntity) e;
 
-                // 아래→위로 올라가는 탄환만 처리 (dy < 0)
-                if (shot.getDY() < 0) {
+                // 이미 튕긴 탄환은 패스
+                if (bouncedShots.contains(shot)) continue;
 
-                    // 중복 반사 방지
-                    if (bouncedShots.contains(shot)) continue;
+                int shotY = shot.getY();
+                int shotHeight = shot.getSpriteHeight(); // 탄환의 높이 고려
+                double dy = shot.getDY();
 
-                    int y = shot.getY();
+                // [수정] 정밀한 충돌 체크 (AABB 방식)
+                // 탄환의 '아랫부분'이 고리 '윗부분'보다 아래에 있고,
+                // 탄환의 '윗부분'이 고리 '아랫부분'보다 위에 있으면 충돌로 간주
+                boolean hitRing = (shotY + shotHeight >= ringY) && (shotY <= ringY + ringThickness);
 
-                    // 운석 고리 영역 진입 체크
-                    if (y <= ringY + ringThickness && y >= ringY) {
-
-                        // 실제 반사 처리: 수직속도 dy 반전 (탄환 하강)
-                        shot.setDY(-shot.getDY());
-
-                        // 다시 튕기지 않게 리스트에 기록
+                if (hitRing) {
+                    // 1. 플레이어 탄환 (위로 이동 중) -> 아래로 튕김
+                    if (dy < 0) {
+                        shot.setDY(-dy);
+                        // 끼임 방지를 위해 고리 밖으로 강제 이동
+                        shot.setLocation(shot.getX(), ringY + ringThickness + 1);
+                        bouncedShots.add(shot);
+                    }
+                    // 2. 적 탄환 (아래로 이동 중) -> 위로 튕김
+                    else if (dy > 0) {
+                        shot.setDY(-dy);
+                        // 끼임 방지를 위해 고리 밖으로 강제 이동
+                        shot.setLocation(shot.getX(), ringY - shotHeight - 1);
                         bouncedShots.add(shot);
                     }
                 }
             }
         }
-
-        // 3) 화면 아래로 떨어져서 삭제된 탄환은 리스트에서 제거
-        bouncedShots.removeIf(shot -> !list.contains(shot));
     }
 
-
+    // [기믹 2] 아이템 획득 시 호출됨: 반사 효과 제거
+    @Override
+    public void activateItem() {
+        this.reflectionControlActive = true;
+        this.itemTimer = 2000; // 2초 설정
+        System.out.println("Reflection Controller Activated! The ring is now safe.");
+    }
+    // [추가] 토성 스테이지 전용 아이템 이미지
+    @Override
+    public String getItemSpriteRef() {
+        return "sprites/item_reflection.png";
+        // *주의: 해당 이미지 파일을 resources/sprites 폴더에 꼭 넣어주세요!
+    }
 
     @Override
     public boolean isCompleted() {
@@ -112,7 +146,7 @@ public class SaturnStage extends Stage {
 
     @Override
     public String getDisplayName() {
-        return "Saturn – Meteor Ring";
+        return reflectionControlActive ? "Saturn – Ring Stabilized" : "Saturn – Meteor Ring Hazard";
     }
 
     @Override
@@ -120,12 +154,8 @@ public class SaturnStage extends Stage {
         return "sprites/bg_saturn.png";
     }
 
-    public int getRingY() {
-        return ringY;
-    }
-
-    public int getRingThickness() {
-        return ringThickness;
-    }
+    // GamePlayPanel에서 고리를 그리기 위해 필요
+    public int getRingY() { return ringY; }
+    public int getRingThickness() { return ringThickness; }
+    public boolean isReflectionActive() { return !reflectionControlActive; }
 }
-
