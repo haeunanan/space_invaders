@@ -1,8 +1,14 @@
 package org.newdawn.spaceinvaders;
 
 import org.newdawn.spaceinvaders.entity.Entity;
-import org.newdawn.spaceinvaders.entity.ShipEntity;
+import org.newdawn.spaceinvaders.stage.Stage;
+
 import org.newdawn.spaceinvaders.entity.ShotEntity;
+import org.newdawn.spaceinvaders.entity.ShipEntity;
+import org.newdawn.spaceinvaders.entity.BossEntity;
+import org.newdawn.spaceinvaders.stage.JupiterStage;
+import org.newdawn.spaceinvaders.CurrentUserManager;
+import org.newdawn.spaceinvaders.Sprite;
 
 import javax.swing.*;
 import java.awt.*;
@@ -32,13 +38,26 @@ public class GamePlayPanel extends JPanel {
     // 이 패널이 다시 그려져야 할 때마다 호출됩니다. (repaint()가 불릴 때)
     @Override
     protected void paintComponent(Graphics g) {
-        super.paintComponent(g); // JPanel의 기본 그리기 기능을 먼저 호출
+        super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
 
-        // --- 1. 배경 그리기 (가장 먼저) ---
-        g2d.setColor(Color.black);
-        g2d.fillRect(0, 0, getWidth(), getHeight());
+        /* ===============================
+         * 1) 스테이지 배경 그리기
+         * =============================== */
+        if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE &&
+                game.getCurrentStage() != null &&
+                game.getCurrentStage().getBackground() != null) {
 
+            g2d.drawImage(
+                    game.getCurrentStage().getBackground(),
+                    0, 0, getWidth(), getHeight(),
+                    null
+            );
+        } else {
+            // 기본 검정 배경
+            g2d.setColor(Color.black);
+            g2d.fillRect(0, 0, getWidth(), getHeight());
+        }
         // --- 2. 게임 엔티티(우주선, 총알 등) 그리기 ---
         // 'Press any key' 상태가 아닐 때만 게임 속 객체들을 그립니다.
         if (!game.isWaitingForKeyPress()) {
@@ -120,49 +139,47 @@ public class GamePlayPanel extends JPanel {
             g2d.setColor(new Color(40,42,45, 230));
             g2d.fillRoundRect(overlayX,overlayY,overlayW,overlayH,10,10);
 
-            // 3개의 light panel
-            int pad = 20;
-            int panelW = (overlayW - pad*4)/3;
-            int panelH = overlayH - 120;
-            int panelY = overlayY + 60;
+        int pad = 20;
+        int panelW = (overlayW - pad*4)/3;
+        int panelH = overlayH - 120;
+        int panelY = overlayY + 60;
 
-            String[] titles = {"공격 속도 증가","이동 속도 증가","미사일 개수 증가"};
-            String[] desc = {
-                    "공격 속도가 증가합니다",
-                    "플레이어의 이동속도가 증가합니다",
-                    "한 번에 발사할 수 있는 미사일의 개수를 하나 추가합니다"
-            };
+        String[] titles = {"공격 속도 증가", "이동 속도 증가", "미사일 개수 증가"};
+        String[] desc = {
+                "공격 속도가 증가합니다",
+                "플레이어의 이동속도가 증가합니다",
+                "한 번에 발사할 수 있는 미사일의 개수를 하나 추가합니다"
+        };
 
-            for (int i=0;i<3;i++) {
-                int px = overlayX + pad + i*(panelW + pad);
-                int py = panelY;
+        for (int i = 0; i < 3; i++) {
+            int px = overlayX + pad + i*(panelW + pad);
+            int py = panelY;
 
-                g2d.setColor(new Color(220,220,220));
-                g2d.fillRect(px,panelY,panelW,panelH);
+            g2d.setColor(new Color(220,220,220));
+            g2d.fillRect(px, py, panelW, panelH);
 
-                g2d.setColor(Color.black);
-                int textX = px + 12;
-                int textY = py + 20;
-                int innerWidth = panelW - 24;
+            g2d.setColor(Color.black);
+            int textX = px + 12;
+            int textY = py + 20;
+            int innerWidth = panelW - 24;
 
-                g2d.setFont(new Font("Malgun Gothic", Font.BOLD, 16));
-                drawWrappedString(g2d, titles[i], textX, textY, innerWidth, 20);
+            g2d.setFont(new Font("Malgun Gothic", Font.BOLD, 16));
+            drawWrappedString(g2d, titles[i], textX, textY, innerWidth, 20);
 
-                g2d.setFont(new Font("Malgun Gothic", Font.PLAIN, 12));
-                drawWrappedString(g2d, desc[i], textX, textY + 36, innerWidth, 16);
+            g2d.setFont(new Font("Malgun Gothic", Font.PLAIN, 12));
+            drawWrappedString(g2d, desc[i], textX, textY + 36, innerWidth, 16);
 
-                // price and level display
-                boolean maxed = false;
-                int level = 0;
-                if (i==0) { level = game.attackLevel; maxed = game.attackLevel>=game.MAX_UPGRADES; }
-                if (i==1) { level = game.moveLevel; maxed = game.moveLevel>=game.MAX_UPGRADES; }
-                if (i==2) { level = game.missileLevel; maxed = game.missileLevel>=game.MAX_UPGRADES; }
+            boolean maxed = false;
+            int level = 0;
+            if (i == 0) { level = game.attackLevel; maxed = game.attackLevel >= game.MAX_UPGRADES; }
+            if (i == 1) { level = game.moveLevel; maxed = game.moveLevel >= game.MAX_UPGRADES; }
+            if (i == 2) { level = game.missileLevel; maxed = game.missileLevel >= game.MAX_UPGRADES; }
 
-                String levelText = "Lv "+level;
-                String priceText = maxed ? "MAX" : ("Price: "+game.UPGRADE_COST);
+            String levelText = "Lv " + level;
+            String priceText = maxed ? "MAX" : ("Price: " + game.UPGRADE_COST);
 
-                if (!maxed && game.coins < game.UPGRADE_COST) g2d.setColor(Color.red);
-                else g2d.setColor(Color.darkGray);
+            if (!maxed && game.coins < game.UPGRADE_COST) g2d.setColor(Color.red);
+            else g2d.setColor(Color.darkGray);
 
                 g2d.setFont(new Font("Malgun Gothic", Font.PLAIN, 12));
                 drawWrappedString(g2d, priceText, px+12, py+panelH-40, innerWidth, 14);

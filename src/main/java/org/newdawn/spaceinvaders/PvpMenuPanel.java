@@ -7,7 +7,6 @@ public class PvpMenuPanel extends JPanel {
     private Game game;
     private Sprite titleLogoSprite;
     private Sprite backgroundSprite;
-
     private JButton myPageButton;
     private JButton soloPlayButton;
     private JButton pvpPlayButton;

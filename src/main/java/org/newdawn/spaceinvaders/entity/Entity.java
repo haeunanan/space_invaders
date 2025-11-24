@@ -3,6 +3,7 @@ package org.newdawn.spaceinvaders.entity;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 
+import org.newdawn.spaceinvaders.Game;
 import org.newdawn.spaceinvaders.Sprite;
 import org.newdawn.spaceinvaders.SpriteStore;
 
@@ -40,7 +41,10 @@ public abstract class Entity {
 	 * The current speed of this entity vertically (pixels/sec)
 	 */
 	protected double dy;
-	/**
+
+    protected Game game;
+
+    /**
 	 * The rectangle used for this entity during collisions  resolution
 	 */
 	private Rectangle me = new Rectangle();
@@ -168,8 +172,22 @@ public abstract class Entity {
 
 		return me.intersects(him);
 	}
-	
-	/**
+    public double getDX() {
+        return dx;
+    }
+
+    public void setDX(double value) {
+        this.dx = value;
+    }
+    public double getDY() {
+        return dy;
+    }
+
+    public void setDY(double dy) {
+        this.dy = dy;
+    }
+
+    /**
 	 * Notification that this entity collided with another.
 	 * 
 	 * @param other The entity with which this entity collided.

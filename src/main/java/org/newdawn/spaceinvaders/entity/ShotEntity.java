@@ -1,7 +1,9 @@
 package org.newdawn.spaceinvaders.entity;
 
 import org.newdawn.spaceinvaders.Game;
-
+import org.newdawn.spaceinvaders.SoundManager;
+import org.newdawn.spaceinvaders.stage.Stage;
+import org.newdawn.spaceinvaders.entity.ItemEntity;
 /**
  * An entity representing a shot fired by the player's ship
  * 
@@ -13,6 +15,8 @@ public class ShotEntity extends Entity {
 	/** True if this shot has been "used", i.e. its hit something */
 	private boolean used = false;
 	private String ownerUid;
+    private double dx;
+    private double dy;
 	
 	/**
 	 * Create a new shot from the player
@@ -22,12 +26,12 @@ public class ShotEntity extends Entity {
 	 * @param x The initial x location of the shot
 	 * @param y The initial y location of the shot
 	 */
-	public ShotEntity(Game game,String sprite,int x,int y, String ownerUid) {
-		super(sprite,x,y);
-		this.game = game;
-		this.ownerUid = ownerUid;
-		dy = -300;
-	}
+    public ShotEntity(Game game, String sprite, int x, int y, double dx, double dy) {
+        super(sprite, x, y);
+        this.game = game;
+        this.dx = dx;
+        this.dy = dy;
+    }
 
 	public String getOwnerUid() { // <-- Getter 추가
 		return ownerUid;
@@ -43,15 +47,16 @@ public class ShotEntity extends Entity {
 	 * 
 	 * @param delta The time that has elapsed since last move
 	 */
-	public void move(long delta) {
-		// proceed with normal move
-		super.move(delta);
-		
-		// if we shot off the screen, remove ourselfs
-		if (y < -100) {
-			game.removeEntity(this);
-		}
-	}
+    @Override
+    public void move(long delta) {
+        x += dx * delta / 1000.0;
+        y += dy * delta / 1000.0;
+
+        // 화면 밖 나가면 제거
+        if (y < -50 || y > 650) {
+            game.removeEntity(this);
+        }
+    }
 	
 	/**
 	 * Notification that this shot has collided with another
@@ -59,29 +64,53 @@ public class ShotEntity extends Entity {
 	 * 
 	 * @parma other The other entity with which we've collided
 	 */
+	@Override
 	public void collidedWith(Entity other) {
-		// prevents double kills, if we've already hit something,
-		// don't collide
+		// 1. 이미 어딘가에 부딪힌 총알이라면 중복 처리 방지
 		if (used) {
 			return;
 		}
+
+		// 2. 싱글 플레이 모드 로직
 		if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE) {
-			// if we've hit an alien, kill it!
+			// 적(Alien)과 충돌했는지 확인
 			if (other instanceof AlienEntity) {
 				AlienEntity alien = (AlienEntity) other;
-				// only handle if alien still alive
+
+				// 이미 죽은 적이면 무시
 				if (!alien.isAlive()) {
 					return;
 				}
-				// mark as dead to prevent other shots from double-counting
-				alien.markDead();
-				// remove the affected entities
-				game.removeEntity(this);
-				game.removeEntity(other);
 
-				// notify the game that the alien has been killed
-				game.notifyAlienKilled();
+				// [수정] 총알은 명중했으므로 무조건 화면에서 제거하고 사용됨 처리
+				game.removeEntity(this);
 				used = true;
+
+				// [수정] 적에게 1의 데미지를 입힘
+				// takeDamage(1)이 true(사망)를 반환할 때만 킬 처리를 수행
+				// false(생존)를 반환하면 체력만 깎이고 피격 애니메이션이 재생됨
+				if (alien.takeDamage(1)) {
+					alien.markDead();            // 적 상태를 '죽음'으로 변경
+					game.removeEntity(alien);    // 적을 화면에서 제거
+					game.notifyAlienKilled();    // 점수 획득 알림
+
+					SoundManager.get().playSound("sounds/explosion.wav"); // <--- SoundManager 사용 지점
+
+					// [수정] 아이템 드랍 로직
+					if (Math.random() < 0.1 && game.getCurrentStage() != null && game.getCurrentStage().isItemAllowed()) {
+
+						// 현재 스테이지에 설정된 아이템 이미지 가져오기
+						String itemRef = game.getCurrentStage().getItemSpriteRef();
+
+						ItemEntity item = new ItemEntity(
+								game,
+								itemRef, // 변수로 변경됨
+								alien.getX(),
+								alien.getY()
+						);
+						game.addEntity(item);
+					}
+				}
 			}
 		} else if (game.getCurrentState() == Game.GameState.PLAYING_PVP) {
 			if (other == game.getOpponentShip()) {
