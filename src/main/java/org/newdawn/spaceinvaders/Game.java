@@ -734,7 +734,8 @@ public class Game
      * Notification that an alien has been killed
      */
     public void notifyAlienKilled() {
-        score += 100;
+        score += 100; // 기존 점수 획득
+        coins += 1;  // [수정] 적 처치 시 10 코인 획득 (원하는 금액으로 조절 가능)
     }
 
 
