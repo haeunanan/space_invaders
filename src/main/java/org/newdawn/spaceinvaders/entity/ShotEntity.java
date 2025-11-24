@@ -79,7 +79,8 @@ public class ShotEntity extends Entity {
 					SoundManager.get().playSound("sounds/explosion.wav");
 
 					// 아이템 드랍 (싱글 모드에서만 혹은 협동에서도 허용 가능)
-					if (game.getCurrentStage() != null && game.getCurrentStage().isItemAllowed()) {
+					if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE &&
+							game.getCurrentStage() != null && game.getCurrentStage().isItemAllowed()) {
 						if (Math.random() < 0.1) {
 							String itemRef = game.getCurrentStage().getItemSpriteRef();
 							ItemEntity item = new ItemEntity(game, itemRef, alien.getX(), alien.getY());

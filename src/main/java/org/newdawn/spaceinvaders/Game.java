@@ -565,8 +565,10 @@ public class Game
                             for (Map<String, Double> shotData : opponentShotsData) {
 
                                 double shotDX = 0;
-                                double shotDY = 300; // 상대 탄환은 내 화면에서는 아래→위 방향
-
+                                double shotDY = 300;
+								if (currentState == GameState.PLAYING_COOP) {
+									shotDY = -300;
+								}
                                 ShotEntity shot = new ShotEntity(
                                         this,
                                         "sprites/shot.gif",
@@ -575,7 +577,7 @@ public class Game
                                         shotDX,
                                         shotDY
                                 );
-
+								shot.setOwnerUid(opponentUid);
                                 addEntity(shot);
                             }
                         }
@@ -591,14 +593,10 @@ public class Game
 		networkThread.start();
 	}
 
-	// ▼▼▼ 협동용 게임 시작 메소드 ▼▼▼
 	private void startCoopGame() {
 		entities.clear();
-		leftPressed = false;
-		rightPressed = false;
-		upPressed = false;
-		downPressed = false;
-		firePressed = false;
+		waitingForKeyPress = false;
+		leftPressed = rightPressed = upPressed = downPressed = firePressed = false;
 
 		// 내 우주선 (아래쪽)
 		ship = new ShipEntity(this, "sprites/ship.gif", 300, 550); // X좌표를 약간 왼쪽으로
@@ -612,12 +610,8 @@ public class Game
 
 		// 외계인 생성 (싱글 플레이처럼 적들도 생성해야 함!)
 		alienCount = 0;
-		initStandardStage(); // 1단계 적들 생성
-
-		startNetworkLoop(); // 네트워크 동기화 시작 (PVP와 같은 루프 사용해도 됨)
-
-		waitingForKeyPress = false;
-
+		initStandardStage();
+		startNetworkLoop();
 	}
 
 	private void startCoopMatchmakingLoop() {
@@ -856,6 +850,7 @@ public class Game
      */
     public void notifyAlienKilled() {
         score += 100;
+		coins += 10;
     }
 
 
@@ -874,9 +869,8 @@ public class Game
 
         int baseX = ship.getX() + 10;
         int baseY = ship.getY() - 30;
-
-        double shotDX = 0;       // 플레이어 탄은 수평 이동 없음
-        double shotDY = -300;    // 위로 빠르게 날아감
+        double shotDX = 0;
+        double shotDY = -300;
 
 		if (currentState == GameState.PLAYING_SINGLE && currentStage != null) {
 			shotDY = currentStage.getPlayerShotVelocity(); // Stage의 속도 가져오기
@@ -1045,10 +1039,83 @@ public class Game
 							Entity me = entities.get(p);
 							Entity him = entities.get(s);
 
+							if (removeList.contains(me) || removeList.contains(him)) continue;
+
 							if (me.collidesWith(him)) {
 								me.collidedWith(him);
 								him.collidedWith(me);
 							}
+						}
+					}
+				}
+
+				if (currentState == GameState.PLAYING_PVP) {
+					String myUid = CurrentUserManager.getInstance().getUid();
+					for (int p = 0; p < entities.size(); p++) {
+						for (int s = p + 1; s < entities.size(); s++) {
+							Entity me = entities.get(p);
+							Entity him = entities.get(s);
+
+							if (removeList.contains(me) || removeList.contains(him)) continue;
+
+							Rectangle meRect = getVisualBounds(me);
+							Rectangle himRect = getVisualBounds(him);
+
+							if (meRect.intersects(himRect)) {
+								if (me instanceof ShotEntity && ((ShotEntity)me).isOwnedBy(myUid) && him == opponentShip) {
+									removeEntity(me);
+								} else if (him instanceof ShotEntity && ((ShotEntity)him).isOwnedBy(myUid) && me == opponentShip) {
+									removeEntity(him);
+								}
+								else if (me instanceof ShotEntity && !((ShotEntity)me).isOwnedBy(myUid) && him == ship) {
+									removeEntity(me);
+									((ShipEntity)him).takeDamage();
+								} else if (him instanceof ShotEntity && !((ShotEntity)him).isOwnedBy(myUid) && me == ship) {
+									removeEntity(him);
+									((ShipEntity)me).takeDamage();
+								}
+							}
+						}
+					}
+				} else if (currentState == GameState.PLAYING_COOP) {
+					// 협동 모드 충돌 로직 강화
+					ArrayList<Entity> currentEntities = new ArrayList<>(entities);
+					for (int p = 0; p < currentEntities.size(); p++) {
+						for (int s = p + 1; s < currentEntities.size(); s++) {
+							Entity me = currentEntities.get(p);
+							Entity him = currentEntities.get(s);
+
+							if (removeList.contains(me) || removeList.contains(him)) continue;
+
+							if (me.collidesWith(him)) {
+								// ... 기존 충돌 로직 ...
+								if (me instanceof ShotEntity && (him instanceof AlienEntity || him instanceof BossEntity)) {
+									removeEntity(me);
+									if (him instanceof AlienEntity) { removeEntity(him); notifyAlienKilled(); }
+									else if (him instanceof BossEntity) { ((BossEntity) him).takeDamage(50); }
+								}
+								else if (him instanceof ShotEntity && (me instanceof AlienEntity || me instanceof BossEntity)) {
+									removeEntity(him);
+									if (me instanceof AlienEntity) { removeEntity(me); notifyAlienKilled(); }
+									else if (me instanceof BossEntity) { ((BossEntity) me).takeDamage(50); }
+								}
+								// ... 적 총알 피격 로직 ...
+								else if ((me instanceof AlienShotEntity || me instanceof BossShotEntity) && him == ship) {
+									removeEntity(me); ((ShipEntity) him).takeDamage();
+								}
+								else if ((him instanceof AlienShotEntity || him instanceof BossShotEntity) && me == ship) {
+									removeEntity(him); ((ShipEntity) me).takeDamage();
+								}
+							}
+						}
+					}
+					// 협동 모드 클리어 체크
+					if (currentLevel < BOSS_LEVEL) {
+						int aliensRemaining = 0;
+						for (Entity e : entities) if (e instanceof AlienEntity) aliensRemaining++;
+						// waitingForKeyPress가 false여야만 체크 (중복 승리 호출 방지)
+						if (aliensRemaining == 0 && !waitingForKeyPress) {
+							notifyWin();
 						}
 					}
 				}

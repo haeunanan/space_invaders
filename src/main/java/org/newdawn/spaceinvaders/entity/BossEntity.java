@@ -65,10 +65,23 @@ public class BossEntity extends Entity {
         ));
     }
 
+    /**
+     * 보스에게 데미지를 입히는 메소드입니다.
+     * 체력이 0 이하가 되면 보스를 제거하고 게임 승리 처리를 합니다.
+     * @param damage 입힐 데미지 양
+     */
+    public void takeDamage(int damage) {
+        hp -= damage;
+        if (hp <= 0) {
+            game.removeEntity(this);
+            game.bossKilled();
+        }
+    }
+
     @Override
     public void collidedWith(Entity other) {
         if (other instanceof ShotEntity && other.getY() < this.y) {
-            hp -= 50;
+            takeDamage(50);
 
             // 탄은 제거
             game.removeEntity(other);
