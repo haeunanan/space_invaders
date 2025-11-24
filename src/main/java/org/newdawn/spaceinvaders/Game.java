@@ -878,6 +878,11 @@ public class Game
         double shotDX = 0;       // 플레이어 탄은 수평 이동 없음
         double shotDY = -300;    // 위로 빠르게 날아감
 
+		if (currentState == GameState.PLAYING_SINGLE && currentStage != null) {
+			shotDY = currentStage.getPlayerShotVelocity(); // Stage의 속도 가져오기
+		}
+		String myUid = CurrentUserManager.getInstance().getUid();
+
         // 여러 발 미사일 처리
         for (int i = 0; i < missileCount; i++) {
             int offset = (i - (missileCount - 1) / 2) * 10;
@@ -890,7 +895,12 @@ public class Game
                     shotDX,
                     shotDY
             );
+			if (currentState == GameState.PLAYING_PVP || currentState == GameState.PLAYING_COOP) {
+				shot.setOwnerUid(myUid); // ShotEntity에 setOwnerUid 메서드가 있어야 함
+			}
+
             entities.add(shot);
+			SoundManager.get().playSound("sounds/shoot.wav");
         }
     }
 

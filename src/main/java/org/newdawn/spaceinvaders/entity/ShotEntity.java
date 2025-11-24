@@ -42,6 +42,10 @@ public class ShotEntity extends Entity {
 		return ownerUid.equals(uid);
 	}
 
+	public void setOwnerUid(String uid) {
+		this.ownerUid = uid;
+	}
+
 	/**
 	 * Request that this shot moved based on time elapsed
 	 * 
