@@ -330,7 +330,6 @@ public class Game
 				startCoopMatchmakingLoop(); // 협동 매칭 루프 시작
 				break;
 			case PLAYING_COOP: // 협동 게임 시작
-				waitingForKeyPress = false;
 				cardLayout.show(mainPanel, "PLAYING_SINGLE"); // 게임 화면 재사용
 				SwingUtilities.invokeLater(() -> gamePlayPanel.requestFocusInWindow());
 				startCoopGame(); // 협동 게임 초기화
@@ -593,7 +592,6 @@ public class Game
 
 	private void startCoopGame() {
 		entities.clear();
-		waitingForKeyPress = false;
 		leftPressed = rightPressed = upPressed = downPressed = firePressed = false;
 
 		// 내 우주선 (아래쪽)
@@ -610,6 +608,8 @@ public class Game
 		alienCount = 0;
 		initStandardStage();
 		startNetworkLoop();
+
+		waitingForKeyPress = false;
 	}
 
 	private void startCoopMatchmakingLoop() {
@@ -1038,6 +1038,7 @@ public class Game
 							Entity him = entities.get(s);
 
 							if (removeList.contains(me) || removeList.contains(him)) continue;
+							if (currentState == GameState.PLAYING_PVP) continue;
 
 							if (me.collidesWith(him)) {
 								me.collidedWith(him);
@@ -1076,37 +1077,6 @@ public class Game
 						}
 					}
 				} else if (currentState == GameState.PLAYING_COOP) {
-					// 협동 모드 충돌 로직 강화
-					ArrayList<Entity> currentEntities = new ArrayList<>(entities);
-					for (int p = 0; p < currentEntities.size(); p++) {
-						for (int s = p + 1; s < currentEntities.size(); s++) {
-							Entity me = currentEntities.get(p);
-							Entity him = currentEntities.get(s);
-
-							if (removeList.contains(me) || removeList.contains(him)) continue;
-
-							if (me.collidesWith(him)) {
-								// ... 기존 충돌 로직 ...
-								if (me instanceof ShotEntity && (him instanceof AlienEntity || him instanceof BossEntity)) {
-									removeEntity(me);
-									if (him instanceof AlienEntity) { removeEntity(him); notifyAlienKilled(); }
-									else if (him instanceof BossEntity) { ((BossEntity) him).takeDamage(50); }
-								}
-								else if (him instanceof ShotEntity && (me instanceof AlienEntity || me instanceof BossEntity)) {
-									removeEntity(him);
-									if (me instanceof AlienEntity) { removeEntity(me); notifyAlienKilled(); }
-									else if (me instanceof BossEntity) { ((BossEntity) me).takeDamage(50); }
-								}
-								// ... 적 총알 피격 로직 ...
-								else if ((me instanceof AlienShotEntity || me instanceof BossShotEntity) && him == ship) {
-									removeEntity(me); ((ShipEntity) him).takeDamage();
-								}
-								else if ((him instanceof AlienShotEntity || him instanceof BossShotEntity) && me == ship) {
-									removeEntity(him); ((ShipEntity) me).takeDamage();
-								}
-							}
-						}
-					}
 					// 협동 모드 클리어 체크
 					if (currentLevel < BOSS_LEVEL) {
 						int aliensRemaining = 0;
