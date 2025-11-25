@@ -350,7 +350,7 @@ public class Game
 		reverseControls = false;
 
 		// 스테이지 기본값 초기화
-		stageIndex = 1;
+		stageIndex = 5;
 		currentStage = loadStage(stageIndex);
 
 		// 플레이어 배 초기화 (스테이지보다 먼저 생성)
