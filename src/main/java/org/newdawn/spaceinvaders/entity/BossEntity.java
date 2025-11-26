@@ -82,7 +82,7 @@ public class BossEntity extends Entity {
                 game.addEntity(new ShotEntity(game, "sprites/boss_shot.png", (int)x+50, (int)y+50, 80, 100));
             }
         } else if (currentPhase == 3) {
-            if (!isGammaRayActive && now - lastShot > 7000) {
+            if (!isGammaRayActive && now - lastShot > 3000) {
                 lastShot = now;
                 startGammaRaySequence();
             }

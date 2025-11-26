@@ -167,8 +167,10 @@ public abstract class Entity {
 	 * @return True if the entities collide with each other
 	 */
 	public boolean collidesWith(Entity other) {
-		me.setBounds((int) x, (int) y, sprite.getWidth(), sprite.getHeight());
-		him.setBounds((int) other.x, (int) other.y, other.sprite.getWidth(), other.sprite.getHeight());
+        // [수정 후] getSpriteWidth(), getSpriteHeight() 메소드를 사용하여
+        // GammaRayEntity처럼 크기를 재정의한 엔티티도 정상적으로 충돌 처리되도록 함
+        me.setBounds((int) x, (int) y, getSpriteWidth(), getSpriteHeight());
+        him.setBounds((int) other.x, (int) other.y, other.getSpriteWidth(), other.getSpriteHeight());
 
 		return me.intersects(him);
 	}

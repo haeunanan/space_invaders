@@ -153,10 +153,9 @@ public class ShipEntity extends Entity {
 	 * * @param other The entity with which the ship has collided
 	 */
 	public void collidedWith(Entity other) {
-		// if its an alien, notify the game that the player
-		// is dead
-		if (other instanceof AlienEntity) {
-			game.notifyDeath();
+        // [수정] AlienEntity 뿐만 아니라 BossEntity와 충돌했을 때도 게임 오버 처리
+        if (other instanceof AlienEntity || other instanceof BossEntity) {
+            game.notifyDeath();
 		}
 	}
 }

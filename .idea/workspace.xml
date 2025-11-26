@@ -4,12 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1c996a34-5b40-4804-9bbe-463efff0f82f" name="변경" comment="gamepannel.java 오류 수정">
+    <list default="true" id="1c996a34-5b40-4804-9bbe-463efff0f82f" name="변경" comment="블랙홀 스테이지 버그 수정">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/Game.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/Game.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/BossEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/BossEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/GammaRayEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/GammaRayEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/Entity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/Entity.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShipEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShipEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/BlackHoleBossStage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/BlackHoleBossStage.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -94,7 +94,7 @@
       <workItem from="1764052413674" duration="580000" />
       <workItem from="1764053042309" duration="2621000" />
       <workItem from="1764074652804" duration="1627000" />
-      <workItem from="1764122172235" duration="946000" />
+      <workItem from="1764122172235" duration="1971000" />
     </task>
     <task id="LOCAL-00001" summary="gamepannel.java 오류 수정">
       <option name="closed" value="true" />
@@ -104,7 +104,15 @@
       <option name="project" value="LOCAL" />
       <updated>1764075512393</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="블랙홀 스테이지 버그 수정">
+      <option name="closed" value="true" />
+      <created>1764123331382</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1764123331382</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -135,6 +143,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="gamepannel.java 오류 수정" />
-    <option name="LAST_COMMIT_MESSAGE" value="gamepannel.java 오류 수정" />
+    <MESSAGE value="블랙홀 스테이지 버그 수정" />
+    <option name="LAST_COMMIT_MESSAGE" value="블랙홀 스테이지 버그 수정" />
   </component>
 </project>
