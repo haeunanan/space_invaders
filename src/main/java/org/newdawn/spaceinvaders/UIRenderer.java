@@ -172,41 +172,99 @@ public class UIRenderer {
         g2d.drawString("Shop", x + 12, y + 20);
     }
 
+    // UIRenderer.java 내부의 drawShopOverlay 메서드를 이 코드로 통째로 교체하세요.
     private void drawShopOverlay(Graphics2D g2d) {
-        // [수정] 매직 넘버 제거: 화면 크기에 맞게 오버레이 그리기
         int overlayW = 720;
         int overlayH = 520;
-        int overlayX = (Constants.WINDOW_WIDTH - overlayW) / 2; // 중앙 정렬
-        int overlayY = (Constants.WINDOW_HEIGHT - overlayH) / 2; // 중앙 정렬
+        // 화면 중앙 정렬
+        int overlayX = (Constants.WINDOW_WIDTH - overlayW) / 2;
+        int overlayY = (Constants.WINDOW_HEIGHT - overlayH) / 2;
 
-        g2d.setColor(new Color(40,42,45, 230));
+        // 1. 상점 배경 그리기 (반투명 검정)
+        g2d.setColor(new Color(40, 42, 45, 230));
         g2d.fillRoundRect(overlayX, overlayY, overlayW, overlayH, 10, 10);
 
-        // ... (중간 생략) ...
+        // 테두리
+        g2d.setColor(Color.WHITE);
+        g2d.setStroke(new BasicStroke(2));
+        g2d.drawRoundRect(overlayX, overlayY, overlayW, overlayH, 10, 10);
 
-        // [수정] PlayerStats 및 Constants 적용
+        // 2. 상점 제목
+        g2d.setFont(new Font("Arial", Font.BOLD, 30));
+        int titleWidth = g2d.getFontMetrics().stringWidth("UPGRADE SHOP");
+        g2d.drawString("UPGRADE SHOP", overlayX + (overlayW - titleWidth) / 2, overlayY + 50);
+
+        // 3. 보유 코인 표시 (좌측 상단)
+        g2d.setColor(Color.YELLOW);
+        g2d.setFont(new Font("Arial", Font.BOLD, 20));
+        g2d.drawString("Your Coins: " + game.playerStats.getCoins(), overlayX + 30, overlayY + 45);
+
+        // 4. 아이템 패널 3개 그리기
+        int pad = 20;
+        int panelW = (overlayW - pad * 4) / 3; // 3등분
+        int panelH = overlayH - 120;
+        int panelY = overlayY + 80;
+
         for (int i = 0; i < 3; i++) {
-            // ... (좌표 계산 코드 유지) ...
+            int px = overlayX + pad + i * (panelW + pad);
+            int py = panelY;
 
-            boolean maxed = false;
+            // 각 아이템 패널 배경
+            g2d.setColor(new Color(60, 63, 65));
+            g2d.fillRoundRect(px, py, panelW, panelH, 10, 10);
+            g2d.setColor(Color.LIGHT_GRAY);
+            g2d.drawRoundRect(px, py, panelW, panelH, 10, 10);
+
+            // 아이템 정보 설정
+            String title = "";
             int level = 0;
-            // game.playerStats 사용은 잘 하셨습니다!
-            // game.MAX_UPGRADES -> Constants.MAX_UPGRADES로 변경 권장
-            if (i == 0) { level = game.playerStats.getAttackLevel(); maxed = level >= Constants.MAX_UPGRADES; }
-            if (i == 1) { level = game.playerStats.getMoveLevel(); maxed = level >= Constants.MAX_UPGRADES; }
-            if (i == 2) { level = game.playerStats.getMissileLevel(); maxed = level >= Constants.MAX_UPGRADES; }
+            boolean maxed = false;
 
-            // game.UPGRADE_COST -> Constants.UPGRADE_COST로 변경 권장
-            String priceText = maxed ? "MAX" : ("Price: " + Constants.UPGRADE_COST);
+            if (i == 0) {
+                title = "Attack Speed";
+                level = game.playerStats.getAttackLevel();
+                maxed = level >= Constants.MAX_UPGRADES;
+            } else if (i == 1) {
+                title = "Move Speed";
+                level = game.playerStats.getMoveLevel();
+                maxed = level >= Constants.MAX_UPGRADES;
+            } else if (i == 2) {
+                title = "Missile Count";
+                level = game.playerStats.getMissileLevel();
+                maxed = level >= Constants.MAX_UPGRADES;
+            }
 
-            // game.playerStats.getCoins() 사용 확인
-            if (!maxed && game.playerStats.getCoins() < Constants.UPGRADE_COST) g2d.setColor(Color.red);
-            else g2d.setColor(Color.darkGray);
+            // (1) 아이템 이름
+            g2d.setColor(Color.WHITE);
+            g2d.setFont(new Font("Arial", Font.BOLD, 18));
+            int itemTitleW = g2d.getFontMetrics().stringWidth(title);
+            g2d.drawString(title, px + (panelW - itemTitleW) / 2, py + 40);
 
-            // ... (텍스트 그리기 유지) ...
+            // (2) 레벨 표시
+            g2d.setFont(new Font("Arial", Font.PLAIN, 16));
+            String levelText = "Level: " + level + " / " + Constants.MAX_UPGRADES;
+            int levelW = g2d.getFontMetrics().stringWidth(levelText);
+            g2d.drawString(levelText, px + (panelW - levelW) / 2, py + 100);
+
+            // (3) 가격 또는 MAX 표시
+            String priceText = maxed ? "MAXED" : ("Cost: " + Constants.UPGRADE_COST);
+
+            // 색상 처리: 만렙이면 초록, 돈 부족하면 빨강, 살 수 있으면 노랑
+            if (maxed) {
+                g2d.setColor(Color.GREEN);
+            } else if (game.playerStats.getCoins() < Constants.UPGRADE_COST) {
+                g2d.setColor(new Color(255, 80, 80)); // 연한 빨강
+            } else {
+                g2d.setColor(Color.YELLOW);
+            }
+
+            g2d.setFont(new Font("Arial", Font.BOLD, 20));
+            int priceW = g2d.getFontMetrics().stringWidth(priceText);
+            g2d.drawString(priceText, px + (panelW - priceW) / 2, py + panelH - 40);
         }
-        g2d.setColor(Color.white);
-        g2d.drawString("Coins: " + game.playerStats.getCoins(), overlayX + 20, overlayY + 30);
+
+        // 색상 초기화
+        g2d.setColor(Color.WHITE);
     }
 
     private void drawMessageOverlay(Graphics2D g2d, int width, int height) {

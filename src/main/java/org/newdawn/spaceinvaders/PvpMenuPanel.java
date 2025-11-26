@@ -40,7 +40,7 @@ public class PvpMenuPanel extends JPanel {
 
         // 1. 혼자하기 버튼 (맨 왼쪽)
         soloPlayButton = createStyledButton("혼자하기");
-        logoutButton.setBounds((Constants.WINDOW_WIDTH - buttonWidth) / 2, 450, buttonWidth, buttonHeight);
+        soloPlayButton.setBounds(startX, 365, buttonWidth, buttonHeight);
         add(soloPlayButton);
 
         // 2. 대결하기 버튼 (가운데)

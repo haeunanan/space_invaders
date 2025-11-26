@@ -57,8 +57,6 @@ public class Game
 	private BufferStrategy strategy;
 	/** True if the game is currently "running", i.e. the game loop is looping */
 	private boolean gameRunning = true;
-	private ArrayList<Entity> entities = new ArrayList<>();
-	private ArrayList<Entity> removeList = new ArrayList<>();
     public PlayerStats playerStats = new PlayerStats();
 	/** The entity representing the player */
 	private Entity ship;
@@ -108,6 +106,7 @@ public class Game
 	private long slowTimer = 0;
 	public boolean reverseControls = false; // 조작 반전 상태 플래그
     private InputManager inputManager;
+    public EntityManager entityManager;
 	// ===============================================
 
 	/**
@@ -161,6 +160,7 @@ public class Game
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
         mainPanel.setPreferredSize(new Dimension(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT));
+        entityManager = new EntityManager(this);
 
         startMenuPanel = new StartMenuPanel(this);
         signInPanel = new SignInPanel(this);
@@ -702,9 +702,9 @@ public class Game
 		entities.add(boss);
 		// 보스 스테이지에서는 alienCount가 아닌 다른 방식으로 승리 조건을 관리합니다.
 	}
-	public void addEntity(Entity entity) {
-		entities.add(entity);
-	}
+    public void addEntity(Entity entity) {
+        entityManager.addEntity(entity);
+    }
 	
 	/**
 	 * Notification from a game entity that the logic of the game
@@ -721,9 +721,9 @@ public class Game
 	 * 
 	 * @param entity The entity that should be removed
 	 */
-	public void removeEntity(Entity entity) {
-		removeList.add(entity);
-	}
+    public void removeEntity(Entity entity) {
+        entityManager.removeEntity(entity);
+    }
 	
 	/**
 	 * Notification that the player has died. 
@@ -763,7 +763,8 @@ public class Game
      * are dead.
      */
     public void notifyWin() {
-        playerStats.addScore(100);// 라운드 클리어 -> 코인
+        playerStats.addScore(100);
+        playerStats.addCoins(50);
         currentLevel++;
         if (currentLevel > BOSS_LEVEL) {
             message = "Congratulations! You have defeated the final boss!";
@@ -971,9 +972,7 @@ public class Game
 
     private void processEnemyLogic() {
         if (logicRequiredThisLoop) {
-            for (Entity entity : entities) {
-                entity.doLogic();
-            }
+            entityManager.doLogic(); // 위임
             logicRequiredThisLoop = false;
         }
     }
@@ -984,6 +983,8 @@ public class Game
             if (currentStage.isCompleted()) {
                 waitingForKeyPress = true;
                 message = "Stage " + stageIndex + " Clear!";
+                playerStats.addCoins(50); // 스테이지 클리어 보상 50코인
+                playerStats.addScore(100); // 점수 보상
                 stageIndex++;
             }
         }
@@ -996,39 +997,13 @@ public class Game
 
     private void moveEntities(long delta) {
         if (!waitingForKeyPress) {
-            for (int i = 0; i < entities.size(); i++) {
-                Entity entity = entities.get(i);
-                // PVP 상대방은 네트워크 스레드가 위치를 제어하므로 이동 로직 스킵
-                if (currentState == GameState.PLAYING_PVP && entity == opponentShip) {
-                    continue;
-                }
-                entity.move(delta);
-            }
+            entityManager.moveEntities(delta); // 위임
         }
     }
 
     private void checkCollisions() {
         if (!waitingForKeyPress) {
-            // 1. 일반적인 충돌 체크 (Entity 간)
-            for (int p = 0; p < entities.size(); p++) {
-                for (int s = p + 1; s < entities.size(); s++) {
-                    Entity me = entities.get(p);
-                    Entity him = entities.get(s);
-
-                    if (removeList.contains(me) || removeList.contains(him)) continue;
-                    if (currentState == GameState.PLAYING_PVP) continue; // PVP는 별도 로직
-
-                    if (me.collidesWith(him)) {
-                        me.collidedWith(him);
-                        him.collidedWith(me);
-                    }
-                }
-            }
-
-            // 2. PVP 전용 충돌 체크 (시각적 범위 기반)
-            if (currentState == GameState.PLAYING_PVP) {
-                checkPvpCollisions();
-            }
+            entityManager.checkCollisions(); // 위임
         }
     }
 
@@ -1079,11 +1054,10 @@ public class Game
     }
 
     private void removeDeadEntities() {
-        entities.removeAll(removeList);
-        removeList.clear();
+        entityManager.removeDeadEntities(); // 위임
     }
 
-    private Rectangle getVisualBounds(Entity entity) {
+    public Rectangle getVisualBounds(Entity entity) {
         if (entity == null) return new Rectangle(0,0,0,0);
         int drawX = entity.getX();
         int drawY = entity.getY();
@@ -1105,7 +1079,7 @@ public class Game
     }
 
     public ArrayList<Entity> getEntities() {
-        return entities;
+        return entityManager.getEntities();
     }
 
     public boolean isWaitingForKeyPress() {
