@@ -137,68 +137,77 @@ public class AlienEntity extends Entity {
 		return false; // 생존
 	}
 
-	@Override
-	public void move(long delta) {
-		if (isNeptuneMob && alive) {
-			if (isDashing) {
-				// 대시 중: 속도를 매우 빠르게!
-				// 원래 dx(좌우) 움직임은 유지하되, y축으로 빠르게 내려오게 할 수도 있고
-				// 여기서는 dy(수직) 속도를 강제로 부여하겠습니다.
-				y += (moveSpeed * 3) * delta / 1000.0; // 평소보다 3배 빠르게 하강
+    @Override
+    public void move(long delta) {
+        // 1. 해왕성 적 특수 패턴 처리
+        updateNeptuneBehavior(delta);
 
-				dashTimer -= delta;
-				if (dashTimer <= 0) {
-					isDashing = false; // 대시 끝
-				}
-			} else {
-				// 평상시: 아주 낮은 확률로 대시 시작 (0.1% 확률)
-				if (Math.random() < 0.0002) {
-					isDashing = true;
-					dashTimer = 500; // 0.5초간 돌진
-				}
-			}
-		}
-		// 1. 피격 타이머 업데이트 (피격 상태 복구)
-		if (hitTimer > 0) {
-			hitTimer -= delta;
-			if (hitTimer <= 0) {
-				// 시간이 다 되면 원래대로 복구해야 하는데,
-				// 애니메이션 중일 수 있으므로 현재 프레임으로 복구합니다.
-				this.sprite = frames[frameNumber];
-			}
-		}
-		// 2. 기본 애니메이션 프레임 업데이트 (피격 중이 아닐 때만)
-		else {
-			lastFrameChange += delta;
-			if (lastFrameChange > frameDuration) {
-				lastFrameChange = 0;
-				frameNumber++;
-				if (frameNumber >= frames.length) {
-					frameNumber = 0;
-				}
-				// 프레임 교체
-				this.sprite = frames[frameNumber];
-				// 다음 피격 시 돌아올 이미지도 갱신
-				this.normalSprite = this.sprite;
-			}
-		}
+        // 2. 애니메이션 및 피격 효과 업데이트
+        updateAnimation(delta);
 
-		// 3. 화면 경계 체크 및 이동 방향 전환
-		if ((dx < 0) && (x < 10)) {
-			game.updateLogic();
-		}
+        // 3. 화면 경계 체크
+        checkBoundaries();
+
+        // 4. 발사 시도
+        tryToFire();
+
+        // 5. 실제 위치 이동
+        super.move(delta);
+    }
+
+    private void updateNeptuneBehavior(long delta) {
+        if (isNeptuneMob && alive) {
+            if (isDashing) {
+                // 대시 중: 속도를 매우 빠르게!
+                y += (moveSpeed * 3) * delta / 1000.0;
+                dashTimer -= delta;
+                if (dashTimer <= 0) {
+                    isDashing = false;
+                }
+            } else if (Math.random() < 0.0002) {
+                // 평상시: 아주 낮은 확률로 대시 시작
+                isDashing = true;
+                dashTimer = 500;
+            }
+        }
+    }
+
+    private void updateAnimation(long delta) {
+        // 피격 타이머가 작동 중이면 프레임 변경을 하지 않음
+        if (hitTimer > 0) {
+            hitTimer -= delta;
+            if (hitTimer <= 0) {
+                this.sprite = frames[frameNumber]; // 원래 프레임 복구
+            }
+        } else {
+            // 기본 애니메이션 수행
+            lastFrameChange += delta;
+            if (lastFrameChange > frameDuration) {
+                lastFrameChange = 0;
+                frameNumber++;
+                if (frameNumber >= frames.length) {
+                    frameNumber = 0;
+                }
+                this.sprite = frames[frameNumber];
+                this.normalSprite = this.sprite;
+            }
+        }
+    }
+
+    private void tryToFire() {
+        if (Math.random() < firingChance) {
+            fire();
+        }
+    }
+
+    private void checkBoundaries() {
+        if ((dx < 0) && (x < 10)) {
+            game.updateLogic();
+        }
         if ((dx > 0) && (x > Constants.WINDOW_WIDTH - 50)) {
-			game.updateLogic();
-		}
-
-		// 4. 총알 발사 시도
-		if (Math.random() < firingChance) {
-			fire();
-		}
-
-		// 5. 실제 위치 이동 (Entity.move 호출)
-		super.move(delta);
-	}
+            game.updateLogic();
+        }
+    }
 
 	private void fire() {
 		if ("ICE".equals(bulletType)) {

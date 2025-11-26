@@ -2,6 +2,7 @@
 
 package org.newdawn.spaceinvaders.entity;
 
+import org.newdawn.spaceinvaders.Constants;
 import org.newdawn.spaceinvaders.Game;
 import org.newdawn.spaceinvaders.SpriteStore;
 
@@ -12,6 +13,8 @@ public class BossEntity extends Entity {
     private long lastShot = 0;
     private double moveSpeed = 100;
     private boolean movingLeft = true;
+    private float gammaRayTimer = 0;
+    private int gammaRayStep = 0; // 0:대기, 1:경고, 2:발사
 
     // 페이즈 상태
     private int currentPhase = 1;
@@ -26,19 +29,25 @@ public class BossEntity extends Entity {
 
     @Override
     public void move(long delta) {
-        if (!isGammaRayActive) {
-            if (movingLeft) {
-                dx = -moveSpeed;
-                if (x <= 50) movingLeft = false;
-            } else {
-                dx = moveSpeed;
-                if (x >= 650) movingLeft = true;
-            }
-            super.move(delta);
-        }
+        if (isGammaRayActive) {
+            gammaRayTimer += delta;
 
-        updatePhase();
-        executePattern(delta);
+            // 1단계: 경고 (2초)
+            if (gammaRayStep == 1 && gammaRayTimer > 2000) {
+                gammaRayStep = 2;
+                gammaRayTimer = 0;
+                // 실제 발사
+                game.addEntity(new GammaRayEntity(game, 275, 0, 3000, false));
+            }
+            // 2단계: 발사 중 (3초)
+            else if (gammaRayStep == 2 && gammaRayTimer > 3000) {
+                isGammaRayActive = false;
+                gammaRayStep = 0;
+                lastShot = System.currentTimeMillis();
+            }
+            // 스레드 없이 메인 루프에서 처리되므로 안전함
+            return;
+        }
     }
 
     private void updatePhase() {
@@ -76,9 +85,9 @@ public class BossEntity extends Entity {
             if (now - lastShot > 1200) {
                 lastShot = now;
                 // 확산탄
-                game.addEntity(new ShotEntity(game, "sprites/boss_shot.png", (int)x+50, (int)y+50, 0, 150));
-                game.addEntity(new ShotEntity(game, "sprites/boss_shot.png", (int)x+50, (int)y+50, -80, 100));
-                game.addEntity(new ShotEntity(game, "sprites/boss_shot.png", (int)x+50, (int)y+50, 80, 100));
+                game.addEntity(new ShotEntity(game, Constants.BOSS_SHOT_SPRITE, (int)x+50, (int)y+50, 0, 150));
+                game.addEntity(new ShotEntity(game, Constants.BOSS_SHOT_SPRITE, (int)x+50, (int)y+50, -80, 100));
+                game.addEntity(new ShotEntity(game, Constants.BOSS_SHOT_SPRITE, (int)x+50, (int)y+50, 80, 100));
             }
         } else if (currentPhase == 3) {
             if (!isGammaRayActive && now - lastShot > 3000) {
@@ -90,26 +99,12 @@ public class BossEntity extends Entity {
 
     private void startGammaRaySequence() {
         isGammaRayActive = true;
+        gammaRayStep = 1;
+        gammaRayTimer = 0;
+        x = 275; // 중앙 이동
 
-        // 별도 스레드에서 시퀀스 실행
-        new Thread(() -> {
-            try {
-                x = 275; // 중앙 이동
-
-                // 경고 (2초)
-                game.addEntity(new GammaRayEntity(game, 275, 0, 2000, true));
-                Thread.sleep(2000);
-
-                // 발사 (3초)
-                game.addEntity(new GammaRayEntity(game, 275, 0, 3000, false));
-                Thread.sleep(3000);
-
-                isGammaRayActive = false;
-                lastShot = System.currentTimeMillis();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }).start();
+        // 경고 이펙트 생성
+        game.addEntity(new GammaRayEntity(game, 275, 0, 2000, true));
     }
 
     private void changeSprite(String ref) {

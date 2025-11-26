@@ -4,9 +4,11 @@ import javax.swing.*;
 import java.awt.*;
 
 public class PvpMenuPanel extends JPanel {
-    private Game game;
-    private Sprite titleLogoSprite;
-    private Sprite backgroundSprite;
+    // [수정] 직렬화 제외를 위해 transient 키워드 추가
+    private transient Game game;
+    private transient Sprite titleLogoSprite;
+    private transient Sprite backgroundSprite;
+
     private JButton myPageButton;
     private JButton soloPlayButton;
     private JButton pvpPlayButton;
@@ -15,11 +17,9 @@ public class PvpMenuPanel extends JPanel {
     public PvpMenuPanel(Game game) {
         this.game = game;
         setLayout(null);
-        // setBackground(Color.BLACK);
+
         titleLogoSprite = SpriteStore.get().getSprite("sprites/title-logo.png");
-
         backgroundSprite = SpriteStore.get().getSprite("sprites/main_background.jpg");
-
 
         myPageButton = createStyledButton("마이페이지");
         myPageButton.setBounds(300, 300, 200, 40);
@@ -32,7 +32,7 @@ public class PvpMenuPanel extends JPanel {
         // --- 버튼 3개를 중앙에 일렬로 배치하기 위한 계산 ---
         int buttonWidth = 180;
         int buttonHeight = 50;
-        int gap = 20; // 버튼 사이 간격 (3개라 간격을 조금 좁힘)
+        int gap = 20; // 버튼 사이 간격
 
         // 전체 너비 = (버튼폭 * 3) + (간격 * 2)
         int totalWidth = (buttonWidth * 3) + (gap * 2);
@@ -54,7 +54,7 @@ public class PvpMenuPanel extends JPanel {
         add(coopPlayButton);
 
         // 4. 로그아웃 버튼 (아래쪽 중앙)
-        logoutButton = createStyledButton("로그아웃"); // [중요] 반드시 먼저 생성해야 함!
+        logoutButton = createStyledButton("로그아웃");
         logoutButton.setBounds((Constants.WINDOW_WIDTH - buttonWidth) / 2, 450, buttonWidth, buttonHeight);
         add(logoutButton);
 
@@ -67,11 +67,11 @@ public class PvpMenuPanel extends JPanel {
 
             // 2. 협동 모드 매치메이킹 시작
             FirebaseClientService clientService = new FirebaseClientService();
-            boolean success = clientService.startCoopMatchmaking(uid, nickname); // coop 메소드 호출
+            boolean success = clientService.startCoopMatchmaking(uid, nickname);
 
             // 3. 로비로 이동
             if (success) {
-                game.changeState(Game.GameState.COOP_LOBBY); // COOP_LOBBY로 이동
+                game.changeState(Game.GameState.COOP_LOBBY);
             } else {
                 JOptionPane.showMessageDialog(this, "서버 접속 실패");
             }
@@ -79,11 +79,10 @@ public class PvpMenuPanel extends JPanel {
 
         // --- 버튼 클릭 이벤트 리스너 ---
         soloPlayButton.addActionListener(e -> {
-            // PLAYING_SINGLE 대신 PLAYING_SINGLE로 상태 변경
             game.changeState(Game.GameState.PLAYING_SINGLE);
         });
+
         pvpPlayButton.addActionListener(e -> {
-            // 1. 현재 로그인된 사용자 정보를 가져옵니다.
             String uid = CurrentUserManager.getInstance().getUid();
             String nickname = CurrentUserManager.getInstance().getNickname();
 
@@ -92,23 +91,22 @@ public class PvpMenuPanel extends JPanel {
                 return;
             }
 
-            // 2. Firebase에 매치메이킹 시작을 요청합니다.
             FirebaseClientService clientService = new FirebaseClientService();
             boolean success = clientService.startMatchmaking(uid, nickname);
 
-            // 3. 요청이 성공하면 로비 화면으로 이동합니다.
             if (success) {
                 game.changeState(Game.GameState.PVP_LOBBY);
             } else {
                 JOptionPane.showMessageDialog(this, "매칭 서버에 접속할 수 없습니다.");
             }
         });
+
         logoutButton.addActionListener(e -> {
             CurrentUserManager.getInstance().logout();
-            // 로그아웃 로직 추가 후 SIGN_IN 상태로 변경 (필요시)
             game.changeState(Game.GameState.SIGN_IN);
         });
     }
+
     // 버튼 스타일을 통일하기 위한 헬퍼 메소드
     private JButton createStyledButton(String text) {
         JButton button = new JButton(text);

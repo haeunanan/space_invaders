@@ -4,10 +4,10 @@ import javax.swing.*;
 import java.awt.*;
 
 public class SignInPanel extends JPanel {
-    private Game game;
-
-    private Sprite titleLogoSprite;
-    private Sprite backgroundSprite;
+    // [수정 1] 직렬화 제외를 위해 transient 키워드 추가
+    private transient Game game;
+    private transient Sprite titleLogoSprite;
+    private transient Sprite backgroundSprite;
 
     private JTextField emailField;
     private JPasswordField passwordField;
@@ -24,14 +24,16 @@ public class SignInPanel extends JPanel {
         // 1. 이메일 입력창
         emailField = new JTextField("email");
         emailField.setBounds(300, 250, 200, 40);
-        emailField.setHorizontalAlignment(JTextField.CENTER);
+        // [수정 2] JTextField.CENTER -> SwingConstants.CENTER 로 변경
+        emailField.setHorizontalAlignment(SwingConstants.CENTER);
         emailField.setBackground(Color.WHITE);
         emailField.setForeground(Color.GRAY);
 
         // 2. 비밀번호 입력창 - 입력 시 ●으로 표시
         passwordField = new JPasswordField();
         passwordField.setBounds(300, 300, 200, 40);
-        passwordField.setHorizontalAlignment(JTextField.CENTER);
+        // [수정 3] JTextField.CENTER -> SwingConstants.CENTER 로 변경
+        passwordField.setHorizontalAlignment(SwingConstants.CENTER);
 
         // 3. 로그인 버튼
         signInButton = new JButton("sign in");
@@ -75,7 +77,7 @@ public class SignInPanel extends JPanel {
 
         FirebaseClientService clientService = new FirebaseClientService();
 
-        // 1. Firebase Authentication으로 로그인 시도 (이제 uid를 바로 받아옵니다)
+        // 1. Firebase Authentication으로 로그인 시도
         String uid = clientService.signIn(email, password);
 
         if (uid != null) {
@@ -107,7 +109,7 @@ public class SignInPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "이메일 또는 비밀번호가 올바르지 않습니다.");
         }
     }
-    // paintComponent를 오버라이드하여 로고 등을 그릴 수 있습니다.
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);

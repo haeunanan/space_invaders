@@ -5,7 +5,10 @@ import javax.swing.*;
 import java.awt.*;
 
 public class SignUpPanel extends JPanel {
-    private Game game;
+    // [수정 1] 직렬화 제외를 위해 transient 키워드 추가
+    private transient Game game;
+    private transient Sprite titleLogoSprite;
+    private transient Sprite backgroundSprite;
 
     // UI 요소들을 클래스 변수로 선언
     private JTextField emailField; // Figma의 'id'
@@ -14,8 +17,6 @@ public class SignUpPanel extends JPanel {
     private JTextField usernameField;
     private JButton signUpButton;
     private JButton goToSignInButton;
-    private Sprite titleLogoSprite;
-    private Sprite backgroundSprite;
 
     public SignUpPanel(Game game) {
         this.game = game;
@@ -24,22 +25,27 @@ public class SignUpPanel extends JPanel {
         // 로고 이미지 로드
         titleLogoSprite = SpriteStore.get().getSprite("sprites/title-logo.png");
         backgroundSprite = SpriteStore.get().getSprite("sprites/main_background.jpg");
+
         // --- UI 요소 생성 및 설정 ---
         emailField = new JTextField("email");
         emailField.setBounds(300, 220, 200, 40);
-        emailField.setHorizontalAlignment(JTextField.CENTER);
+        // [수정 2] JTextField.CENTER -> SwingConstants.CENTER 로 변경
+        emailField.setHorizontalAlignment(SwingConstants.CENTER);
 
         passwordField = new JPasswordField();
         passwordField.setBounds(300, 270, 200, 40);
-        passwordField.setHorizontalAlignment(JTextField.CENTER);
+        // [수정 3] JTextField.CENTER -> SwingConstants.CENTER 로 변경
+        passwordField.setHorizontalAlignment(SwingConstants.CENTER);
 
         confirmPasswordField = new JPasswordField();
         confirmPasswordField.setBounds(300, 320, 200, 40);
-        confirmPasswordField.setHorizontalAlignment(JTextField.CENTER);
+        // [수정 4] JTextField.CENTER -> SwingConstants.CENTER 로 변경
+        confirmPasswordField.setHorizontalAlignment(SwingConstants.CENTER);
 
         usernameField = new JTextField("username");
         usernameField.setBounds(300, 370, 200, 40);
-        usernameField.setHorizontalAlignment(JTextField.CENTER);
+        // [수정 5] JTextField.CENTER -> SwingConstants.CENTER 로 변경
+        usernameField.setHorizontalAlignment(SwingConstants.CENTER);
 
         signUpButton = new JButton("sign up"); // Figma의 'log in' 버튼을 'sign up'으로 수정
         signUpButton.setBounds(300, 420, 200, 40);
@@ -75,11 +81,10 @@ public class SignUpPanel extends JPanel {
         String email = emailField.getText();
         String password = new String(passwordField.getPassword());
         String confirmPassword = new String(confirmPasswordField.getPassword());
-        String username = usernameField.getText(); // username은 지금 당장 쓰진 않지만 받아둡니다.
+        // String username = usernameField.getText(); // (현재 사용 안 함)
 
         // 1. 비밀번호와 비밀번호 확인이 일치하는지 검사
         if (!password.equals(confirmPassword)) {
-            // JOptionPane을 사용하려면 javax.swing.JOptionPane을 import 해야 합니다.
             JOptionPane.showMessageDialog(this, "비밀번호가 일치하지 않습니다.");
             return; // 일치하지 않으면 여기서 중단
         }

@@ -11,17 +11,20 @@ public class FirebaseClientService {
     private static final String WEB_API_KEY = "AIzaSyCg47obQ1LAaQ1d0M87t8KGcVn4rGabDio";
     private static final String PROJECT_ID = "space-invaders-dd665";
     private static final String REALTIME_DB_URL = "https://space-invaders-dd665-default-rtdb.asia-southeast1.firebasedatabase.app/";
-
+    private static final String JSON_TYPE_STR = "application/json; charset=utf-8";
     private static final String SIGN_UP_URL = "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" + WEB_API_KEY;
     private static final String SIGN_IN_URL = "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + WEB_API_KEY;
     private static final String FIRESTORE_USERS_URL = "https://firestore.googleapis.com/v1/projects/" + PROJECT_ID + "/databases/(default)/documents/users/";
-
+    private static final String EXT_JSON = ".json";
+    private static final String PATH_QUEUE = "matchmaking/queue/";
+    private static final String PATH_COOP_QUEUE = "matchmaking/coop_queue/";
+    private static final String PATH_MATCHES = "matches/";
     private final OkHttpClient client = new OkHttpClient();
     private final Gson gson = new Gson();
 
     public String signUp(String email, String password) {
         String json = "{\"email\": \"" + email + "\", \"password\": \"" + password + "\", \"returnSecureToken\": true}";
-        RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
+        RequestBody body = RequestBody.create(json, MediaType.get(JSON_TYPE_STR));
         Request request = new Request.Builder().url(SIGN_UP_URL).post(body).build();
 
         try (Response response = client.newCall(request).execute()) {
@@ -41,7 +44,7 @@ public class FirebaseClientService {
     public boolean saveUsername(String uid, String username) {
         String url = FIRESTORE_USERS_URL + uid;
         String json = "{\"fields\": {\"nickname\": {\"stringValue\": \"" + username + "\"}}}";
-        RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
+        RequestBody body = RequestBody.create(json, MediaType.get((JSON_TYPE_STR)));
         Request request = new Request.Builder().url(url).patch(body).build();
 
         try (Response response = client.newCall(request).execute()) {
@@ -55,7 +58,7 @@ public class FirebaseClientService {
 
     public String signIn(String email, String password) {
         String json = "{\"email\": \"" + email + "\", \"password\": \"" + password + "\", \"returnSecureToken\": true}";
-        RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
+        RequestBody body = RequestBody.create(json, MediaType.get(JSON_TYPE_STR));
         Request request = new Request.Builder().url(SIGN_IN_URL).post(body).build();
 
         try (Response response = client.newCall(request).execute()) {
@@ -97,10 +100,10 @@ public class FirebaseClientService {
      * @return 등록 성공 시 true, 실패 시 false
      */
     public boolean startMatchmaking(String uid, String nickname) {
-        String url = REALTIME_DB_URL + "matchmaking/queue/" + uid + ".json";
+        String url = REALTIME_DB_URL + PATH_QUEUE + uid + EXT_JSON;
 
         String json = "{\"nickname\": \"" + nickname + "\", \"timestamp\": " + System.currentTimeMillis() + "}";
-        RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
+        RequestBody body = RequestBody.create(json, MediaType.get(JSON_TYPE_STR));
 
         Request request = new Request.Builder()
                 .url(url)
@@ -122,7 +125,7 @@ public class FirebaseClientService {
      * @return 찾은 상대방의 UID, 없으면 null
      */
     public String findOpponent(String myUid) {
-        String url = REALTIME_DB_URL + "matchmaking/queue.json";
+        String url = REALTIME_DB_URL + "matchmaking/queue" + EXT_JSON;
         Request request = new Request.Builder().url(url).get().build();
 
         try (Response response = client.newCall(request).execute()) {
@@ -155,11 +158,11 @@ public class FirebaseClientService {
     public String createMatch(String player1Uid, String player2Uid) {
         // 매치 ID를 두 UID를 정렬하여 조합 (항상 동일한 ID가 생성되도록)
         String matchId = player1Uid.compareTo(player2Uid) < 0 ? player1Uid + "_" + player2Uid : player2Uid + "_" + player1Uid;
-        String url = REALTIME_DB_URL + "matches/" + matchId + ".json";
+        String url = REALTIME_DB_URL + PATH_MATCHES + matchId + EXT_JSON;
 
         // 게임 방의 초기 상태 데이터
         String json = "{\"player1\": \"" + player1Uid + "\", \"player2\": \"" + player2Uid + "\", \"status\": \"starting\"}";
-        RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
+        RequestBody body = RequestBody.create(json, MediaType.get(JSON_TYPE_STR));
         Request request = new Request.Builder().url(url).put(body).build();
 
         try (Response response = client.newCall(request).execute()) {
@@ -178,7 +181,7 @@ public class FirebaseClientService {
      * @return 삭제 성공 시 true
      */
     public boolean deleteFromQueue(String uid) {
-        String url = REALTIME_DB_URL + "matchmaking/queue/" + uid + ".json";
+        String url = REALTIME_DB_URL + PATH_QUEUE + uid + EXT_JSON;
         // DELETE 요청
         Request request = new Request.Builder().url(url).delete().build();
 
@@ -196,7 +199,7 @@ public class FirebaseClientService {
      * @return 큐에 있으면 true, 없으면 false
      */
     public boolean isUserInQueue(String myUid) {
-        String url = REALTIME_DB_URL + "matchmaking/queue/" + myUid + ".json";
+        String url = REALTIME_DB_URL + PATH_QUEUE + myUid + EXT_JSON;
         Request request = new Request.Builder().url(url).get().build();
 
         try (Response response = client.newCall(request).execute()) {
@@ -238,20 +241,22 @@ public class FirebaseClientService {
         return null;
     }
     public void updatePlayerState(String matchId, String playerNode, Map<String, Object> playerData) {
-        String url = REALTIME_DB_URL + "matches/" + matchId + "/" + playerNode + ".json";
+        String url = REALTIME_DB_URL + PATH_MATCHES + matchId + "/" + playerNode + EXT_JSON;
 
         String json = gson.toJson(playerData);
-        RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
+        RequestBody body = RequestBody.create(json, MediaType.get(JSON_TYPE_STR));
         Request request = new Request.Builder().url(url).patch(body).build();
 
         client.newCall(request).enqueue(new Callback() {
-            @Override public void onFailure(Call call, IOException e) {}
+            @Override public void onFailure(Call call, IOException e) {
+                System.err.println("Update Player State Failed: " + e.getMessage());
+            }
             @Override public void onResponse(Call call, Response response) throws IOException { response.close(); }
         });
     }
 
     public Map<String, Object> getOpponentState(String matchId, String opponentNode) {
-        String url = REALTIME_DB_URL + "matches/" + matchId + "/" + opponentNode + ".json";
+        String url = REALTIME_DB_URL + PATH_MATCHES + matchId + "/" + opponentNode + EXT_JSON;
         Request request = new Request.Builder().url(url).get().build();
 
         try (Response response = client.newCall(request).execute()) {
@@ -271,7 +276,7 @@ public class FirebaseClientService {
      * @return 매치 정보가 담긴 Map, 실패 시 null
      */
     public Map<String, Object> getMatchData(String matchId) {
-        String url = REALTIME_DB_URL + "matches/" + matchId + ".json";
+        String url = REALTIME_DB_URL + PATH_MATCHES + matchId + EXT_JSON;
         Request request = new Request.Builder().url(url).get().build();
 
         try (Response response = client.newCall(request).execute()) {
@@ -290,9 +295,9 @@ public class FirebaseClientService {
 
     // 1. 협동 모드 대기열 등록
     public boolean startCoopMatchmaking(String uid, String nickname) {
-        String url = REALTIME_DB_URL + "matchmaking/coop_queue/" + uid + ".json"; // coop_queue 사용
+        String url = REALTIME_DB_URL + PATH_COOP_QUEUE + uid + EXT_JSON; // coop_queue 사용
         String json = "{\"nickname\": \"" + nickname + "\", \"timestamp\": " + System.currentTimeMillis() + "}";
-        RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
+        RequestBody body = RequestBody.create(json, MediaType.get(JSON_TYPE_STR));
         Request request = new Request.Builder().url(url).put(body).build();
 
         try (Response response = client.newCall(request).execute()) {
@@ -329,7 +334,7 @@ public class FirebaseClientService {
 
     // 3. 협동 모드 대기열에서 삭제
     public boolean deleteFromCoopQueue(String uid) {
-        String url = REALTIME_DB_URL + "matchmaking/coop_queue/" + uid + ".json"; // coop_queue 사용
+        String url = REALTIME_DB_URL + PATH_COOP_QUEUE + uid + EXT_JSON; // coop_queue 사용
         Request request = new Request.Builder().url(url).delete().build();
 
         try (Response response = client.newCall(request).execute()) {
@@ -342,7 +347,7 @@ public class FirebaseClientService {
 
     // 4. 협동 모드 대기열 확인 (참가자용)
     public boolean isUserInCoopQueue(String myUid) {
-        String url = REALTIME_DB_URL + "matchmaking/coop_queue/" + myUid + ".json";
+        String url = REALTIME_DB_URL + PATH_COOP_QUEUE + myUid + EXT_JSON;
         Request request = new Request.Builder().url(url).get().build();
 
         try (Response response = client.newCall(request).execute()) {

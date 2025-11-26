@@ -134,7 +134,7 @@ public class UIRenderer {
         g2d.setStroke(new BasicStroke(2));
         g2d.drawRect(barX, barY, barWidth, barHeight);
 
-        g2d.setFont(new Font("Arial", Font.BOLD, 16));
+        g2d.setFont(new Font(Constants.FONT_ARIAL, Font.BOLD, 16));
         String bossName = "THE VOID CORE";
         int textWidth = g2d.getFontMetrics().stringWidth(bossName);
         g2d.drawString(bossName, barX + (barWidth - textWidth) / 2, barY - 10);
@@ -142,7 +142,7 @@ public class UIRenderer {
 
     private void drawScoreAndCoins(Graphics2D g2d) {
         g2d.setColor(Color.white);
-        g2d.setFont(new Font("Arial", Font.BOLD, 16));
+        g2d.setFont(new Font(Constants.FONT_ARIAL, Font.BOLD, 16));
         g2d.drawString("Score: " + game.playerStats.getScore(), 160, 45);
 
         // Coin Badge
@@ -154,7 +154,7 @@ public class UIRenderer {
         g2d.setColor(Color.black);
         g2d.setFont(new Font("SansSerif", Font.BOLD, 18));
         g2d.drawString("$", badgeX+13, badgeY+28);
-        g2d.setFont(new Font("Arial", Font.BOLD, 12));
+        g2d.setFont(new Font(Constants.FONT_ARIAL, Font.BOLD, 12));
         g2d.drawString(String.valueOf(game.playerStats.getCoins()), badgeX+46, badgeY+26);
     }
 
@@ -168,7 +168,7 @@ public class UIRenderer {
         g2d.setColor(Color.gray);
         g2d.fillRect(x, y, btnWidth, btnHeight);
         g2d.setColor(Color.white);
-        g2d.setFont(new Font("Arial", Font.PLAIN, 12));
+        g2d.setFont(new Font(Constants.FONT_ARIAL, Font.PLAIN, 12));
         g2d.drawString("Shop", x + 12, y + 20);
     }
 
@@ -190,13 +190,13 @@ public class UIRenderer {
         g2d.drawRoundRect(overlayX, overlayY, overlayW, overlayH, 10, 10);
 
         // 2. 상점 제목
-        g2d.setFont(new Font("Arial", Font.BOLD, 30));
+        g2d.setFont(new Font(Constants.FONT_ARIAL, Font.BOLD, 30));
         int titleWidth = g2d.getFontMetrics().stringWidth("UPGRADE SHOP");
         g2d.drawString("UPGRADE SHOP", overlayX + (overlayW - titleWidth) / 2, overlayY + 50);
 
         // 3. 보유 코인 표시 (좌측 상단)
         g2d.setColor(Color.YELLOW);
-        g2d.setFont(new Font("Arial", Font.BOLD, 20));
+        g2d.setFont(new Font(Constants.FONT_ARIAL, Font.BOLD, 20));
         g2d.drawString("Your Coins: " + game.playerStats.getCoins(), overlayX + 30, overlayY + 45);
 
         // 4. 아이템 패널 3개 그리기
@@ -236,12 +236,12 @@ public class UIRenderer {
 
             // (1) 아이템 이름
             g2d.setColor(Color.WHITE);
-            g2d.setFont(new Font("Arial", Font.BOLD, 18));
+            g2d.setFont(new Font(Constants.FONT_ARIAL, Font.BOLD, 18));
             int itemTitleW = g2d.getFontMetrics().stringWidth(title);
             g2d.drawString(title, px + (panelW - itemTitleW) / 2, py + 40);
 
             // (2) 레벨 표시
-            g2d.setFont(new Font("Arial", Font.PLAIN, 16));
+            g2d.setFont(new Font(Constants.FONT_ARIAL, Font.PLAIN, 16));
             String levelText = "Level: " + level + " / " + Constants.MAX_UPGRADES;
             int levelW = g2d.getFontMetrics().stringWidth(levelText);
             g2d.drawString(levelText, px + (panelW - levelW) / 2, py + 100);
@@ -258,7 +258,7 @@ public class UIRenderer {
                 g2d.setColor(Color.YELLOW);
             }
 
-            g2d.setFont(new Font("Arial", Font.BOLD, 20));
+            g2d.setFont(new Font(Constants.FONT_ARIAL, Font.BOLD, 20));
             int priceW = g2d.getFontMetrics().stringWidth(priceText);
             g2d.drawString(priceText, px + (panelW - priceW) / 2, py + panelH - 40);
         }
@@ -287,12 +287,12 @@ public class UIRenderer {
             }
             g2d.setColor(Color.WHITE);
             g2d.drawRect(325, 550, 150, 40);
-            g2d.setFont(new Font("Malgun Gothic", Font.BOLD, 16));
+            g2d.setFont(new Font(Constants.FONT_MALGUN, Font.BOLD, 16));
             String backToMenu = "메뉴로 돌아가기";
             g2d.drawString(backToMenu, (width - g2d.getFontMetrics().stringWidth(backToMenu)) / 2, 575);
         } else {
             g2d.setColor(Color.white);
-            g2d.setFont(new Font("Malgun Gothic", Font.BOLD, 40));
+            g2d.setFont(new Font(Constants.FONT_MALGUN, Font.BOLD, 40));
             String message = game.getMessage();
             FontMetrics fm = g2d.getFontMetrics();
             g2d.drawString(message, (width - fm.stringWidth(message)) / 2, height / 2 - 50);

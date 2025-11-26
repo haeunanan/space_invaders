@@ -107,6 +107,10 @@ public class Game
 	public boolean reverseControls = false; // 조작 반전 상태 플래그
     private InputManager inputManager;
     public EntityManager entityManager;
+    private static final String CARD_PLAYING_SINGLE = "PLAYING_SINGLE";
+    private static final String CARD_PVP_LOBBY = "PVP_LOBBY";
+    private static final String KEY_HEALTH = "health";
+    private static final String KEY_SHOTS = "shots";
 	// ===============================================
 
 	/**
@@ -176,9 +180,9 @@ public class Game
         mainPanel.add(startMenuPanel, "START");
         mainPanel.add(signInPanel, "SIGN_IN");
         mainPanel.add(signUpPanel, "SIGN_UP");
-        mainPanel.add(gamePlayPanel, "PLAYING_SINGLE");
+        mainPanel.add(gamePlayPanel, CARD_PLAYING_SINGLE);
         mainPanel.add(pvpMenuPanel, "PVP_MENU");
-        mainPanel.add(pvpLobbyPanel, "PVP_LOBBY");
+        mainPanel.add(pvpLobbyPanel, CARD_PVP_LOBBY);
         mainPanel.add(myPagePanel, "MY_PAGE");
 
         container.getContentPane().add(mainPanel);
@@ -188,58 +192,28 @@ public class Game
         inputManager = new InputManager(this); // 객체 생성
         gamePlayPanel.addKeyListener(inputManager); // 리스너 등록
         gamePlayPanel.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-                int mx = e.getX();
-                int my = e.getY();
-
-                // ▼▼▼ '메뉴로 돌아가기' 버튼 클릭 처리 추가 ▼▼▼
-                // 게임이 끝나고(waitingForKeyPress) 싱글 플레이 상태일 때
-                if (Game.this.isWaitingForKeyPress() && Game.this.getCurrentState() == Game.GameState.PLAYING_SINGLE) {
+            private void handleGameMouseClick(int mx, int my) {
+                // '메뉴로 돌아가기' 버튼 처리
+                if (isWaitingForKeyPress() && getCurrentState() == GameState.PLAYING_SINGLE) {
                     if (mx >= 325 && mx <= 475 && my >= 550 && my <= 590) {
-                        int choice = JOptionPane.showConfirmDialog(
-                                container,
-                                "진행 상황이 저장되지 않습니다. 메뉴로 돌아가시겠습니까?\n(레벨 1부터 다시 시작합니다)",
-                                "메뉴로 돌아가기",
-                                JOptionPane.YES_NO_OPTION
-                        );
-
-                        if (choice == JOptionPane.YES_OPTION) {
-                            Game.this.resetSinglePlayerState(); // '예'를 눌렀을 때만 초기화
-                            Game.this.changeState(GameState.PVP_MENU);
-                        }
-                        // '아니오'를 누르면 아무것도 하지 않고 게임 종료 화면에 남아있습니다.
+                        showReturnToMenuDialog();
                         return;
                     }
                 }
 
-                // simple shop button at top-right
+                // 상점 버튼 처리
                 if (mx >= 720 && mx <= 780 && my >= 10 && my <= 40) {
                     shopOpen = !shopOpen;
                     return;
                 }
-                // if shop open, check option clicks
+
+                // 상점 내부 아이템 구매 처리
                 if (shopOpen) {
-                    // calculate panel positions consistent with rendering
-                    int overlayX = 40;
-                    int overlayY = 40;
-                    int overlayW = 720;
-                    int overlayH = 520;
-                    int pad = 20;
-                    int panelW = (overlayW - pad*4)/3; // space for 3 panels and paddings
-                    int panelH = overlayH - 120;
-                    int panelY = overlayY + 60;
-                    for (int i=0;i<3;i++) {
-                        int px = overlayX + pad + i*(panelW + pad);
-                        int py = panelY;
-                        if (mx >= px && mx <= px + panelW && my >= py && my <= py + panelH) {
-                            if (i == 0) purchaseAttackSpeed();
-                            if (i == 1) purchaseMoveSpeed();
-                            if (i == 2) purchaseMissileCount();
-                        }
-                    }
+                    handleShopPurchase(mx, my);
                 }
             }
         });
+
         gamePlayPanel.setFocusable(true);
 
         // finally make the window visible
@@ -261,6 +235,46 @@ public class Game
             this.gameLoop();
         });
         gameThread.start();
+    }
+
+    private void showReturnToMenuDialog() {
+        int choice = JOptionPane.showConfirmDialog(
+                container,
+                "진행 상황이 저장되지 않습니다. 메뉴로 돌아가시겠습니까?\n(레벨 1부터 다시 시작합니다)",
+                "메뉴로 돌아가기",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (choice == JOptionPane.YES_OPTION) {
+            resetSinglePlayerState(); // 상태 초기화
+            changeState(GameState.PVP_MENU); // 메뉴로 이동
+        }
+        // '아니오'를 누르면 아무것도 하지 않음
+    }
+
+    private void handleShopPurchase(int mx, int my) {
+        // 상점 패널 위치 및 크기 계산 (하드코딩된 값들)
+        int overlayX = 40;
+        int overlayY = 40;
+        int overlayW = 720;
+        int overlayH = 520;
+        int pad = 20;
+        int panelW = (overlayW - pad * 4) / 3; // 패널 3개 나란히 배치
+        int panelH = overlayH - 120;
+        int panelY = overlayY + 60;
+
+        // 3개의 아이템 슬롯을 반복문으로 체크
+        for (int i = 0; i < 3; i++) {
+            int px = overlayX + pad + i * (panelW + pad);
+            int py = panelY;
+
+            // 마우스 클릭이 i번째 아이템 패널 안에 있는지 확인
+            if (mx >= px && mx <= px + panelW && my >= py && my <= py + panelH) {
+                if (i == 0) purchaseAttackSpeed();
+                if (i == 1) purchaseMoveSpeed();
+                if (i == 2) purchaseMissileCount();
+            }
+        }
     }
 
     public void changeState(GameState newState) {
@@ -287,17 +301,17 @@ public class Game
 				cardLayout.show(mainPanel, "PVP_MENU");
 				break;
 			case PVP_LOBBY:
-				cardLayout.show(mainPanel, "PVP_LOBBY");
+				cardLayout.show(mainPanel, CARD_PVP_LOBBY);
 				startMatchmakingLoop();
 				break;
 			case PLAYING_SINGLE:
-				cardLayout.show(mainPanel, "PLAYING_SINGLE");
+                cardLayout.show(mainPanel, CARD_PLAYING_SINGLE);
 				gamePlayPanel.requestFocusInWindow();
 				startGame();
 				break;
 			case PLAYING_PVP:
 				waitingForKeyPress = false;
-				cardLayout.show(mainPanel, "PLAYING_SINGLE");
+                cardLayout.show(mainPanel, CARD_PLAYING_SINGLE);
 				SwingUtilities.invokeLater(() -> {
 					gamePlayPanel.requestFocusInWindow();
 				});
@@ -308,11 +322,11 @@ public class Game
 				myPagePanel.updateUser();
 				break;
 			case COOP_LOBBY:
-				cardLayout.show(mainPanel, "PVP_LOBBY"); // UI는 PVP 로비 재사용 (텍스트만 바꾸면 됨)
+				cardLayout.show(mainPanel, CARD_PVP_LOBBY); // UI는 PVP 로비 재사용 (텍스트만 바꾸면 됨)
 				startCoopMatchmakingLoop(); // 협동 매칭 루프 시작
 				break;
 			case PLAYING_COOP: // 협동 게임 시작
-				cardLayout.show(mainPanel, "PLAYING_SINGLE"); // 게임 화면 재사용
+                cardLayout.show(mainPanel, CARD_PLAYING_SINGLE);
 				SwingUtilities.invokeLater(() -> gamePlayPanel.requestFocusInWindow());
 				startCoopGame(); // 협동 게임 초기화
 				break;
@@ -337,7 +351,7 @@ public class Game
 
 		// 플레이어 배 초기화 (스테이지보다 먼저 생성)
 		// initPlayer() 로직을 직접 포함:
-        ship = new ShipEntity(this, "sprites/ship.gif", Constants.PLAYER_START_X, Constants.PLAYER_START_Y);
+        ship = new ShipEntity(this, Constants.SHIP_SPRITE, Constants.PLAYER_START_X, Constants.PLAYER_START_Y);
 		((ShipEntity) ship).setHealth(3);
 		this.slowTimer = 0;
         entityManager.addEntity(ship);
@@ -374,7 +388,7 @@ public class Game
         currentStage = StageFactory.createStage(this, stageIndex);
 
 		// initPlayer() 로직을 직접 포함 (ship만 다시 추가)
-		ship = new ShipEntity(this, "sprites/ship.gif", 370, 550);
+		ship = new ShipEntity(this, Constants.SHIP_SPRITE, 370, 550);
 		((ShipEntity) ship).setHealth(3); // 체력 복구
 		this.slowTimer = 0;
         entityManager.addEntity(ship);
@@ -398,55 +412,56 @@ public class Game
                     System.out.println("상대방 찾는 중...");
                     String opponentUid = clientService.findOpponent(myUid);
 
+                    boolean matched = false;
                     if (opponentUid != null) {
-                        // === 방장(Creator) 로직 ===
-                        if (myUid.compareTo(opponentUid) < 0) {
-                            System.out.println("내가 방장! 게임 방 생성 시도.");
-                            String matchId = clientService.createMatch(myUid, opponentUid);
-                            if (matchId != null) {
-                                this.currentMatchId = matchId;
-                                this.player1_uid = myUid;
-                                this.player2_uid = opponentUid;
-                                clientService.deleteFromQueue(myUid);
-                                clientService.deleteFromQueue(opponentUid);
-
-                                SwingUtilities.invokeLater(() -> Game.this.changeState(GameState.PLAYING_PVP));
-                                break;
-                            }
-                        }
+                        matched = tryProcessHostMatchmaking(clientService, myUid, opponentUid);
                     } else {
-                        // === 참가자(Follower) 로직 ▼▼▼ 수정 ▼▼▼ ===
-                        if (!clientService.isUserInQueue(myUid)) {
-                            System.out.println("큐에서 사라짐! 내 게임 방을 찾습니다.");
-                            String matchId = clientService.findMyMatch(myUid);
-
-                            if (matchId != null) {
-                                this.currentMatchId = matchId;
-                                System.out.println("매치 찾음! ID: " + matchId);
-
-                                // 매치 데이터를 가져와서 player1, player2 uid 설정
-                                Map<String, Object> matchData = clientService.getMatchData(matchId);
-                                if (matchData != null) {
-                                    this.player1_uid = (String) matchData.get("player1");
-                                    this.player2_uid = (String) matchData.get("player2");
-
-                                    // 모든 정보가 설정되었으므로 PVP 상태로 전환
-                                    SwingUtilities.invokeLater(() -> Game.this.changeState(GameState.PLAYING_PVP));
-                                    break;
-                                }
-                            }
-                        }
+                        matched = tryProcessGuestMatchmaking(clientService, myUid);
                     }
+
+                    if (matched) break; // 매칭 성공 시 루프 종료
 
                     Thread.sleep(2000);
 
                 } catch (InterruptedException e) {
-                    System.out.println("매치메이킹 중단됨.");
-                    Thread.currentThread().interrupt();
+                    // ... 에러 처리
                 }
             }
         });
         matchmakingThread.start();
+    }
+
+    private boolean tryProcessHostMatchmaking(FirebaseClientService client, String myUid, String opUid) {
+        if (myUid.compareTo(opUid) < 0) { // 내가 방장 조건
+            String matchId = client.createMatch(myUid, opUid);
+            if (matchId != null) {
+                this.currentMatchId = matchId;
+                this.player1_uid = myUid;
+                this.player2_uid = opUid;
+                client.deleteFromQueue(myUid);
+                client.deleteFromQueue(opUid);
+                SwingUtilities.invokeLater(() -> changeState(GameState.PLAYING_PVP));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean tryProcessGuestMatchmaking(FirebaseClientService client, String myUid) {
+        if (!client.isUserInQueue(myUid)) { // 큐에서 사라졌다면 (누가 날 데려감)
+            String matchId = client.findMyMatch(myUid);
+            if (matchId != null) {
+                this.currentMatchId = matchId;
+                Map<String, Object> matchData = client.getMatchData(matchId);
+                if (matchData != null) {
+                    this.player1_uid = (String) matchData.get("player1");
+                    this.player2_uid = (String) matchData.get("player2");
+                    SwingUtilities.invokeLater(() -> changeState(GameState.PLAYING_PVP));
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
 	private void startPvpGame() {
@@ -455,7 +470,7 @@ public class Game
         inputManager.reset();
 
         // 언제나 '나'는 아래쪽에 생성
-        ship = new ShipEntity(this, "sprites/ship.gif", 370, 550);
+        ship = new ShipEntity(this, Constants.SHIP_SPRITE, 370, 550);
         ((ShipEntity) ship).setHealth(3);
         entityManager.addEntity(ship);
 
@@ -494,7 +509,7 @@ public class Game
         Map<String, Object> myState = new HashMap<>();
         myState.put("x", ship.getX());
         myState.put("y", ship.getY());
-        myState.put("health", ((ShipEntity) ship).getCurrentHealth());
+        myState.put(KEY_HEALTH, ((ShipEntity) ship).getCurrentHealth());
 
         java.util.List<Map<String, Integer>> myShotsData = new ArrayList<>();
         for (Entity entity : entityManager.getEntities()) {
@@ -508,7 +523,7 @@ public class Game
                 }
             }
         }
-        myState.put("shots", myShotsData);
+        myState.put(KEY_SHOTS, myShotsData);
 
         String myPlayerNode = amIPlayer1() ? "player1_state" : "player2_state";
         clientService.updatePlayerState(currentMatchId, myPlayerNode, myState);
@@ -527,8 +542,8 @@ public class Game
             }
 
             // 체력 동기화
-            if (opponentState.get("health") instanceof Number) {
-                int opHealth = ((Number) opponentState.get("health")).intValue();
+            if (opponentState.get(KEY_HEALTH) instanceof Number) {
+                int opHealth = ((Number) opponentState.get(KEY_HEALTH)).intValue();
                 ((ShipEntity)opponentShip).setCurrentHealth(opHealth);
                 if (opHealth <= 0) {
                     SwingUtilities.invokeLater(this::notifyWinPVP);
@@ -554,8 +569,8 @@ public class Game
         }
 
         // 새 총알 생성
-        if (opponentState.get("shots") instanceof java.util.List) {
-            java.util.List<Map<String, Double>> shotList = (java.util.List<Map<String, Double>>) opponentState.get("shots");
+        if (opponentState.get(KEY_SHOTS) instanceof java.util.List) {
+            java.util.List<Map<String, Double>> shotList = (java.util.List<Map<String, Double>>) opponentState.get(KEY_SHOTS);
             for (Map<String, Double> sData : shotList) {
                 ShotEntity shot = new ShotEntity(this, "sprites/shot.gif", sData.get("x").intValue(), sData.get("y").intValue(), 0, -300);
                 shot.setOwnerUid(opponentUid);
@@ -569,12 +584,12 @@ public class Game
         inputManager.reset();
 
 		// 내 우주선 (아래쪽)
-		ship = new ShipEntity(this, "sprites/ship.gif", 300, 550); // X좌표를 약간 왼쪽으로
+		ship = new ShipEntity(this, Constants.SHIP_SPRITE, 300, 550); // X좌표를 약간 왼쪽으로
 		((ShipEntity) ship).setHealth(3);
         entityManager.addEntity(ship);
 
 		// 상대방 우주선 (같은 편! 아래쪽)
-		opponentShip = new ShipEntity(this, "sprites/ship.gif", 500, 550); // X좌표를 약간 오른쪽으로, 이미지는 ship.gif 사용
+		opponentShip = new ShipEntity(this, Constants.SHIP_SPRITE, 500, 550); // X좌표를 약간 오른쪽으로, 이미지는 ship.gif 사용
 		((ShipEntity) opponentShip).setHealth(3);
         entityManager.addEntity(opponentShip);
 
@@ -586,54 +601,69 @@ public class Game
 		waitingForKeyPress = false;
 	}
 
-	private void startCoopMatchmakingLoop() {
-		matchmakingThread = new Thread(() -> {
-			FirebaseClientService clientService = new FirebaseClientService();
-			String myUid = CurrentUserManager.getInstance().getUid();
+    private void startCoopMatchmakingLoop() {
+        matchmakingThread = new Thread(() -> {
+            FirebaseClientService clientService = new FirebaseClientService();
+            String myUid = CurrentUserManager.getInstance().getUid();
 
-			while (!Thread.currentThread().isInterrupted()) {
-				try {
-					System.out.println("협동 상대 찾는 중...");
-					String opponentUid = clientService.findCoopOpponent(myUid); // Coop 메소드 사용
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    System.out.println("협동 상대 찾는 중...");
+                    String opponentUid = clientService.findCoopOpponent(myUid);
 
-					if (opponentUid != null) {
-						// 방장 로직
-						if (myUid.compareTo(opponentUid) < 0) {
-							String matchId = clientService.createMatch(myUid, opponentUid);
-							if (matchId != null) {
-								this.currentMatchId = matchId;
-								this.player1_uid = myUid;
-								this.player2_uid = opponentUid;
-								clientService.deleteFromCoopQueue(myUid);       // Coop 큐에서 삭제
-								clientService.deleteFromCoopQueue(opponentUid); // Coop 큐에서 삭제
-								SwingUtilities.invokeLater(() -> changeState(GameState.PLAYING_COOP));
-								break;
-							}
-						}
-					} else {
-						// 참가자 로직
-						if (!clientService.isUserInCoopQueue(myUid)) { // Coop 큐 확인
-							String matchId = clientService.findMyMatch(myUid); // 매치 찾는건 동일 (matches 경로는 공유)
-							if (matchId != null) {
-								this.currentMatchId = matchId;
-								Map<String, Object> matchData = clientService.getMatchData(matchId);
-								if (matchData != null) {
-									this.player1_uid = (String) matchData.get("player1");
-									this.player2_uid = (String) matchData.get("player2");
-									SwingUtilities.invokeLater(() -> changeState(GameState.PLAYING_COOP));
-									break;
-								}
-							}
-						}
-					}
-					Thread.sleep(2000);
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-				}
-			}
-		});
-		matchmakingThread.start();
-	}
+                    boolean matched = false;
+
+                    if (opponentUid != null) {
+                        // 상대방을 찾았을 때 (방장 시도)
+                        matched = tryProcessCoopHost(clientService, myUid, opponentUid);
+                    } else {
+                        // 대기열에 아무도 없을 때 (참가자 시도)
+                        matched = tryProcessCoopGuest(clientService, myUid);
+                    }
+
+                    if (matched) break; // 매칭 성공 시 루프 종료
+
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        });
+        matchmakingThread.start();
+    }
+
+    private boolean tryProcessCoopHost(FirebaseClientService client, String myUid, String opUid) {
+        if (myUid.compareTo(opUid) < 0) {
+            String matchId = client.createMatch(myUid, opUid);
+            if (matchId != null) {
+                this.currentMatchId = matchId;
+                this.player1_uid = myUid;
+                this.player2_uid = opUid;
+                client.deleteFromCoopQueue(myUid);
+                client.deleteFromCoopQueue(opUid);
+                SwingUtilities.invokeLater(() -> changeState(GameState.PLAYING_COOP));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean tryProcessCoopGuest(FirebaseClientService client, String myUid) {
+        if (!client.isUserInCoopQueue(myUid)) { // 큐에서 사라졌다면 (누군가 나를 데려감)
+            String matchId = client.findMyMatch(myUid);
+            if (matchId != null) {
+                this.currentMatchId = matchId;
+                Map<String, Object> matchData = client.getMatchData(matchId);
+                if (matchData != null) {
+                    this.player1_uid = (String) matchData.get("player1");
+                    this.player2_uid = (String) matchData.get("player2");
+                    SwingUtilities.invokeLater(() -> changeState(GameState.PLAYING_COOP));
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
 	/**
 	 * Initialise the starting state of the entities (ship and aliens). Each
@@ -667,6 +697,12 @@ public class Game
                 alienRows = 5;
                 firingChance = 0.0008;
                 startY = 80;
+                break;
+            default: // [추가] 예외 상황 방지
+                moveSpeed = 200;
+                alienRows = 5;
+                firingChance = 0.001;
+                System.err.println("Undefined level: " + currentLevel + ". Using default settings.");
                 break;
         }
 

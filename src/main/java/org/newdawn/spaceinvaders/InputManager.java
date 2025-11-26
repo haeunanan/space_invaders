@@ -3,15 +3,11 @@ package org.newdawn.spaceinvaders;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
-/**
- * 게임의 키보드 입력을 전담하여 관리하는 클래스
- * (Refactoring: Game.java에서 추출함)
- */
 public class InputManager extends KeyAdapter {
 
-    private Game game; // 게임 상태 확인을 위한 참조
+    private Game game;
 
-    // 키 상태 저장 변수들 (Game.java에서 이동해옴)
+    // 키 상태 변수들
     private boolean leftPressed = false;
     private boolean rightPressed = false;
     private boolean firePressed = false;
@@ -22,14 +18,13 @@ public class InputManager extends KeyAdapter {
         this.game = game;
     }
 
-    // 각 키의 상태를 외부에서 확인할 수 있는 Getter 메서드
+    // ... (Getter 및 reset 메소드는 기존 유지) ...
     public boolean isLeftPressed() { return leftPressed; }
     public boolean isRightPressed() { return rightPressed; }
     public boolean isFirePressed() { return firePressed; }
     public boolean isUpPressed() { return upPressed; }
     public boolean isDownPressed() { return downPressed; }
 
-    // 상태 초기화 메서드 (스테이지 변경 시 등)
     public void reset() {
         leftPressed = false;
         rightPressed = false;
@@ -38,32 +33,49 @@ public class InputManager extends KeyAdapter {
         firePressed = false;
     }
 
+    /**
+     * 리팩토링된 keyPressed 메소드
+     * 복잡한 로직을 별도 메소드로 위임하여 인지 복잡도를 대폭 낮췄습니다.
+     */
     @Override
     public void keyPressed(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+        int key = e.getKeyCode();
+
+        // 1. 강제 종료
+        if (key == KeyEvent.VK_ESCAPE) {
             System.exit(0);
         }
 
+        // 2. 대기 상태일 때의 키 처리 (메소드 추출)
         if (game.isWaitingForKeyPress()) {
-            if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE) {
-                game.requestTransition(); // Game 클래스에 이 메서드 추가 필요
-            }
-            else if (game.getCurrentState() == Game.GameState.PLAYING_PVP ||
-                    game.getCurrentState() == Game.GameState.PLAYING_COOP) {
-                game.changeState(Game.GameState.PVP_MENU);
-            }
+            handleWaitingKeyPress();
             return;
         }
 
-        // 게임 플레이 중 키 입력 처리
+        // 3. 게임 플레이 중일 때의 키 처리 (메소드 추출)
         if (isPlayingState()) {
-            int key = e.getKeyCode();
-            if (key == KeyEvent.VK_LEFT) leftPressed = true;
-            if (key == KeyEvent.VK_RIGHT) rightPressed = true;
-            if (key == KeyEvent.VK_UP) upPressed = true;
-            if (key == KeyEvent.VK_DOWN) downPressed = true;
-            if (key == KeyEvent.VK_SPACE) firePressed = true;
+            handleInGameKeyPress(key);
         }
+    }
+
+    // [추가] 대기 상태(게임 오버/클리어 등)에서의 키 입력 처리
+    private void handleWaitingKeyPress() {
+        if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE) {
+            game.requestTransition();
+        }
+        else if (game.getCurrentState() == Game.GameState.PLAYING_PVP ||
+                game.getCurrentState() == Game.GameState.PLAYING_COOP) {
+            game.changeState(Game.GameState.PVP_MENU);
+        }
+    }
+
+    // [추가] 게임 플레이 중 방향키/발사키 입력 처리
+    private void handleInGameKeyPress(int key) {
+        if (key == KeyEvent.VK_LEFT) leftPressed = true;
+        if (key == KeyEvent.VK_RIGHT) rightPressed = true;
+        if (key == KeyEvent.VK_UP) upPressed = true;
+        if (key == KeyEvent.VK_DOWN) downPressed = true;
+        if (key == KeyEvent.VK_SPACE) firePressed = true;
     }
 
     @Override

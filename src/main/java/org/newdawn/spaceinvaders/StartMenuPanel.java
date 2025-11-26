@@ -5,10 +5,10 @@ import java.awt.*;
 
 public class StartMenuPanel extends JPanel {
 
-    private Game game; // 상태 변경을 위해 Game 객체를 저장할 변수
-    private Sprite titleLogoSprite;
-    private Sprite shipImageSprite;
-    private Sprite backgroundSprite;
+    private transient Game game;
+    private transient Sprite titleLogoSprite;
+    private transient Sprite shipImageSprite;
+    private transient Sprite backgroundSprite;
 
     public StartMenuPanel(Game game) {
         this.game = game; // 생성자에서 Game 객체를 받아 저장

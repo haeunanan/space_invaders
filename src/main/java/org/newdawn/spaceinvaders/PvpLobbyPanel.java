@@ -6,26 +6,30 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class PvpLobbyPanel extends JPanel {
-    private Game game;
+    // [수정 1] 직렬화 경고 해결: Game 객체를 직렬화에서 제외
+    private transient Game game;
+
     private JLabel waitingLabel;
-    private Timer animationTimer; // 애니메이션을 위한 타이머
-    private int dotCount = 0; // 점의 개수를 추적하는 변수
+    private Timer animationTimer;
+    private int dotCount = 0;
 
     public PvpLobbyPanel(Game game) {
         this.game = game;
-        setLayout(new BorderLayout()); // 레이아웃을 BorderLayout으로 변경
+        setLayout(new BorderLayout());
         setBackground(Color.BLACK);
 
-        // --- '기다리는 중' 라벨 설정 ---
-        waitingLabel = new JLabel("상대방을 기다리는 중.", JLabel.CENTER);
-        waitingLabel.setFont(new Font("Malgun Gothic", Font.BOLD, 30)); // 폰트 크기 키움
+        // [수정 2] 정적 멤버 접근 수정: JLabel.CENTER -> SwingConstants.CENTER
+        // (javax.swing.* 임포트로 인해 SwingConstants 사용 가능)
+        waitingLabel = new JLabel("상대방을 기다리는 중.", SwingConstants.CENTER);
+
+        waitingLabel.setFont(new Font("Malgun Gothic", Font.BOLD, 30));
         waitingLabel.setForeground(Color.WHITE);
         add(waitingLabel, BorderLayout.CENTER);
 
         // --- '매칭 취소' 버튼 스타일 및 크기 수정 ---
         JButton cancelButton = new JButton("매칭 취소");
         cancelButton.setFont(new Font("Malgun Gothic", Font.BOLD, 18));
-        cancelButton.setPreferredSize(new Dimension(200, 50)); // 버튼 크기 설정
+        cancelButton.setPreferredSize(new Dimension(200, 50));
         cancelButton.setBackground(Color.WHITE);
         cancelButton.setForeground(Color.BLACK);
         cancelButton.setFocusPainted(false);
@@ -34,25 +38,25 @@ public class PvpLobbyPanel extends JPanel {
         JPanel buttonPanel = new JPanel();
         buttonPanel.setBackground(Color.BLACK);
         buttonPanel.add(cancelButton);
-        buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0)); // 하단 여백 추가
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
         add(buttonPanel, BorderLayout.SOUTH);
 
         cancelButton.addActionListener(e -> {
-            stopAnimation(); // 화면 전환 전에 애니메이션 중지
+            stopAnimation();
             game.changeState(Game.GameState.PVP_MENU);
         });
 
-        startAnimation(); // 패널이 생성될 때 애니메이션 시작
+        startAnimation();
     }
+
     /**
      * '...' 애니메이션을 시작하는 메소드
      */
     public void startAnimation() {
-        // 0.5초(500ms)마다 ActionListener를 실행하는 타이머 생성
         animationTimer = new Timer(500, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                dotCount = (dotCount + 1) % 4; // 점 개수를 0, 1, 2, 3으로 순환
+                dotCount = (dotCount + 1) % 4;
                 String dots = "";
                 for (int i = 0; i < dotCount; i++) {
                     dots += ".";
@@ -60,8 +64,9 @@ public class PvpLobbyPanel extends JPanel {
                 waitingLabel.setText("상대방을 기다리는 중" + dots);
             }
         });
-        animationTimer.start(); // 타이머 시작
+        animationTimer.start();
     }
+
     /**
      * 애니메이션을 중지하는 메소드
      */
@@ -71,7 +76,6 @@ public class PvpLobbyPanel extends JPanel {
         }
     }
 
-    // 패널이 화면에서 보이지 않게 될 때 호출 (Game 클래스에서 상태 변경 시 호출 필요)
     @Override
     public void setVisible(boolean aFlag) {
         super.setVisible(aFlag);

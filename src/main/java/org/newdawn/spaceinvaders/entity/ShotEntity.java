@@ -54,71 +54,81 @@ public class ShotEntity extends Entity {
 		}
 	}
 
-	@Override
-	public void collidedWith(Entity other) {
-		if (used) return;
+    @Override
+    public void collidedWith(Entity other) {
+        // 이미 사용된 총알이면 무시
+        if (used) return;
 
-		// =============================================================
-		// [수정] 1. 외계인 충돌 처리 (싱글 및 협동 모드 공통)
-		// =============================================================
-		if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE ||
-				game.getCurrentState() == Game.GameState.PLAYING_COOP) {
+        // 1. 싱글 또는 협동 모드일 때 외계인 충돌 처리
+        if (isSingleOrCoopMode()) {
+            handleAlienCollision(other);
+        }
+        // 2. PVP 모드일 때 플레이어 간 충돌 처리
+        else if (game.getCurrentState() == Game.GameState.PLAYING_PVP) {
+            handlePvpCollision(other);
+        }
+    }
+    private boolean isSingleOrCoopMode() {
+        return game.getCurrentState() == Game.GameState.PLAYING_SINGLE ||
+                game.getCurrentState() == Game.GameState.PLAYING_COOP;
+    }
+    private void handleAlienCollision(Entity other) {
+        if (other instanceof AlienEntity) {
+            AlienEntity alien = (AlienEntity) other;
+            if (!alien.isAlive()) return;
 
-			if (other instanceof AlienEntity) {
-				AlienEntity alien = (AlienEntity) other;
-				if (!alien.isAlive()) return;
+            // 총알 제거 및 사용 처리
+            game.removeEntity(this);
+            used = true;
 
-				game.removeEntity(this);
-				used = true;
+            // 데미지 적용 및 사망 처리
+            if (alien.takeDamage(1)) {
+                processAlienDeath(alien);
+            }
+        }
+    }
+    private void processAlienDeath(AlienEntity alien) {
+        alien.markDead();
+        game.removeEntity(alien);
+        game.notifyAlienKilled();
+        SoundManager.get().playSound("sounds/explosion.wav");
 
-				if (alien.takeDamage(1)) {
-					alien.markDead();
-					game.removeEntity(alien);
-					game.notifyAlienKilled();
-					SoundManager.get().playSound("sounds/explosion.wav");
+        tryDropItem(alien);
+    }
+    private void tryDropItem(AlienEntity alien) {
+        // 싱글 모드이고 아이템이 허용된 스테이지인 경우에만
+        if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE &&
+                game.getCurrentStage() != null &&
+                game.getCurrentStage().isItemAllowed()) {
 
-					// 아이템 드랍 (싱글 모드에서만 혹은 협동에서도 허용 가능)
-					if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE &&
-							game.getCurrentStage() != null && game.getCurrentStage().isItemAllowed()) {
-						if (Math.random() < 0.1) {
-							String itemRef = game.getCurrentStage().getItemSpriteRef();
-							ItemEntity item = new ItemEntity(game, itemRef, alien.getX(), alien.getY());
-							game.addEntity(item);
-						}
-					}
-				}
-			}
-		}
+            // 10% 확률로 아이템 드랍
+            if (Math.random() < 0.1) {
+                String itemRef = game.getCurrentStage().getItemSpriteRef();
+                ItemEntity item = new ItemEntity(game, itemRef, alien.getX(), alien.getY());
+                game.addEntity(item);
+            }
+        }
+    }
+    private void handlePvpCollision(Entity other) {
+        String myUid = CurrentUserManager.getInstance().getUid();
 
-		// =============================================================
-		// [수정] 2. PVP 플레이어 충돌 처리
-		// =============================================================
-		else if (game.getCurrentState() == Game.GameState.PLAYING_PVP) {
-			String myUid = CurrentUserManager.getInstance().getUid();
+        // (A) 내가 쏜 총알이 상대방(OpponentShip)을 맞췄을 때
+        if (other == game.getOpponentShip()) {
+            if (this.isOwnedBy(myUid)) {
+                used = true;
+                game.removeEntity(this);
+                // 데미지 처리는 상대방 클라이언트에서 수행됨
+            }
+        }
+        // (B) 상대방 총알이 나(Ship)를 맞췄을 때
+        else if (other == game.getShip()) {
+            if (!this.isOwnedBy(myUid)) { // 내 총알이 아닐 경우
+                used = true;
+                game.removeEntity(this);
 
-			// (A) 내가 쏜 총알이 상대방을 맞췄을 때 -> 내 화면에서 총알 제거 (데미지는 상대방이 처리)
-			if (other == game.getOpponentShip()) {
-				if (this.isOwnedBy(myUid)) {
-					used = true;
-					game.removeEntity(this);
-				}
-			}
-			// (B) 상대방 총알이 나를 맞췄을 때 -> 데미지 처리
-			else if (other == game.getShip()) {
-				if (!this.isOwnedBy(myUid)) { // 내 총알이 아닐 경우
-					used = true;
-					game.removeEntity(this);
-
-					// 쉴드 체크 및 체력 감소 로직
-					ShipEntity myShip = (ShipEntity) other;
-					if (myShip.isShieldActive()) {
-						myShip.takeDamage(); // 쉴드만 제거됨
-					} else {
-						myShip.takeDamage(); // 체력 감소
-						// HP 동기화는 GameLoop의 NetworkThread에서 처리됨
-					}
-				}
-			}
-		}
-	}
+                // 데미지 처리 (쉴드 여부는 takeDamage 내부에서 확인)
+                ((ShipEntity) other).takeDamage();
+            }
+        }
+    }
 }
