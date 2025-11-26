@@ -1,5 +1,7 @@
 package org.newdawn.spaceinvaders.entity;
 
+import org.newdawn.spaceinvaders.Constants;
+import org.newdawn.spaceinvaders.CurrentUserManager;
 import org.newdawn.spaceinvaders.Game;
 import org.newdawn.spaceinvaders.SoundManager;
 
@@ -140,14 +142,51 @@ public class ShipEntity extends Entity {
 		// 3. 화면 밖으로 나갔다면 강제로 안으로 끌어옵니다 (Clamping)
 		// 이렇게 하면 키 입력이 무시되는 일이 없습니다.
 
-		// 좌우 보정
-		if (x < 10) x = 10;
-		if (x > 750) x = 750;
+        // 변경 후 (Constants 활용)
+// 비행기 크기(약 50)를 고려해 여유분을 뺍니다.
+        if (x > Constants.WINDOW_WIDTH - 50) x = Constants.WINDOW_WIDTH - 50;
+        if (y > Constants.WINDOW_HEIGHT - 50) y = Constants.WINDOW_HEIGHT - 50;
 
 		// 상하 보정
 		if (y < 10) y = 10;
 		if (y > 550) y = 550;
 	}
+    // [ShipEntity.java] 내부에 추가
+    public void tryToFire() {
+        // 1. 쿨타임 체크 (Game의 변수 사용)
+        if (System.currentTimeMillis() - game.lastFire < game.firingInterval) {
+            return;
+        }
+        game.lastFire = System.currentTimeMillis();
+
+        // 2. 발사 위치 및 속도 설정
+        int baseX = (int) x + 10;
+        int baseY = (int) y - 30;
+        double shotDX = 0;
+        double shotDY = -300;
+
+        // 3. 스테이지별 탄환 속도 보정
+        if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE && game.getCurrentStage() != null) {
+            shotDY = game.getCurrentStage().getPlayerShotVelocity();
+        }
+
+        // 4. 미사일 생성 및 등록
+        String myUid = org.newdawn.spaceinvaders.CurrentUserManager.getInstance().getUid();
+
+        for (int i = 0; i < game.playerStats.getMissileCount(); i++) {
+            int offset = (i - (game.playerStats.getMissileCount() - 1) / 2) * 10;
+            ShotEntity shot = new ShotEntity(game, "sprites/shot.gif", baseX + offset, baseY, shotDX, shotDY);
+
+            // PVP/COOP 소유자 설정
+            if (game.getCurrentState() == Game.GameState.PLAYING_PVP || game.getCurrentState() == Game.GameState.PLAYING_COOP) {
+                shot.setOwnerUid(myUid);
+            }
+            game.addEntity(shot);
+        }
+
+        // 5. 효과음 재생
+        org.newdawn.spaceinvaders.SoundManager.get().playSound("sounds/shoot.wav");
+    }
 	/**
 	 * Notification that the player's ship has collided with something
 	 * * @param other The entity with which the ship has collided

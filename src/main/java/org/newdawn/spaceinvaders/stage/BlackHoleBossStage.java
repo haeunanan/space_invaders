@@ -11,6 +11,8 @@ import org.newdawn.spaceinvaders.entity.ShotEntity;
 public class BlackHoleBossStage extends Stage {
 
     private BossEntity boss;
+    private static final int BOSS_START_X = 350;
+    private static final int BOSS_START_Y = 80;
 
     // 중력 설정
     private final double GRAVITY_X = 400; // 끌려갈 중심 X
@@ -28,7 +30,7 @@ public class BlackHoleBossStage extends Stage {
                 .getImage();
 
         // 보스 생성 (체력 등은 BossEntity 내부에서 설정됨)
-        boss = new BossEntity(game, 350, 80);
+        boss = new org.newdawn.spaceinvaders.entity.BossEntity(game, BOSS_START_X, BOSS_START_Y);
         game.addEntity(boss);
     }
 

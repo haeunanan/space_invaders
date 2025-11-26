@@ -36,11 +36,11 @@ public class PvpMenuPanel extends JPanel {
 
         // 전체 너비 = (버튼폭 * 3) + (간격 * 2)
         int totalWidth = (buttonWidth * 3) + (gap * 2);
-        int startX = (800 - totalWidth) / 2; // 전체 그룹의 시작 X 좌표
+        int startX = (Constants.WINDOW_WIDTH - totalWidth) / 2; // 전체 그룹의 시작 X 좌표
 
         // 1. 혼자하기 버튼 (맨 왼쪽)
         soloPlayButton = createStyledButton("혼자하기");
-        soloPlayButton.setBounds(startX, 365, buttonWidth, buttonHeight);
+        logoutButton.setBounds((Constants.WINDOW_WIDTH - buttonWidth) / 2, 450, buttonWidth, buttonHeight);
         add(soloPlayButton);
 
         // 2. 대결하기 버튼 (가운데)
@@ -54,8 +54,8 @@ public class PvpMenuPanel extends JPanel {
         add(coopPlayButton);
 
         // 4. 로그아웃 버튼 (아래쪽 중앙)
-        logoutButton = createStyledButton("로그아웃");
-        logoutButton.setBounds((800 - buttonWidth) / 2, 450, buttonWidth, buttonHeight);
+        logoutButton = createStyledButton("로그아웃"); // [중요] 반드시 먼저 생성해야 함!
+        logoutButton.setBounds((Constants.WINDOW_WIDTH - buttonWidth) / 2, 450, buttonWidth, buttonHeight);
         add(logoutButton);
 
         // 리스너 추가

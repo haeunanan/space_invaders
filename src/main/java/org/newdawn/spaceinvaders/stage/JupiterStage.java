@@ -23,39 +23,22 @@ public class JupiterStage extends Stage {
 
     @Override
     public void init() {
-        background = SpriteStore.get()
-                .getSprite(getBackgroundSpriteRef())
-                .getImage();
+        background = org.newdawn.spaceinvaders.SpriteStore.get().getSprite(getBackgroundSpriteRef()).getImage();
 
+        // 변수 설정 (기존 값들)
         double moveSpeed = 110;
-        // [수정] 적이 커졌으므로 줄 수를 줄여서 화면을 꽉 채우지 않게 조정 (4 -> 3)
         int alienRows = 3;
         double firingChance = 0.0002;
         int startY = 60;
-
-        // [수정] 새로운 '큰' 적 이미지 경로 (이미지 파일을 꼭 만들어주세요!)
-        // 파일이 없다면 기존 "sprites/alien.gif" 등을 사용해야 오류가 안 납니다.
         String spriteRef = "sprites/alien_jupiter_big.png";
 
-        for (int row = 0; row < alienRows; row++) {
-            // [수정] 적이 커졌으므로 한 줄에 들어가는 개수도 줄임 (10 -> 8)
-            for (int x = 0; x < 8; x++) {
-                AlienEntity alien = new AlienEntity(
-                        game,
-                        spriteRef,
-                        // [수정] 간격 조정: 가로 간격(50->70), 세로 간격(35->50)
-                        100 + (x * 70),
-                        startY + row * 50,
-                        moveSpeed,
-                        firingChance
-                );
-
-                // [추가] 목성 적은 체력이 3 (3번 맞춰야 죽음)
-                alien.setHp(3);
-
-                game.addEntity(alien);
-            }
-        }
+        // [수정] 반복문 삭제 -> setupAliens 한 줄로 대체!
+        // (이미지, 행, 열, 시작Y, 가로간격, 세로간격, 속도, 공격확률)
+        setupAliens(spriteRef, alienRows, 8, startY, 70, 50, moveSpeed, firingChance);
+    }
+    @Override
+    protected void customizeAlien(org.newdawn.spaceinvaders.entity.AlienEntity alien) {
+        alien.setHp(3);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package org.newdawn.spaceinvaders.entity;
 
+import org.newdawn.spaceinvaders.Constants;
 import org.newdawn.spaceinvaders.Game;
 import org.newdawn.spaceinvaders.Sprite;
 import org.newdawn.spaceinvaders.SpriteStore;
@@ -187,7 +188,7 @@ public class AlienEntity extends Entity {
 		if ((dx < 0) && (x < 10)) {
 			game.updateLogic();
 		}
-		if ((dx > 0) && (x > 750)) {
+        if ((dx > 0) && (x > Constants.WINDOW_WIDTH - 50)) {
 			game.updateLogic();
 		}
 

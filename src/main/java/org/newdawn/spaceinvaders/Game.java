@@ -1,33 +1,28 @@
 package org.newdawn.spaceinvaders;
 
+import org.newdawn.spaceinvaders.entity.*;
+import org.newdawn.spaceinvaders.stage.NeptuneStage;
+import org.newdawn.spaceinvaders.stage.Stage;
+
+import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.swing.*;
-
-import org.newdawn.spaceinvaders.entity.*;
-import org.newdawn.spaceinvaders.stage.Stage;
-import org.newdawn.spaceinvaders.stage.MarsStage;
-import org.newdawn.spaceinvaders.stage.JupiterStage;
-import org.newdawn.spaceinvaders.stage.SaturnStage;
-import org.newdawn.spaceinvaders.stage.UranusStage;
-import org.newdawn.spaceinvaders.stage.NeptuneStage;
-import org.newdawn.spaceinvaders.stage.BlackHoleBossStage;
-
 
 /**
  * The main hook of our game. This class with both act as a manager
  * for the display and central mediator for the game logic.
- *
  * Display management will consist of a loop that cycles round all
  * entities in the game asking them to move and then drawing them
  * in the appropriate place. With the help of an inner class it
  * will also allow the player to control the main ship.
- *
  * As a mediator it will be informed when entities within our game
  * detect events (e.g. alient killed, played died) and will take
  * appropriate game actions.
@@ -64,27 +59,22 @@ public class Game
 	private boolean gameRunning = true;
 	private ArrayList<Entity> entities = new ArrayList<>();
 	private ArrayList<Entity> removeList = new ArrayList<>();
+    public PlayerStats playerStats = new PlayerStats();
 	/** The entity representing the player */
 	private Entity ship;
 	private Entity opponentShip;
 	/** The speed at which the player's ship should move (pixels/sec) */
 	private double moveSpeed = 300;
 	/** The time at which last fired a shot */
-	private long lastFire = 0;
+    public long lastFire = 0;
 	/** The interval between our players shot (ms) */
-	private long firingInterval = 500;
+    public long firingInterval = 500;
 	/** The number of aliens left on the screen */
 	private int alienCount;
 	// shop 브랜치에서 복사해올 변수들
-	public int missileCount = 1; // 다중 미사일 기능
-	public int coins = 0;
 	public boolean shopOpen = false;
 	public final int UPGRADE_COST = 10;
 	public final int MAX_UPGRADES = 6;
-	public int attackLevel = 0;
-	public int moveLevel = 0;
-	public int missileLevel = 0;
-	public int score = 0;
 	public RankingManager rankingManager;
 	public int currentLevel = 1;
 	public static final int BOSS_LEVEL = 5;
@@ -99,16 +89,6 @@ public class Game
 	private String message = "";
 	/** True if we're holding up game play until a key has been pressed */
 	private boolean waitingForKeyPress = true;
-	/** True if the left cursor key is currently pressed */
-	private boolean leftPressed = false;
-	/** True if the right cursor key is currently pressed */
-	private boolean rightPressed = false;
-	/** True if we are firing */
-	private boolean firePressed = false;
-	/** True if the up cursor key is currently pressed */
-	private boolean upPressed = false;
-	/** True if the down cursor key is currently pressed */
-	private boolean downPressed = false;
 	/** True if game logic needs to be applied this loop, normally as a result of a game event */
 	private boolean logicRequiredThisLoop = false;
 	/** The last time at which we recorded the frame rate */
@@ -127,6 +107,7 @@ public class Game
 	private boolean transitionRequested = false; // 다음 스테이지 전환 요청 플래그
 	private long slowTimer = 0;
 	public boolean reverseControls = false; // 조작 반전 상태 플래그
+    private InputManager inputManager;
 	// ===============================================
 
 	/**
@@ -160,7 +141,7 @@ public class Game
 
     public void resetSinglePlayerState() {
         this.currentLevel = 1;
-        this.score = 0;
+        playerStats.resetScore();
     }
 
     public Stage getCurrentStage() {
@@ -179,7 +160,7 @@ public class Game
 
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
-        mainPanel.setPreferredSize(new Dimension(800, 600));
+        mainPanel.setPreferredSize(new Dimension(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT));
 
         startMenuPanel = new StartMenuPanel(this);
         signInPanel = new SignInPanel(this);
@@ -190,7 +171,7 @@ public class Game
         myPagePanel = new MyPagePanel(this);
         // dev 브랜치의 Game() 생성자 안에 추가
         rankingManager = new RankingManager();
-        score = 0;
+        playerStats.resetScore();
 
         mainPanel.add(startMenuPanel, "START");
         mainPanel.add(signInPanel, "SIGN_IN");
@@ -204,7 +185,8 @@ public class Game
 
         changeState(GameState.START_MENU);
 
-        gamePlayPanel.addKeyListener(new KeyInputHandler());
+        inputManager = new InputManager(this); // 객체 생성
+        gamePlayPanel.addKeyListener(inputManager); // 리스너 등록
         gamePlayPanel.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 int mx = e.getX();
@@ -351,11 +333,12 @@ public class Game
 
 		// 스테이지 기본값 초기화
 		stageIndex = 1;
-		currentStage = loadStage(stageIndex);
+        // 팩토리를 통해 스테이지 생성
+        currentStage = StageFactory.createStage(this, stageIndex);
 
 		// 플레이어 배 초기화 (스테이지보다 먼저 생성)
 		// initPlayer() 로직을 직접 포함:
-		ship = new ShipEntity(this, "sprites/ship.gif", 370, 550);
+        ship = new ShipEntity(this, "sprites/ship.gif", Constants.PLAYER_START_X, Constants.PLAYER_START_Y);
 		((ShipEntity) ship).setHealth(3);
 		this.slowTimer = 0;
 		entities.add(ship);
@@ -366,7 +349,7 @@ public class Game
 		}
 		alienCount = 0; // 스테이지 내에서 카운트 갱신되므로 0으로 초기화
 
-		leftPressed = rightPressed = upPressed = downPressed = firePressed = false;
+        inputManager.reset();
 		waitingForKeyPress = false;
     }
 
@@ -379,11 +362,7 @@ public class Game
 
 		// [수정] 스테이지 전환/재시작 시 조작 반전 및 키 입력 상태 초기화
 		reverseControls = false;
-		leftPressed = false;
-		rightPressed = false;
-		firePressed = false;
-		upPressed = false;   // 혹시 눌린 상태로 시작되는 것 방지
-		downPressed = false;
+        inputManager.reset();
 
 		// 스테이지 제한 확인 (예: 6단계)
 		if (stageIndex > MAX_STAGE) {
@@ -393,7 +372,8 @@ public class Game
 			return;
 		}
 
-		currentStage = loadStage(stageIndex);
+        // 팩토리를 통해 스테이지 생성
+        currentStage = StageFactory.createStage(this, stageIndex);
 
 		// initPlayer() 로직을 직접 포함 (ship만 다시 추가)
 		ship = new ShipEntity(this, "sprites/ship.gif", 370, 550);
@@ -474,11 +454,7 @@ public class Game
 	private void startPvpGame() {
 		entities.clear();
 		waitingForKeyPress = false;
-		leftPressed = false;
-		rightPressed = false;
-		upPressed = false;
-		downPressed = false;
-		firePressed = false;
+        inputManager.reset();
 
         // 언제나 '나'는 아래쪽에 생성
         ship = new ShipEntity(this, "sprites/ship.gif", 370, 550);
@@ -592,7 +568,7 @@ public class Game
 
 	private void startCoopGame() {
 		entities.clear();
-		leftPressed = rightPressed = upPressed = downPressed = firePressed = false;
+        inputManager.reset();
 
 		// 내 우주선 (아래쪽)
 		ship = new ShipEntity(this, "sprites/ship.gif", 300, 550); // X좌표를 약간 왼쪽으로
@@ -767,19 +743,19 @@ public class Game
 		if (CurrentUserManager.getInstance().isLoggedIn()) {
 			// 로그인 상태이면, 현재 닉네임을 가져와서 바로 랭킹에 추가
 			String nickname = CurrentUserManager.getInstance().getNickname();
-			rankingManager.addScore(score, nickname);
+			rankingManager.addScore(playerStats.getScore(), nickname);
 		} else {
 			// 비로그인 상태일 때만 이름을 물어봄 (기존 방식)
-			if (rankingManager.isHighScore(score)) {
+			if (rankingManager.isHighScore(playerStats.getScore())) {
 				String name = JOptionPane.showInputDialog(container, "New High Score! Enter your name:", "Ranking", JOptionPane.PLAIN_MESSAGE);
 				if (name != null && !name.trim().isEmpty()) {
-					rankingManager.addScore(score, name);
+					rankingManager.addScore(playerStats.getScore(), name);
 				}
 			}
 		}
 
         currentLevel = 1;// 죽으면 레벨 1로 리셋
-        score = 0;
+        playerStats.resetScore();
     }
 
     /**
@@ -787,7 +763,7 @@ public class Game
      * are dead.
      */
     public void notifyWin() {
-        coins += 10;// 라운드 클리어 -> 코인
+        playerStats.addScore(100);// 라운드 클리어 -> 코인
         currentLevel++;
         if (currentLevel > BOSS_LEVEL) {
             message = "Congratulations! You have defeated the final boss!";
@@ -804,7 +780,7 @@ public class Game
     // ▼▼▼ PVP 승리/패배 처리 메소드 추가 ▼▼▼
     public void notifyWinPVP() {
         if (currentState != GameState.PLAYING_PVP) return; // 중복 호출 방지
-        coins += 30;
+        playerStats.addScore(30);
         message = "You win! 30 reward coins";
         waitingForKeyPress = true;
     }
@@ -815,40 +791,45 @@ public class Game
         stageIndex++;
     }
 
-    // 상점 옵션1: 공격 속도 증가 >> firing interval 10% 감소
+    // 상점 옵션1: 공격 속도 증가
     private void purchaseAttackSpeed() {
-        if (attackLevel >= MAX_UPGRADES) return;
-        if (coins < UPGRADE_COST) return;
-        coins -= UPGRADE_COST;
-        attackLevel++;
-        // reduce interval but clamp to a minimum
-        firingInterval = Math.max(100, (long)(firingInterval * 0.9));
+        if (playerStats.getAttackLevel() >= MAX_UPGRADES) return;
+
+        // spendCoins가 true를 반환하면(구매 성공하면) 레벨업 진행
+        if (playerStats.spendCoins(UPGRADE_COST)) {
+            playerStats.increaseAttackLevel();
+            // 공격 속도 갱신 (기존 로직 유지)
+            firingInterval = Math.max(100, (long)(firingInterval * 0.9));
+        }
     }
 
-    // 상점 옵션2: 이동 속도 증가 >> move speed 10% 증가
+    // 상점 옵션2: 이동 속도 증가
     private void purchaseMoveSpeed() {
-        if (moveLevel >= MAX_UPGRADES) return;
-        if (coins < UPGRADE_COST) return;
-        coins -= UPGRADE_COST;
-        moveLevel++;
-        moveSpeed = moveSpeed * 1.1;
+        if (playerStats.getMoveLevel() >= MAX_UPGRADES) return;
+
+        if (playerStats.spendCoins(UPGRADE_COST)) {
+            playerStats.increaseMoveLevel();
+            // 이동 속도 갱신 (기존 로직 유지)
+            moveSpeed = moveSpeed * 1.1;
+        }
     }
 
-    // 상점 옵션3: 미사일 개수 증가 increment missiles by 1 up to a reasonable cap
+    // 상점 옵션3: 미사일 개수 증가
     private void purchaseMissileCount() {
-        if (missileLevel >= MAX_UPGRADES) return;
-        if (coins < UPGRADE_COST) return;
-        coins -= UPGRADE_COST;
-        missileLevel++;
-        missileCount = Math.min(5, missileCount + 1);
+        if (playerStats.getMissileLevel() >= MAX_UPGRADES) return;
+
+        if (playerStats.spendCoins(UPGRADE_COST)) {
+            playerStats.increaseMissileLevel();
+            // 미사일 개수 증가 (PlayerStats의 변수 사용)
+            playerStats.setMissileCount(Math.min(5, playerStats.getMissileCount() + 1));
+        }
     }
 
     /**
      * Notification that an alien has been killed
      */
     public void notifyAlienKilled() {
-        score += 100;
-		coins += 1;
+        playerStats.addScore(100);
     }
 
 
@@ -857,252 +838,250 @@ public class Game
      * since we must first check that the player can fire at this
      * point, i.e. has he/she waited long enough between shots
      */
-    public void tryToFire() {
-        // check that we have waiting long enough to fire
-        if (System.currentTimeMillis() - lastFire < firingInterval) {
-            return;
-        }
-
-        lastFire = System.currentTimeMillis();
-
-        int baseX = ship.getX() + 10;
-        int baseY = ship.getY() - 30;
-        double shotDX = 0;
-        double shotDY = -300;
-
-		if (currentState == GameState.PLAYING_SINGLE && currentStage != null) {
-			shotDY = currentStage.getPlayerShotVelocity(); // Stage의 속도 가져오기
-		}
-		String myUid = CurrentUserManager.getInstance().getUid();
-
-        // 여러 발 미사일 처리
-        for (int i = 0; i < missileCount; i++) {
-            int offset = (i - (missileCount - 1) / 2) * 10;
-
-            ShotEntity shot = new ShotEntity(
-                    this,
-                    "sprites/shot.gif",
-                    baseX + offset,
-                    baseY,
-                    shotDX,
-                    shotDY
-            );
-			if (currentState == GameState.PLAYING_PVP || currentState == GameState.PLAYING_COOP) {
-				shot.setOwnerUid(myUid); // ShotEntity에 setOwnerUid 메서드가 있어야 함
-			}
-
-            entities.add(shot);
-			SoundManager.get().playSound("sounds/shoot.wav");
-        }
-    }
 
 	public void applySlow(long duration) {
 		this.slowTimer = duration;
 
 	}
 
-	public void gameLoop() {
-		long lastLoopTime = SystemTimer.getTime();
+    public void gameLoop() {
+        long lastLoopTime = SystemTimer.getTime();
 
-		// keep looping round til the game ends
-		while (gameRunning) {
-			// work out how long its been since the last update
-			long now = SystemTimer.getTime();
-			long delta = now - lastLoopTime;
-			lastLoopTime = now;
+        while (gameRunning) {
+            long now = SystemTimer.getTime();
+            long delta = now - lastLoopTime;
+            lastLoopTime = now;
 
-			// --- FPS 업데이트 ---
-			lastFpsTime += delta;
-			fps++;
-			if (lastFpsTime >= 1000) {
-				container.setTitle(windowTitle + " (FPS: " + fps + ")");
-				lastFpsTime = 0;
-				fps = 0;
-			}
+            // 1. FPS 갱신
+            updateFPS(delta);
 
-			// --- 슬로우 타이머 업데이트 ---
-			if (slowTimer > 0) {
-				slowTimer -= delta;
-			}
+            // 2. 타이머 갱신 (슬로우 효과 등)
+            updateTimers(delta);
 
-			// --- 스테이지 전환 요청 처리 ---
-			if (transitionRequested) {
-				nextStage();
-				transitionRequested = false;
-				continue;
-			}
+            // 3. 스테이지 전환 체크
+            if (transitionRequested) {
+                nextStage();
+                transitionRequested = false;
+                continue;
+            }
 
-			// --- 게임 플레이 중일 때만 로직 실행 ---
-			if (currentState == GameState.PLAYING_SINGLE || currentState == GameState.PLAYING_PVP || currentState == GameState.PLAYING_COOP) {
+            // 4. 게임 로직 수행 (플레이 중일 때만)
+            if (isPlayingState()) {
+                // (1) 입력 처리 및 이동
+                processPlayerInput();
 
-				// 1. 플레이어 이동 처리 (키 입력 반영 및 속도 계산)
-				if (!waitingForKeyPress && ship != null) {
-					ship.setHorizontalMovement(0);
-					ship.setDY(0);
+                // (2) 적 로직 (방향 전환 등)
+                processEnemyLogic();
 
-					// 1-1. 속도 계산 (슬로우 적용)
-					double currentSpeed = moveSpeed;
-					if (slowTimer > 0) currentSpeed *= 0.5;
+                // (3) 스테이지 업데이트 (기믹)
+                updateStage(delta);
 
-					// 1-2. 조작 반전 여부에 따른 입력 처리
-					boolean moveLeft = leftPressed;
-					boolean moveRight = rightPressed;
-					boolean moveUp = upPressed;
-					boolean moveDown = downPressed;
+                // (4) 네트워크 (PVP)
+                updateNetwork();
 
-					if (reverseControls) {
-						moveLeft = rightPressed;
-						moveRight = leftPressed;
-						moveUp = downPressed;
-						moveDown = upPressed;
-					}
+                // (5) 엔티티 이동
+                moveEntities(delta);
 
-					if (moveLeft && !moveRight) {
-						ship.setHorizontalMovement(-currentSpeed);
-					} else if (moveRight && !moveLeft) {
-						ship.setHorizontalMovement(currentSpeed);
-					}
+                // (6) 충돌 체크
+                checkCollisions();
 
-					if (moveUp && !moveDown) {
-						ship.setDY(-currentSpeed);
-					} else if (moveDown && !moveUp) {
-						ship.setDY(currentSpeed);
-					} else {
-						// 수직 이동이 없으면 속도 0으로 명확히 설정
-						ship.setDY(0);
-					}
+                // (7) 게임 승리 조건 체크 (Coop)
+                checkWinCondition();
 
-					// 1-3. 해왕성 바람 효과 적용 (싱글 플레이에만 해당)
-					if (currentState == GameState.PLAYING_SINGLE && currentStage instanceof NeptuneStage) {
-						NeptuneStage ns = (NeptuneStage) currentStage;
-						double wind = ns.getCurrentWindForce();
+                // (8) 죽은 엔티티 삭제
+                removeDeadEntities();
 
-						if (wind != 0 && !((ShipEntity)ship).isBoosterActive()) {
-							// 기존 움직임 + 바람 속도 합산
-							ship.setHorizontalMovement(ship.getDX() + wind);
-						}
-					}
+                // (9) 화면 그리기 요청
+                gamePlayPanel.repaint();
+            } else {
+                // 메뉴 화면 등에서도 repaint는 필요
+                mainPanel.repaint();
+            }
 
-					// 1-4. 발사 처리
-					if (firePressed) {
-						tryToFire();
-					}
-				}
+            SystemTimer.sleep(10);
+        }
+    }
 
-				// 2. 외계인 방향 전환 로직 (벽에 닿았을 때)
-				if (logicRequiredThisLoop) {
-					for (Entity entity : entities) {
-						entity.doLogic();
-					}
-					logicRequiredThisLoop = false;
-				}
+    // --- 리팩토링으로 추출된 헬퍼 메서드들 ---
 
-				// 3. 스테이지 기믹 및 클리어 업데이트 (싱글 플레이에만 해당)
-				if (currentState == GameState.PLAYING_SINGLE && !waitingForKeyPress && currentStage != null) {
-					currentStage.update(delta);
+    private boolean isPlayingState() {
+        return currentState == GameState.PLAYING_SINGLE ||
+                currentState == GameState.PLAYING_PVP ||
+                currentState == GameState.PLAYING_COOP;
+    }
 
-					if (currentStage.isCompleted()) {
-						waitingForKeyPress = true;
-						message = "Stage " + stageIndex + " Clear!";
-						stageIndex++;
-					}
-				}
+    private void updateFPS(long delta) {
+        lastFpsTime += delta;
+        fps++;
+        if (lastFpsTime >= 1000) {
+            container.setTitle(windowTitle + " (FPS: " + fps + ")");
+            lastFpsTime = 0;
+            fps = 0;
+        }
+    }
 
+    private void updateTimers(long delta) {
+        if (slowTimer > 0) {
+            slowTimer -= delta;
+        }
+    }
 
-				// 4. PVP 네트워크 업데이트
-				if (currentState == GameState.PLAYING_PVP || currentState == GameState.PLAYING_COOP) {
-					// networkThread에서 위치 동기화를 처리하고 있으므로,
-					// 이 루프에서는 엔티티 이동 및 충돌만 처리합니다.
-					// PVP 전용 업데이트 함수가 있다면 여기서 호출합니다.
-					// 현재는 networkThread가 모든 네트워크/엔티티 생성을 처리하고 있습니다.
-				}
+    private void processPlayerInput() {
+        if (!waitingForKeyPress && ship != null) {
+            ship.setHorizontalMovement(0);
+            ship.setDY(0);
 
-				// 5. 엔티티 이동 (PVP 모드에서는 상대방 Ship 제외)
-				if (!waitingForKeyPress) {
-					for (int i = 0; i < entities.size(); i++) {
-						Entity entity = entities.get(i);
-						// PVP에서 상대방 우주선은 networkThread에서 위치를 강제하므로 여기서 이동 로직 스킵
-						if (currentState == GameState.PLAYING_PVP && entity == opponentShip) {
-							continue;
-						}
-						entity.move(delta);
-					}
-				}
+            double currentSpeed = moveSpeed;
+            if (slowTimer > 0) currentSpeed *= 0.5;
 
+            boolean moveLeft = inputManager.isLeftPressed();
+            boolean moveRight = inputManager.isRightPressed();
+            boolean moveUp = inputManager.isUpPressed();
+            boolean moveDown = inputManager.isDownPressed();
 
-				// 6. 충돌 체크 (모든 플레이 상태 공통)
-				if (!waitingForKeyPress) {
-					for (int p = 0; p < entities.size(); p++) {
-						for (int s = p + 1; s < entities.size(); s++) {
-							Entity me = entities.get(p);
-							Entity him = entities.get(s);
+            if (reverseControls) {
+                moveLeft = inputManager.isRightPressed();
+                moveRight = inputManager.isLeftPressed();
+                moveUp = inputManager.isDownPressed();
+                moveDown = inputManager.isUpPressed();
+            }
 
-							if (removeList.contains(me) || removeList.contains(him)) continue;
-							if (currentState == GameState.PLAYING_PVP) continue;
+            if (moveLeft && !moveRight) ship.setHorizontalMovement(-currentSpeed);
+            else if (moveRight && !moveLeft) ship.setHorizontalMovement(currentSpeed);
 
-							if (me.collidesWith(him)) {
-								me.collidedWith(him);
-								him.collidedWith(me);
-							}
-						}
-					}
-				}
+            if (moveUp && !moveDown) ship.setDY(-currentSpeed);
+            else if (moveDown && !moveUp) ship.setDY(currentSpeed);
 
-				if (currentState == GameState.PLAYING_PVP) {
-					String myUid = CurrentUserManager.getInstance().getUid();
-					for (int p = 0; p < entities.size(); p++) {
-						for (int s = p + 1; s < entities.size(); s++) {
-							Entity me = entities.get(p);
-							Entity him = entities.get(s);
+            // 해왕성 바람 효과
+            if (currentState == GameState.PLAYING_SINGLE && currentStage instanceof NeptuneStage) {
+                NeptuneStage ns = (NeptuneStage) currentStage;
+                double wind = ns.getCurrentWindForce();
+                if (wind != 0 && !((ShipEntity) ship).isBoosterActive()) {
+                    ship.setHorizontalMovement(ship.getDX() + wind);
+                }
+            }
 
-							if (removeList.contains(me) || removeList.contains(him)) continue;
+            if (inputManager.isFirePressed()) {
+                if (ship instanceof ShipEntity) {
+                    ((ShipEntity) ship).tryToFire(); // ShipEntity에게 발사 위임
+                }
+            }
+        }
+    }
 
-							Rectangle meRect = getVisualBounds(me);
-							Rectangle himRect = getVisualBounds(him);
+    private void processEnemyLogic() {
+        if (logicRequiredThisLoop) {
+            for (Entity entity : entities) {
+                entity.doLogic();
+            }
+            logicRequiredThisLoop = false;
+        }
+    }
 
-							if (meRect.intersects(himRect)) {
-								if (me instanceof ShotEntity && ((ShotEntity)me).isOwnedBy(myUid) && him == opponentShip) {
-									removeEntity(me);
-								} else if (him instanceof ShotEntity && ((ShotEntity)him).isOwnedBy(myUid) && me == opponentShip) {
-									removeEntity(him);
-								}
-								else if (me instanceof ShotEntity && !((ShotEntity)me).isOwnedBy(myUid) && him == ship) {
-									removeEntity(me);
-									((ShipEntity)him).takeDamage();
-								} else if (him instanceof ShotEntity && !((ShotEntity)him).isOwnedBy(myUid) && me == ship) {
-									removeEntity(him);
-									((ShipEntity)me).takeDamage();
-								}
-							}
-						}
-					}
-				} else if (currentState == GameState.PLAYING_COOP) {
-					// 협동 모드 클리어 체크
-					if (currentLevel < BOSS_LEVEL) {
-						int aliensRemaining = 0;
-						for (Entity e : entities) if (e instanceof AlienEntity) aliensRemaining++;
-						// waitingForKeyPress가 false여야만 체크 (중복 승리 호출 방지)
-						if (aliensRemaining == 0 && !waitingForKeyPress) {
-							notifyWin();
-						}
-					}
-				}
+    private void updateStage(long delta) {
+        if (currentState == GameState.PLAYING_SINGLE && !waitingForKeyPress && currentStage != null) {
+            currentStage.update(delta);
+            if (currentStage.isCompleted()) {
+                waitingForKeyPress = true;
+                message = "Stage " + stageIndex + " Clear!";
+                stageIndex++;
+            }
+        }
+    }
 
-				// 7. 삭제 큐 처리
-				entities.removeAll(removeList);
-				removeList.clear();
+    private void updateNetwork() {
+        // PVP/COOP 네트워크 로직은 별도 스레드에서 돌지만,
+        // 메인 루프에서 처리해야 할 동기화 로직이 있다면 이곳에 작성
+    }
 
-				// 8. 화면 렌더링 요청
-				gamePlayPanel.repaint();
-			} else {
-				// 게임 플레이 상태가 아닐 때도 UI 갱신 (메뉴, 로비 등)
-				mainPanel.repaint();
-			}
+    private void moveEntities(long delta) {
+        if (!waitingForKeyPress) {
+            for (int i = 0; i < entities.size(); i++) {
+                Entity entity = entities.get(i);
+                // PVP 상대방은 네트워크 스레드가 위치를 제어하므로 이동 로직 스킵
+                if (currentState == GameState.PLAYING_PVP && entity == opponentShip) {
+                    continue;
+                }
+                entity.move(delta);
+            }
+        }
+    }
 
-			// 루프가 너무 빨리 돌지 않도록 잠시 대기
-			SystemTimer.sleep(10);
-		}
-	}
+    private void checkCollisions() {
+        if (!waitingForKeyPress) {
+            // 1. 일반적인 충돌 체크 (Entity 간)
+            for (int p = 0; p < entities.size(); p++) {
+                for (int s = p + 1; s < entities.size(); s++) {
+                    Entity me = entities.get(p);
+                    Entity him = entities.get(s);
+
+                    if (removeList.contains(me) || removeList.contains(him)) continue;
+                    if (currentState == GameState.PLAYING_PVP) continue; // PVP는 별도 로직
+
+                    if (me.collidesWith(him)) {
+                        me.collidedWith(him);
+                        him.collidedWith(me);
+                    }
+                }
+            }
+
+            // 2. PVP 전용 충돌 체크 (시각적 범위 기반)
+            if (currentState == GameState.PLAYING_PVP) {
+                checkPvpCollisions();
+            }
+        }
+    }
+
+    private void checkPvpCollisions() {
+        String myUid = CurrentUserManager.getInstance().getUid();
+        for (int p = 0; p < entities.size(); p++) {
+            for (int s = p + 1; s < entities.size(); s++) {
+                Entity me = entities.get(p);
+                Entity him = entities.get(s);
+
+                if (removeList.contains(me) || removeList.contains(him)) continue;
+
+                Rectangle meRect = getVisualBounds(me);
+                Rectangle himRect = getVisualBounds(him);
+
+                if (meRect.intersects(himRect)) {
+                    handlePvpCollision(me, him, myUid);
+                }
+            }
+        }
+    }
+
+    private void handlePvpCollision(Entity me, Entity him, String myUid) {
+        // PVP 충돌 로직 분리
+        if (me instanceof ShotEntity && ((ShotEntity)me).isOwnedBy(myUid) && him == opponentShip) {
+            removeEntity(me);
+        } else if (him instanceof ShotEntity && ((ShotEntity)him).isOwnedBy(myUid) && me == opponentShip) {
+            removeEntity(him);
+        } else if (me instanceof ShotEntity && !((ShotEntity)me).isOwnedBy(myUid) && him == ship) {
+            removeEntity(me);
+            ((ShipEntity)him).takeDamage();
+        } else if (him instanceof ShotEntity && !((ShotEntity)him).isOwnedBy(myUid) && me == ship) {
+            removeEntity(him);
+            ((ShipEntity)me).takeDamage();
+        }
+    }
+
+    private void checkWinCondition() {
+        if (currentState == GameState.PLAYING_COOP) {
+            if (currentLevel < BOSS_LEVEL) {
+                int aliensRemaining = 0;
+                for (Entity e : entities) if (e instanceof AlienEntity) aliensRemaining++;
+                if (aliensRemaining == 0 && !waitingForKeyPress) {
+                    notifyWin();
+                }
+            }
+        }
+    }
+
+    private void removeDeadEntities() {
+        entities.removeAll(removeList);
+        removeList.clear();
+    }
 
     private Rectangle getVisualBounds(Entity entity) {
         if (entity == null) return new Rectangle(0,0,0,0);
@@ -1137,29 +1116,6 @@ public class Game
         return message;
     }
 
-    private Stage loadStage(int index) {
-        switch (index) {
-            case 1: return new MarsStage(this);
-            case 2: return new JupiterStage(this);
-            case 3: return new SaturnStage(this);
-            case 4: return new UranusStage(this);
-            case 5: return new NeptuneStage(this);
-            case 6: return new BlackHoleBossStage(this);
-        }
-        return null; // 끝난 경우
-    }
-
-    public String getBackgroundForLevel() {
-        switch(currentLevel) {
-            case 1: return "sprites/bg_mars.png";
-            case 2: return "sprites/bg_jupiter.png";
-            case 3: return "sprites/bg_saturn.png";
-            case 4: return "sprites/bg_uranus.png";
-            case 5: return "sprites/bg_neptune.png";
-            case 6: return "sprites/bg_blackhole.png";
-        }
-        return "sprites/bg_default.png";
-    }
     private void updatePvpGameplay(long delta) {
         // 이 안에는 PVP 모드에서 매 프레임 실행되는 내용만 넣음.
         // 현재는 네 기존 PvP move/shot/network 코드를 그대로 유지하면 됨.
@@ -1174,7 +1130,9 @@ public class Game
             }
         }
     }
-
+    public void requestTransition() {
+        this.transitionRequested = true;
+    }
 
 
 
@@ -1192,71 +1150,7 @@ public class Game
      */
     // Game.java 파일의 KeyInputHandler 클래스 전체를 아래 코드로 교체
 
-	private class KeyInputHandler extends KeyAdapter {
 
-		@Override
-		public void keyPressed(KeyEvent e) {
-			if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-				System.exit(0);
-			}
-
-			if (waitingForKeyPress) {
-				if (currentState == GameState.PLAYING_SINGLE) {
-					// 싱글 플레이의 다음 스테이지 전환은 transitionRequested 플래그를 통해 gameLoop에서 처리
-					transitionRequested = true;
-				}
-				// PVP/COOP 종료 후에는 메뉴로 이동
-				else if (currentState == GameState.PLAYING_PVP || currentState == GameState.PLAYING_COOP) {
-					changeState(GameState.PVP_MENU);
-				}
-				return;
-			}
-
-			// 게임 플레이 키 입력
-			if (currentState == GameState.PLAYING_SINGLE || currentState == GameState.PLAYING_PVP || currentState == GameState.PLAYING_COOP) {
-
-				if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-					leftPressed = true;
-				}
-				if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-					rightPressed = true;
-				}
-				if (e.getKeyCode() == KeyEvent.VK_UP) {
-					upPressed = true;
-				}
-				if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-					downPressed = true;
-				}
-				if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-					firePressed = true;
-				}
-			}
-		}
-
-		@Override
-		public void keyReleased(KeyEvent e) {
-			if (waitingForKeyPress) return;
-
-			if (currentState == GameState.PLAYING_SINGLE || currentState == GameState.PLAYING_PVP || currentState == GameState.PLAYING_COOP) {
-
-				if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-					leftPressed = false;
-				}
-				if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-					rightPressed = false;
-				}
-				if (e.getKeyCode() == KeyEvent.VK_UP) {
-					upPressed = false;
-				}
-				if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-					downPressed = false;
-				}
-				if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-					firePressed = false;
-				}
-			}
-		}
-	}
 	/**
 	 * The entry point into the game. We'll simply create an
 	 * instance of class which will start the display and game

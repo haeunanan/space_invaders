@@ -22,30 +22,18 @@ public class NeptuneStage extends Stage {
 
     @Override
     public void init() {
-        background = SpriteStore.get().getSprite(getBackgroundSpriteRef()).getImage();
+        // 배경 이미지 로드
+        background = org.newdawn.spaceinvaders.SpriteStore.get().getSprite(getBackgroundSpriteRef()).getImage();
 
-        double moveSpeed = 70; // 적 기본 속도 (돌진 전에는 평범하게)
-        int alienRows = 5;
-        double firingChance = 0.0002;
-        int startY = 80;
-
-        for (int row = 0; row < alienRows; row++) {
-            for (int x = 0; x < 10; x++) {
-                AlienEntity alien = new AlienEntity(
-                        game,
-                        "sprites/alien_neptune.gif", // 해왕성 적 이미지 필요
-                        100 + (x * 45),
-                        startY + row * 30,
-                        moveSpeed,
-                        firingChance
-                );
-                game.addEntity(alien);
-            }
-        }
         // 초기화
         currentWindForce = 0;
         isWindy = false;
         windTimer = 0;
+
+        // [수정] 복잡한 2중 for문 삭제 -> 부모 메서드 호출로 대체
+        // 파라미터: (이미지경로, 행, 열, 시작Y, 가로간격, 세로간격, 속도, 공격확률)
+        // 해왕성은 적 간격(45, 30)이 조금 좁고, 줄 수(5줄)가 많습니다.
+        setupAliens("sprites/alien_neptune.gif", 5, 10, 80, 45, 30, 70, 0.0002);
     }
 
     @Override

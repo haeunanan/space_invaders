@@ -29,19 +29,7 @@ public class MarsStage extends Stage {
         double firingChance = 0.0; // 1스테이지라 공격 안 함
         int startY = 60;
 
-        for (int row = 0; row < alienRows; row++) {
-            for (int x = 0; x < 10; x++) {
-                AlienEntity alien = new AlienEntity(
-                        game,
-                        "sprites/alien_mars.gif",
-                        120 + (x * 50),
-                        startY + row * 35,
-                        moveSpeed,
-                        firingChance
-                );
-                game.addEntity(alien);
-            }
-        }
+        setupAliens("sprites/alien_mars.gif", 3, 10, 60, 50, 35, 70, 0.0);
         elapsedTime = 0;
         stabilizerActive = false;
     }

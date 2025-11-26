@@ -1,6 +1,7 @@
 package org.newdawn.spaceinvaders.stage;
 
 import org.newdawn.spaceinvaders.Game;
+import org.newdawn.spaceinvaders.entity.AlienEntity;
 import org.newdawn.spaceinvaders.entity.Entity;
 
 import java.awt.Image;
@@ -51,6 +52,22 @@ public abstract class Stage {
             if (alienType.isInstance(e)) return false;
         }
         return true;
+    }
+    // Stage.java에 공통 메서드 추가
+    protected void setupAliens(String spriteRef, int rows, int cols, int startY, int gapX, int gapY, double speed, double fireChance) {
+        for (int row = 0; row < rows; row++) {
+            for (int x = 0; x < cols; x++) {
+                AlienEntity alien = new AlienEntity(game, spriteRef, 100 + (x * gapX), startY + row * gapY, speed, fireChance);
+
+                // [핵심] 자식 스테이지에서 커스텀할 수 있는 'Hook' 메서드 호출
+                customizeAlien(alien);
+
+                game.addEntity(alien);
+            }
+        }
+    }
+    protected void customizeAlien(AlienEntity alien) {
+        // Override me if needed!
     }
     public boolean isItemAllowed() {
         return true;
