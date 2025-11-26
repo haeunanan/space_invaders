@@ -39,23 +39,26 @@ public class ShipEntity extends Entity {
 		return boosterActive;
 	}
 
-	/**
-	 * 데미지를 입었을 때 호출됩니다.
-	 */
-	public void takeDamage() {
-		// [추가] 피격 효과음 재생
-		SoundManager.get().playSound("sounds/hit.wav");
-		currentHealth--;
-		if (currentHealth <= 0) {
-			game.notifyDeath(); // 체력이 0이 되면 게임 오버 처리
-		}
-		if (shieldActive) {
-			shieldActive = false;
-			System.out.println("Shield blocked the damage!");
-			return;
-		}
-		this.currentHealth--;
-	}
+    /**
+     * 데미지를 입었을 때 호출됩니다.
+     */
+    public void takeDamage() {
+        // [추가] 피격 효과음 재생
+        SoundManager.get().playSound("sounds/hit.wav");
+
+        // 1. 쉴드가 있으면 쉴드만 끄고 데미지 무효화
+        if (shieldActive) {
+            shieldActive = false;
+            System.out.println("Shield blocked the damage!");
+            return;
+        }
+
+        // 2. 쉴드가 없을 때만 체력 감소
+        currentHealth--;
+        if (currentHealth <= 0) {
+            game.notifyDeath(); // 체력이 0이 되면 게임 오버 처리
+        }
+    }
 
 	public int getCurrentHealth() {
 		return currentHealth;
