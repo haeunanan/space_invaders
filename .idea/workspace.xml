@@ -4,19 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="eb80459d-6f84-4ce9-b90c-dd6c51981bd9" name="변경" comment="sonarlint 리팩토링 완료 (상점이 안뜨는 오류 수정)">
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/CollisionManager.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/FirebaseNetworkHelper.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/NeptuneAlienEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/UranusAlienEntity.java" afterDir="false" />
+    <list default="true" id="eb80459d-6f84-4ce9-b90c-dd6c51981bd9" name="변경" comment="metric 리팩토링중">
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/LevelManager.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/NetworkManager.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/PlayerController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/ShopManager.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/WindowManager.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/EntityManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/EntityManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/FirebaseClientService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/FirebaseClientService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/AlienEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/AlienEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/NeptuneStage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/NeptuneStage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/SaturnStage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/SaturnStage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/Stage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/Stage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/UranusStage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/UranusStage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/Game.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/Game.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,6 +40,9 @@
     "accountId": "62cd962e-651e-4d1d-ab5a-c53636edd0f1"
   }
 }]]></component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
   <component name="ProjectColorInfo"><![CDATA[{
   "customColor": "",
   "associatedIndex": 4
@@ -75,7 +73,7 @@
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "run.code.analysis.last.selected.profile": "pProject Default",
-    "settings.editor.selected.configurable": "preferences.lookFeel",
+    "settings.editor.selected.configurable": "inlay.hints",
     "to.speed.mode.migration.done": "true",
     "vue.rearranger.settings.migration": "true",
     "애플리케이션.Game.executor": "Run",
@@ -106,7 +104,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1764131691331</updated>
-      <workItem from="1764131693803" duration="32492000" />
+      <workItem from="1764131693803" duration="38132000" />
     </task>
     <task id="LOCAL-00001" summary="리팩토링 실행 오류 수정중">
       <option name="closed" value="true" />
@@ -148,7 +146,15 @@
       <option name="project" value="LOCAL" />
       <updated>1764168438198</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="metric 리팩토링중">
+      <option name="closed" value="true" />
+      <created>1764171351286</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1764171351287</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -170,6 +176,7 @@
     <MESSAGE value="리팩토링 중" />
     <MESSAGE value="sonarlint 리팩토링 완료" />
     <MESSAGE value="sonarlint 리팩토링 완료 (상점이 안뜨는 오류 수정)" />
-    <option name="LAST_COMMIT_MESSAGE" value="sonarlint 리팩토링 완료 (상점이 안뜨는 오류 수정)" />
+    <MESSAGE value="metric 리팩토링중" />
+    <option name="LAST_COMMIT_MESSAGE" value="metric 리팩토링중" />
   </component>
 </project>
