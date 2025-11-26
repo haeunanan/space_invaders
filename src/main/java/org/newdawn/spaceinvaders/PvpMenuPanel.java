@@ -26,7 +26,7 @@ public class PvpMenuPanel extends JPanel {
         add(myPageButton);
 
         myPageButton.addActionListener(e -> {
-            game.changeState(Gamestate.MY_PAGE);
+            game.changeState(GameState.MY_PAGE);
         });
 
         // --- 버튼 3개를 중앙에 일렬로 배치하기 위한 계산 ---
@@ -71,7 +71,7 @@ public class PvpMenuPanel extends JPanel {
 
             // 3. 로비로 이동
             if (success) {
-                game.changeState(Gamestate.COOP_LOBBY);
+                game.changeState(GameState.COOP_LOBBY);
             } else {
                 JOptionPane.showMessageDialog(this, "서버 접속 실패");
             }
@@ -79,7 +79,7 @@ public class PvpMenuPanel extends JPanel {
 
         // --- 버튼 클릭 이벤트 리스너 ---
         soloPlayButton.addActionListener(e -> {
-            game.changeState(Gamestate.PLAYING_SINGLE);
+            game.changeState(GameState.PLAYING_SINGLE);
         });
 
         pvpPlayButton.addActionListener(e -> {
@@ -95,7 +95,7 @@ public class PvpMenuPanel extends JPanel {
             boolean success = clientService.startMatchmaking(uid, nickname);
 
             if (success) {
-                game.changeState(Gamestate.PVP_LOBBY);
+                game.changeState(GameState.PVP_LOBBY);
             } else {
                 JOptionPane.showMessageDialog(this, "매칭 서버에 접속할 수 없습니다.");
             }
@@ -103,7 +103,7 @@ public class PvpMenuPanel extends JPanel {
 
         logoutButton.addActionListener(e -> {
             CurrentUserManager.getInstance().logout();
-            game.changeState(Gamestate.SIGN_IN);
+            game.changeState(GameState.SIGN_IN);
         });
     }
 

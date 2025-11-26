@@ -21,12 +21,15 @@ public class GameMouseListener extends MouseAdapter {
         int mx = e.getX();
         int my = e.getY();
 
+        handleShopInteraction(mx, my);
+
         // 1. "메뉴로 돌아가기" 버튼 처리 (대기 상태일 때)
-        if (game.isWaitingForKeyPress()) {
-            if (isMenuReturnClick(mx, my)) {
+        if (game.getLevelManager().isWaitingForKeyPress()) {
+            // 단, 상점이 열려있을 때는 오버레이가 덮여있으므로 메뉴 버튼 클릭을 막음
+            if (!game.getShopManager().isShopOpen() && isMenuReturnClick(mx, my)) {
                 showReturnToMenuDialog();
             }
-            return;
+            return; // 대기 상태면 게임 플레이(발사 등)로 넘어가지 않도록 리턴
         }
 
         // 2. 상점 상호작용 처리

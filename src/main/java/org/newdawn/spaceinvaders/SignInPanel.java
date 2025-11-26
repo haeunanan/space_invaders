@@ -57,7 +57,7 @@ public class SignInPanel extends JPanel {
 
         // "회원가입 하러가기" 버튼 클릭 시
         goToSignUpButton.addActionListener(e -> {
-            game.changeState(Gamestate.SIGN_UP);
+            game.changeState(GameState.SIGN_UP);
         });
 
         // "로그인" 버튼 클릭 시
@@ -76,38 +76,31 @@ public class SignInPanel extends JPanel {
         }
 
         FirebaseClientService clientService = new FirebaseClientService();
-
-        // 1. Firebase Authentication으로 로그인 시도
         String uid = clientService.signIn(email, password);
 
         if (uid != null) {
-            // 2. 로그인 성공! Firestore에서 닉네임 정보를 가져옵니다.
-            String nickname = clientService.getUsername(uid);
-
-            if (nickname == null) {
-                // 3. 닉네임이 없는 경우 (기존 사용자), 새로 입력받습니다.
-                nickname = JOptionPane.showInputDialog(this, "최초 접속입니다. 사용할 닉네임을 입력해주세요.");
-
-                if (nickname != null && !nickname.trim().isEmpty()) {
-                    // 입력받은 닉네임을 Firestore에 저장합니다.
-                    clientService.saveUsername(uid, nickname);
-                } else {
-                    JOptionPane.showMessageDialog(this, "닉네임 설정이 취소되어 로그인을 중단합니다.");
-                    return; // 닉네임 설정 안하면 로그인 중단
-                }
-            }
-
-            // 4. 최종적으로 얻은 uid와 nickname을 CurrentUserManager에 저장합니다.
-            CurrentUserManager.getInstance().login(uid, nickname);
-
-            // 5. PVP 메뉴 화면으로 전환합니다.
-            JOptionPane.showMessageDialog(this, nickname + "님, 환영합니다!");
-            game.changeState(Gamestate.PVP_MENU);
-
+            processSuccessfulLogin(clientService, uid); // [리팩토링] 성공 로직 분리
         } else {
-            // 클라이언트 로그인 실패 (아이디/비밀번호 틀림)
             JOptionPane.showMessageDialog(this, "이메일 또는 비밀번호가 올바르지 않습니다.");
         }
+    }
+
+    private void processSuccessfulLogin(FirebaseClientService clientService, String uid) {
+        String nickname = clientService.getUsername(uid);
+
+        if (nickname == null) {
+            nickname = JOptionPane.showInputDialog(this, "최초 접속입니다. 사용할 닉네임을 입력해주세요.");
+            if (nickname != null && !nickname.trim().isEmpty()) {
+                clientService.saveUsername(uid, nickname);
+            } else {
+                JOptionPane.showMessageDialog(this, "닉네임 설정이 취소되어 로그인을 중단합니다.");
+                return;
+            }
+        }
+
+        CurrentUserManager.getInstance().login(uid, nickname);
+        JOptionPane.showMessageDialog(this, nickname + "님, 환영합니다!");
+        game.changeState(GameState.PVP_MENU);
     }
 
     @Override

@@ -44,22 +44,29 @@ public class ShopManager {
     }
 
     private void buyItem(int index) {
-        int cost = Constants.UPGRADE_COST;
-        int max = Constants.MAX_UPGRADES;
-
-        if (index == 0) { // Attack Speed
-            if (playerStats.getAttackLevel() < max && playerStats.spendCoins(cost)) {
-                playerStats.increaseAttackLevel();
-            }
-        } else if (index == 1) { // Move Speed
-            if (playerStats.getMoveLevel() < max && playerStats.spendCoins(cost)) {
-                playerStats.increaseMoveLevel();
-            }
-        } else if (index == 2) { // Missile Count
-            if (playerStats.getMissileLevel() < max && playerStats.spendCoins(cost)) {
-                playerStats.increaseMissileLevel();
-                playerStats.setMissileCount(Math.min(5, playerStats.getMissileCount() + 1));
-            }
+        switch (index) {
+            case 0: tryBuyAttackSpeed(); break;
+            case 1: tryBuyMoveSpeed(); break;
+            case 2: tryBuyMissileCount(); break;
+        }
+    }
+    private void tryBuyAttackSpeed() {
+        if (playerStats.getAttackLevel() < Constants.MAX_UPGRADES &&
+                playerStats.spendCoins(Constants.UPGRADE_COST)) {
+            playerStats.increaseAttackLevel();
+        }
+    }
+    private void tryBuyMoveSpeed() {
+        if (playerStats.getMoveLevel() < Constants.MAX_UPGRADES &&
+                playerStats.spendCoins(Constants.UPGRADE_COST)) {
+            playerStats.increaseMoveLevel();
+        }
+    }
+    private void tryBuyMissileCount() {
+        if (playerStats.getMissileLevel() < Constants.MAX_UPGRADES &&
+                playerStats.spendCoins(Constants.UPGRADE_COST)) {
+            playerStats.increaseMissileLevel();
+            playerStats.setMissileCount(Math.min(5, playerStats.getMissileCount() + 1));
         }
     }
 }

@@ -4,6 +4,7 @@ import org.newdawn.spaceinvaders.Constants;
 import org.newdawn.spaceinvaders.CurrentUserManager;
 import org.newdawn.spaceinvaders.Game;
 import org.newdawn.spaceinvaders.SoundManager;
+import org.newdawn.spaceinvaders.GameState;
 
 /**
  * The entity that represents the players ship
@@ -40,6 +41,11 @@ public class ShipEntity extends Entity {
      * 데미지를 입었을 때 호출됩니다.
      */
     public void takeDamage() {
+        // [수정] 이미 파괴되었거나 게임이 대기 상태(사망 처리 중)라면 추가 데미지/사운드 무시
+        if (currentHealth <= 0 || game.getLevelManager().isWaitingForKeyPress()) {
+            return;
+        }
+
         SoundManager.get().playSound("sounds/hit.wav");
 
         if (shieldActive) {
@@ -50,7 +56,6 @@ public class ShipEntity extends Entity {
 
         currentHealth--;
         if (currentHealth <= 0) {
-            // [수정] Game 클래스가 아니라 LevelManager를 통해 사망 처리 호출
             game.getLevelManager().notifyDeath();
         }
     }
@@ -114,7 +119,8 @@ public class ShipEntity extends Entity {
     }
 
     public void tryToFire() {
-        if (System.currentTimeMillis() - game.lastFire < game.firingInterval) {
+        long interval = game.getPlayerStats().getFiringInterval();
+        if (System.currentTimeMillis() - game.lastFire < interval) {
             return;
         }
         game.lastFire = System.currentTimeMillis();
@@ -124,7 +130,7 @@ public class ShipEntity extends Entity {
         double shotDX = 0;
         double shotDY = -300;
 
-        if (game.getCurrentState() == Gamestate.PLAYING_SINGLE && game.getCurrentStage() != null) {
+        if (game.getCurrentState() == GameState.PLAYING_SINGLE && game.getCurrentStage() != null) {
             shotDY = game.getCurrentStage().getPlayerShotVelocity();
         }
 
@@ -134,10 +140,10 @@ public class ShipEntity extends Entity {
             int offset = (i - (game.playerStats.getMissileCount() - 1) / 2) * 10;
             ShotEntity shot = new ShotEntity(game, "sprites/shot.gif", baseX + offset, baseY, shotDX, shotDY);
 
-            if (game.getCurrentState() == Gamestate.PLAYING_PVP || game.getCurrentState() == Gamestate.PLAYING_COOP) {
+            if (game.getCurrentState() == GameState.PLAYING_PVP || game.getCurrentState() == GameState.PLAYING_COOP) {
                 shot.setOwnerUid(myUid);
             }
-            game.addEntity(shot);
+            game.getEntityManager().addEntity(shot);
         }
 
         org.newdawn.spaceinvaders.SoundManager.get().playSound("sounds/shoot.wav");

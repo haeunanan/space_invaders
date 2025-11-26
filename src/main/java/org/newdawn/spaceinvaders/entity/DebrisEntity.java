@@ -20,7 +20,7 @@ public class DebrisEntity extends Entity {
         double distance = Math.sqrt(dx*dx + dy*dy);
 
         if (distance < 20) {
-            game.removeEntity(this); // 블랙홀에 흡수됨
+            game.getEntityManager().removeEntity(this); // 블랙홀에 흡수됨
             return;
         }
 
@@ -37,7 +37,7 @@ public class DebrisEntity extends Entity {
             ShipEntity ship = (ShipEntity) other;
 
             // 자신(잔해) 제거
-            game.removeEntity(this);
+            game.getEntityManager().removeEntity(this);
 
             // [수정] 데미지 처리 및 로그 출력
             // 만약 방어막(Shield)이 있다면 방어막만 까짐

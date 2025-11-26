@@ -16,7 +16,7 @@ public class IceShardEntity extends Entity {
         super.move(delta);
         // 화면 밖으로 나가면 제거
         if (y > 600) {
-            game.removeEntity(this);
+            game.getEntityManager().removeEntity(this);
         }
     }
 
@@ -24,7 +24,7 @@ public class IceShardEntity extends Entity {
     public void collidedWith(Entity other) {
         if (other instanceof ShipEntity) {
             ShipEntity ship = (ShipEntity) other;
-            game.removeEntity(this); // 파편 제거
+            game.getEntityManager().removeEntity(this); // 파편 제거
 
             // [수정] 방어막 상태에 따른 분기 처리
             if (ship.isShieldActive()) {

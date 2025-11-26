@@ -31,7 +31,7 @@ public class UranusStage extends Stage {
                     randX,
                     -50 // 화면 위에서 시작
             );
-            game.addEntity(shard);
+            game.getEntityManager().addEntity(shard);
         }
     }
     @Override

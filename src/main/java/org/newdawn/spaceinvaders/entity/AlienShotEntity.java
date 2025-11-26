@@ -16,7 +16,7 @@ public class AlienShotEntity extends Entity {
     public void move(long delta) {
         super.move(delta);
         if (y > 600) {
-            game.removeEntity(this);
+            game.getEntityManager().removeEntity(this);
         }
     }
 
@@ -24,7 +24,7 @@ public class AlienShotEntity extends Entity {
     public void collidedWith(Entity other) {
         // 플레이어와 충돌하면 플레이어 사망 처리
         if (other instanceof ShipEntity) {
-            game.removeEntity(this);
+            game.getEntityManager().removeEntity(this);
             ((ShipEntity) other).takeDamage();
         }
     }

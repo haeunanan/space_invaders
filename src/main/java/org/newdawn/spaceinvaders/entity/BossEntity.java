@@ -33,7 +33,7 @@ public class BossEntity extends Entity {
             if (gammaRayStep == 1 && gammaRayTimer > 2000) {
                 gammaRayStep = 2;
                 gammaRayTimer = 0;
-                game.addEntity(new GammaRayEntity(game, 275, 0, 3000, false));
+                game.getEntityManager().addEntity(new GammaRayEntity(game, 275, 0, 3000, false));
             }
             else if (gammaRayStep == 2 && gammaRayTimer > 3000) {
                 isGammaRayActive = false;
@@ -61,13 +61,13 @@ public class BossEntity extends Entity {
 
         if (hpRatio > 0.6) {
             currentPhase = 1;
-            game.reverseControls = false;
+            game.getPlayerController().setReverseControls(false);
         } else if (hpRatio > 0.3) {
             currentPhase = 2;
-            game.reverseControls = true; // 조작 반전 기믹
+            game.getPlayerController().setReverseControls(true);
         } else {
             currentPhase = 3;
-            game.reverseControls = false;
+            game.getPlayerController().setReverseControls(false);
 
             if (!spriteChanged) {
                 changeSprite("sprites/boss_phase3.gif");
@@ -82,15 +82,15 @@ public class BossEntity extends Entity {
         if (currentPhase == 1) {
             if (now - lastShot > 800) {
                 lastShot = now;
-                game.addEntity(new ShotEntity(game, "sprites/debris.png", (int)x+50, (int)y+50, -100, 200));
-                game.addEntity(new ShotEntity(game, "sprites/debris.png", (int)x+50, (int)y+50, 100, 200));
+                game.getEntityManager().addEntity(new ShotEntity(game, "sprites/debris.png", (int)x+50, (int)y+50, -100, 200));
+                game.getEntityManager().addEntity(new ShotEntity(game, "sprites/debris.png", (int)x+50, (int)y+50, 100, 200));
             }
         } else if (currentPhase == 2) {
             if (now - lastShot > 1200) {
                 lastShot = now;
-                game.addEntity(new ShotEntity(game, Constants.BOSS_SHOT_SPRITE, (int)x+50, (int)y+50, 0, 150));
-                game.addEntity(new ShotEntity(game, Constants.BOSS_SHOT_SPRITE, (int)x+50, (int)y+50, -80, 100));
-                game.addEntity(new ShotEntity(game, Constants.BOSS_SHOT_SPRITE, (int)x+50, (int)y+50, 80, 100));
+                game.getEntityManager().addEntity(new ShotEntity(game, Constants.BOSS_SHOT_SPRITE, (int)x+50, (int)y+50, 0, 150));
+                game.getEntityManager().addEntity(new ShotEntity(game, Constants.BOSS_SHOT_SPRITE, (int)x+50, (int)y+50, -80, 100));
+                game.getEntityManager().addEntity(new ShotEntity(game, Constants.BOSS_SHOT_SPRITE, (int)x+50, (int)y+50, 80, 100));
             }
         } else if (currentPhase == 3) {
             if (!isGammaRayActive && now - lastShot > 3000) {
@@ -105,7 +105,7 @@ public class BossEntity extends Entity {
         gammaRayStep = 1;
         gammaRayTimer = 0;
         x = 275;
-        game.addEntity(new GammaRayEntity(game, 275, 0, 2000, true));
+        game.getEntityManager().addEntity(new GammaRayEntity(game, 275, 0, 2000, true));
     }
 
     private void changeSprite(String ref) {
@@ -120,12 +120,12 @@ public class BossEntity extends Entity {
     public void collidedWith(Entity other) {
         if (other instanceof ShotEntity && ((ShotEntity)other).getDY() < 0) {
             hp -= 50;
-            game.removeEntity(other);
+            game.getEntityManager().removeEntity(other);
             if (hp <= 0) {
-                game.removeEntity(this);
+                game.getEntityManager().removeEntity(this);
                 // [수정] Game 클래스가 아니라 LevelManager를 통해 보스 처치 처리 호출
                 game.getLevelManager().bossKilled();
-                game.reverseControls = false;
+                game.getPlayerController().setReverseControls(false);
             }
         }
     }

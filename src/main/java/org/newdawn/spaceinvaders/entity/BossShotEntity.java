@@ -18,7 +18,7 @@ public class BossShotEntity extends Entity {
 
         // 화면 밖으로 나가면 자동 제거
         if (y > 600) {
-            game.removeEntity(this);
+            game.getEntityManager().removeEntity(this);
         }
     }
 
@@ -26,7 +26,7 @@ public class BossShotEntity extends Entity {
     public void collidedWith(Entity other) {
         // 플레이어와 충돌 시
         if (other instanceof ShipEntity) {
-            game.removeEntity(this); // 총알 제거
+            game.getEntityManager().removeEntity(this); // 총알 제거
             ((ShipEntity) other).takeDamage();
         }
     }

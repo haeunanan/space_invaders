@@ -11,10 +11,19 @@ public class PlayerController {
     // [이동됨] Game 클래스에서 가져온 이동 속도 관련 변수들
     private double moveSpeed = 300;
     private long slowTimer = 0;
+    private boolean reverseControls = false;
 
     public PlayerController(Game game, InputManager inputManager) {
         this.game = game;
         this.inputManager = inputManager;
+    }
+
+    public void setReverseControls(boolean reverse) {
+        this.reverseControls = reverse;
+    }
+
+    public boolean isReverseControls() {
+        return reverseControls;
     }
 
     public void setShip(ShipEntity ship) {
@@ -22,7 +31,7 @@ public class PlayerController {
     }
 
     public void update() {
-        if (currentShip == null || game.isWaitingForKeyPress()) return;
+        if (currentShip == null || game.getLevelManager().isWaitingForKeyPress()) return;
 
         handleMovement();
         handleEnvironmentalEffects();
@@ -74,7 +83,7 @@ public class PlayerController {
         if (inputManager.isUpPressed())    dy -= 1;
         if (inputManager.isDownPressed())  dy += 1;
 
-        if (game.isReverseControls()) {
+        if (this.reverseControls) {
             dx *= -1;
             dy *= -1;
         }
@@ -84,7 +93,7 @@ public class PlayerController {
     }
 
     private void handleEnvironmentalEffects() {
-        if (game.getCurrentState() == Gamestate.PLAYING_SINGLE
+        if (game.getCurrentState() == GameState.PLAYING_SINGLE
                 && game.getCurrentStage() instanceof NeptuneStage) {
 
             NeptuneStage ns = (NeptuneStage) game.getCurrentStage();

@@ -47,7 +47,7 @@ public class InputManager extends KeyAdapter {
         }
 
         // 2. 대기 상태일 때의 키 처리 (메소드 추출)
-        if (game.isWaitingForKeyPress()) {
+        if (game.getLevelManager().isWaitingForKeyPress()) {
             handleWaitingKeyPress();
             return;
         }
@@ -60,12 +60,12 @@ public class InputManager extends KeyAdapter {
 
     // [추가] 대기 상태(게임 오버/클리어 등)에서의 키 입력 처리
     private void handleWaitingKeyPress() {
-        if (game.getCurrentState() == Gamestate.PLAYING_SINGLE) {
+        if (game.getCurrentState() == GameState.PLAYING_SINGLE) {
             game.requestTransition();
         }
-        else if (game.getCurrentState() == Gamestate.PLAYING_PVP ||
-                game.getCurrentState() == Gamestate.PLAYING_COOP) {
-            game.changeState(Gamestate.PVP_MENU);
+        else if (game.getCurrentState() == GameState.PLAYING_PVP ||
+                game.getCurrentState() == GameState.PLAYING_COOP) {
+            game.changeState(GameState.PVP_MENU);
         }
     }
 
@@ -80,7 +80,7 @@ public class InputManager extends KeyAdapter {
 
     @Override
     public void keyReleased(KeyEvent e) {
-        if (game.isWaitingForKeyPress()) return;
+        if (game.getLevelManager().isWaitingForKeyPress()) return;
 
         if (isPlayingState()) {
             int key = e.getKeyCode();
@@ -93,9 +93,9 @@ public class InputManager extends KeyAdapter {
     }
 
     private boolean isPlayingState() {
-        Gamestate state = game.getCurrentState();
-        return state == Gamestate.PLAYING_SINGLE ||
-                state == Gamestate.PLAYING_PVP ||
-                state == Gamestate.PLAYING_COOP;
+        GameState state = game.getCurrentState();
+        return state == GameState.PLAYING_SINGLE ||
+                state == GameState.PLAYING_PVP ||
+                state == GameState.PLAYING_COOP;
     }
 }

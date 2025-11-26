@@ -44,7 +44,7 @@ public class RankingManager {
 
         // 최대 순위를 넘는 점수는 제거
         if (scores.size() > MAX_SCORES) {
-            scores = scores.subList(0, MAX_SCORES);
+            scores = new ArrayList<>(scores.subList(0, MAX_SCORES));
         }
         saveScores(); // 변경사항을 파일에 저장
     }

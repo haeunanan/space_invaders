@@ -1,18 +1,15 @@
 package org.newdawn.spaceinvaders;
 
-import org.newdawn.spaceinvaders.StageFactory;
-
 import org.newdawn.spaceinvaders.entity.AlienEntity;
-import org.newdawn.spaceinvaders.entity.Entity;
-import org.newdawn.spaceinvaders.entity.ShipEntity;
 import org.newdawn.spaceinvaders.stage.Stage;
-
-
-import javax.swing.*;
 
 public class LevelManager {
     private final Game game;
     private final EntityManager entityManager;
+
+    // [분리된 매니저들]
+    private final GameSetupManager setupManager;
+    private final GameResultHandler resultHandler;
 
     private int currentLevel = 1;
     private int stageIndex = 1;
@@ -21,117 +18,86 @@ public class LevelManager {
     private static final int MAX_STAGE = 6;
     private static final int BOSS_LEVEL = 5;
 
+    // 메시지 상태
+    private String message = "";
+    private boolean waitingForKeyPress = true;
+
     public LevelManager(Game game, EntityManager entityManager) {
         this.game = game;
         this.entityManager = entityManager;
-    }
-    public void notifyAlienKilled() {
-        game.getPlayerStats().addScore(100);
-    }
-    public void notifyWinPVP() {
-        // 중복 호출 방지를 위해 상태 확인
-        if (game.getCurrentState() != Gamestate.PLAYING_PVP) return;
 
-        game.getPlayerStats().addScore(30);
-        game.setMessage("You win! 30 reward coins");
-        game.setWaitingForKeyPress(true);
+        // [초기화] 하위 매니저 생성
+        this.setupManager = new GameSetupManager(game, entityManager);
+        this.resultHandler = new GameResultHandler(game, this);
     }
 
+    // --- [위임] 게임 시작/설정 (SetupManager) ---
     public void startNewGame() {
-        entityManager.clear();
-        game.setSlowTimer(0);
-
-        stageIndex = 1;
-        currentStage = StageFactory.createStage(game, stageIndex);
-
-        // 플레이어 생성
-        ShipEntity ship = new ShipEntity(game, Constants.SHIP_SPRITE, Constants.PLAYER_START_X, Constants.PLAYER_START_Y);
-        ship.setHealth(3);
-        entityManager.addEntity(ship);
-
-        // Game에 ship 참조 설정 (PlayerController 등을 위해)
-        game.setShip(ship);
-
-        if (currentStage != null) {
-            currentStage.init();
-        }
-
-        game.setWaitingForKeyPress(false);
-        game.getInputManager().reset();
+        setupManager.startNewGame(this);
     }
 
-    public void setupCoopStage() {
-        // 레벨 1 난이도로 설정
-        double moveSpeed = 100;
-        int alienRows = 3;
-        double firingChance = 0;
-        int startY = 50;
+    public void startPvpGame() {
+        setupManager.startPvpGame();
+    }
 
-        for (int row = 0; row < alienRows; row++) {
-            for (int x = 0; x < 12; x++) {
-                Entity alien = new AlienEntity(game, "sprites/alien.gif",
-                        100 + (x * 50), startY + row * 30, moveSpeed, firingChance);
-                entityManager.addEntity(alien);
+    public void startCoopGame() {
+        setupManager.startCoopGame();
+    }
+
+    // --- [위임] 게임 결과 처리 (ResultHandler) ---
+    public void notifyAlienKilled() {
+        resultHandler.notifyAlienKilled();
+    }
+
+    public void notifyWinPVP() {
+        resultHandler.notifyWinPVP();
+    }
+
+    public void notifyWin() {
+        resultHandler.notifyWin();
+    }
+
+    public void notifyDeath() {
+        resultHandler.notifyDeath();
+    }
+
+    public void bossKilled() {
+        resultHandler.bossKilled();
+    }
+
+    // --- LevelManager 고유 로직 (스테이지 진행) ---
+    public void checkWinCondition() {
+        // 협동 모드 승리 체크 (보스전 이전)
+        if (game.getGameStateManager().getCurrentState() == GameState.PLAYING_COOP && currentLevel < BOSS_LEVEL) {
+            if (entityManager.getAlienCount() == 0 && !waitingForKeyPress) {
+                notifyWin();
             }
         }
     }
 
-    public void startPvpGame() {
-        entityManager.clear();
-        game.getInputManager().reset();
-
-        // 내 우주선 (아래쪽)
-        ShipEntity ship = new ShipEntity(game, Constants.SHIP_SPRITE, 370, 550);
-        ship.setHealth(3);
-        entityManager.addEntity(ship);
-        game.setShip(ship);
-
-        // 상대방 우주선 (위쪽)
-        ShipEntity opponentShip = new ShipEntity(game, "sprites/opponent_ship.gif", 370, 50);
-        opponentShip.setHealth(3);
-        entityManager.addEntity(opponentShip);
-        game.setOpponentShip(opponentShip); // Game에 Setter 추가 필요
-    }
-
-    public void startCoopGame() {
-        entityManager.clear();
-        game.getInputManager().reset();
-
-        // 내 우주선
-        ShipEntity ship = new ShipEntity(game, Constants.SHIP_SPRITE, 300, 550);
-        ship.setHealth(3);
-        entityManager.addEntity(ship);
-        game.setShip(ship);
-
-        // 상대방 우주선 (협동 파트너)
-        ShipEntity opponentShip = new ShipEntity(game, Constants.SHIP_SPRITE, 500, 550);
-        opponentShip.setHealth(3);
-        entityManager.addEntity(opponentShip);
-        game.setOpponentShip(opponentShip);
-
-        setupCoopStage(); // 외계인 생성
-    }
-
     public void nextStage() {
-        game.setWaitingForKeyPress(false);
+        this.setWaitingForKeyPress(false); // GameStateManger 혹은 직접 제어 확인 필요
+        // 여기서는 game.setWaiting...이 사라졌으므로 this.setWaiting... 사용
+        this.setWaitingForKeyPress(false);
+
         entityManager.clear();
         game.getInputManager().reset();
-
-        // 다음 스테이지 진입 시 조작 반전 등 초기화
-        // (필요 시 Game에 setReverseControls 메서드 추가)
-        // game.setReverseControls(false);
 
         if (stageIndex > MAX_STAGE) {
-            game.setMessage("ALL STAGES CLEAR! Returning to Menu...");
-            game.setWaitingForKeyPress(true);
-            game.changeState(Gamestate.PVP_MENU);
+            setMessage("ALL STAGES CLEAR! Returning to Menu...");
+            setWaitingForKeyPress(true);
+            game.getGameStateManager().changeState(GameState.PVP_MENU);
             return;
         }
 
         currentStage = StageFactory.createStage(game, stageIndex);
 
-        // 플레이어 재생성
-        ShipEntity ship = new ShipEntity(game, Constants.SHIP_SPRITE, 370, 550);
+        // (참고) 플레이어 재생성은 SetupManager 로직과 중복될 수 있으나,
+        // 다음 스테이지 진행 시 위치 초기화를 위해 여기에 둡니다.
+        // 필요하다면 setupManager.respawnShip() 같은 메서드로 뺄 수 있습니다.
+        // 여기서는 간단하게 직접 생성합니다.
+        org.newdawn.spaceinvaders.entity.ShipEntity ship =
+                new org.newdawn.spaceinvaders.entity.ShipEntity(game, Constants.SHIP_SPRITE, 370, 550);
         ship.setHealth(3);
         entityManager.addEntity(ship);
         game.setShip(ship);
@@ -139,16 +105,16 @@ public class LevelManager {
         if (currentStage != null) {
             currentStage.init();
         } else {
-            game.changeState(Gamestate.PVP_MENU);
+            game.getGameStateManager().changeState(GameState.PVP_MENU);
         }
     }
 
     public void updateStage(long delta) {
         if (currentStage != null) {
             currentStage.update(delta);
-            if (currentStage.isCompleted()) {
-                game.setWaitingForKeyPress(true);
-                game.setMessage("Stage " + stageIndex + " Clear!");
+            if (!waitingForKeyPress && currentStage.isCompleted()) {
+                setWaitingForKeyPress(true);
+                setMessage("Stage " + stageIndex + " Clear!");
                 game.getPlayerStats().addCoins(50);
                 game.getPlayerStats().addScore(100);
                 stageIndex++;
@@ -156,72 +122,39 @@ public class LevelManager {
         }
     }
 
-    public void checkWinCondition() {
-        // 협동 모드 승리 체크 (보스전 이전)
-        if (game.getCurrentState() == Gamestate.PLAYING_COOP && currentLevel < BOSS_LEVEL) {
-            if (entityManager.getAlienCount() == 0 && !game.isWaitingForKeyPress()) {
-                notifyWin();
-            }
-        }
-    }
-
-    public void notifyWin() {
-        game.getPlayerStats().addScore(100);
-        game.getPlayerStats().addCoins(50);
-        currentLevel++;
-
-        String message;
-        if (currentLevel > BOSS_LEVEL) {
-            message = "Congratulations! You have defeated the final boss!";
-            currentLevel = 1;
-        } else if (currentLevel == BOSS_LEVEL) {
-            message = "Final Stage! The Boss is approaching!";
-        } else {
-            message = "Stage " + (currentLevel - 1) + " Cleared! Prepare for the next stage.";
-        }
-
-        game.setMessage(message);
-        game.setWaitingForKeyPress(true);
-    }
-
-    public void notifyDeath() {
-        if (game.getCurrentState() == Gamestate.PLAYING_PVP) {
-            if (game.isWaitingForKeyPress()) return;
-            game.setMessage("You Lose...");
-            game.setWaitingForKeyPress(true);
-            return;
-        }
-
-        game.setMessage("Oh no! They got you, try again?");
-        game.setWaitingForKeyPress(true);
-
-        // 랭킹 처리 로직
-        if (CurrentUserManager.getInstance().isLoggedIn()) {
-            String nickname = CurrentUserManager.getInstance().getNickname();
-            game.getRankingManager().addScore(game.getPlayerStats().getScore(), nickname);
-        } else {
-            if (game.getRankingManager().isHighScore(game.getPlayerStats().getScore())) {
-                String name = JOptionPane.showInputDialog(game.getContainer(), "New High Score! Enter your name:", "Ranking", JOptionPane.PLAIN_MESSAGE);
-                if (name != null && !name.trim().isEmpty()) {
-                    game.getRankingManager().addScore(game.getPlayerStats().getScore(), name);
-                }
-            }
-        }
-
-        resetSinglePlayerState();
-    }
-
-    public void bossKilled() {
-        game.setMessage("BOSS DEFEATED!");
-        game.setWaitingForKeyPress(true);
-        stageIndex++;
-    }
-
+    // --- 헬퍼 메서드 (GameResultHandler 등이 사용) ---
     public void resetSinglePlayerState() {
         this.currentLevel = 1;
         game.getPlayerStats().resetScore();
     }
 
+    public void resetForNewGame() {
+        this.stageIndex = 1;
+        this.currentLevel = 1;
+        game.getPlayerStats().resetScore();
+    }
+
+    public void increaseLevel() {
+        this.currentLevel++;
+    }
+
+    public void resetLevel() {
+        this.currentLevel = 1;
+    }
+
+    public void increaseStageIndex() {
+        this.stageIndex++;
+    }
+
+    // --- Getters / Setters ---
     public Stage getCurrentStage() { return currentStage; }
+    public void setCurrentStage(Stage stage) { this.currentStage = stage; }
+
     public int getCurrentLevel() { return currentLevel; }
+
+    public String getMessage() { return message; }
+    public void setMessage(String msg) { this.message = msg; }
+
+    public boolean isWaitingForKeyPress() { return waitingForKeyPress; }
+    public void setWaitingForKeyPress(boolean val) { this.waitingForKeyPress = val; }
 }

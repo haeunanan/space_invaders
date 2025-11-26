@@ -118,15 +118,15 @@ public class AlienEntity extends Entity {
     }
 
     protected void checkBoundaries() {
-        if ((dx < 0) && (x < 10)) game.updateLogic();
-        if ((dx > 0) && (x > Constants.WINDOW_WIDTH - 50)) game.updateLogic();
+        if ((dx < 0) && (x < 10)) game.getEntityManager().doLogic();
+        if ((dx > 0) && (x > Constants.WINDOW_WIDTH - 50)) game.getEntityManager().doLogic();
     }
 
     protected void fire() {
         if ("ICE".equals(bulletType)) {
-            game.addEntity(new AlienIceShotEntity(game, "sprites/ice_shot.png", getX() + 10, getY() + 20));
+            game.getEntityManager().addEntity(new AlienIceShotEntity(game, "sprites/ice_shot.png", getX() + 10, getY() + 20));
         } else {
-            game.addEntity(new AlienShotEntity(game, "sprites/alien_shot.gif", getX() + 10, getY() + 20));
+            game.getEntityManager().addEntity(new AlienShotEntity(game, "sprites/alien_shot.gif", getX() + 10, getY() + 20));
         }
     }
 

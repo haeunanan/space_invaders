@@ -31,7 +31,7 @@ public class BlackHoleBossStage extends Stage {
 
         // 보스 생성 (체력 등은 BossEntity 내부에서 설정됨)
         boss = new org.newdawn.spaceinvaders.entity.BossEntity(game, BOSS_START_X, BOSS_START_Y);
-        game.addEntity(boss);
+        game.getEntityManager().addEntity(boss);
     }
 
     @Override
@@ -65,7 +65,7 @@ public class BlackHoleBossStage extends Stage {
             // ==========================================
             // 화면 상단(Y < 300)인 '사건의 지평선' 근처에 가면 느려짐
             if (player.getY() < 300) {
-                game.applySlow(100); // 매 프레임 슬로우 갱신
+                game.getPlayerController().applySlow(2000);
             }
         }
 
@@ -97,7 +97,7 @@ public class BlackHoleBossStage extends Stage {
         }
 
         DebrisEntity debris = new DebrisEntity(game, "sprites/debris.png", startX, startY);
-        game.addEntity(debris);
+        game.getEntityManager().addEntity(debris);
     }
 
     @Override

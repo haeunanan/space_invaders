@@ -18,7 +18,7 @@ public class CollisionManager {
 
     // 메인 충돌 체크 메서드
     public void checkCollisions() {
-        if (game.getCurrentState() == Gamestate.PLAYING_PVP) {
+        if (game.getCurrentState() == GameState.PLAYING_PVP) {
             checkPvpCollisions();
         } else {
             checkStandardCollisions();
@@ -32,7 +32,7 @@ public class CollisionManager {
         int drawY = entity.getY();
 
         boolean isOpponentEntity = false;
-        if (game.getCurrentState() == Gamestate.PLAYING_PVP) {
+        if (game.getCurrentState() == GameState.PLAYING_PVP) {
             String myUid = CurrentUserManager.getInstance().getUid();
             // 상대방 기체이거나, 내가 쏘지 않은 총알인 경우 반전 대상
             if (entity == game.getOpponentShip() ||
@@ -83,8 +83,8 @@ public class CollisionManager {
             return;
         }
 
-        Rectangle meRect = game.getVisualBounds(me);
-        Rectangle himRect = game.getVisualBounds(him);
+        Rectangle meRect = getVisualBounds(me);
+        Rectangle himRect = getVisualBounds(him);
 
         if (meRect.intersects(himRect)) {
             handlePvpCollision(me, him, myUid);

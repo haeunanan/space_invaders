@@ -17,7 +17,7 @@ public class ItemEntity extends Entity {
         super.move(delta);
         // 화면 아래로 벗어나면 제거
         if (y > 600) {
-            game.removeEntity(this);
+            game.getEntityManager().removeEntity(this);
         }
     }
 
@@ -25,7 +25,7 @@ public class ItemEntity extends Entity {
     @Override
     public void collidedWith(Entity other) {
         if (other instanceof ShipEntity) {
-            game.removeEntity(this);
+            game.getEntityManager().removeEntity(this);
 
             Stage currentStage = game.getCurrentStage();
             if (currentStage != null) {

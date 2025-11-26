@@ -56,6 +56,14 @@ public class PlayerStats {
         return false;
     }
 
+    public long getFiringInterval() {
+        long interval = 500;
+        for (int i = 0; i < attackLevel; i++) {
+            interval *= 0.9;
+        }
+        return Math.max(100, interval);
+    }
+
     // --- 미사일 개수(Missile Count) 관련 메서드 ---
     public int getMissileCount() {
         return missileCount;

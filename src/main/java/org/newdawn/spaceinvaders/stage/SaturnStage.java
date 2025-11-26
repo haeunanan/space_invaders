@@ -53,7 +53,7 @@ public class SaturnStage extends Stage {
                         moveSpeed,
                         firingChance
                 );
-                game.addEntity(alien);
+                game.getEntityManager().addEntity(alien);
             }
         }
 

@@ -43,7 +43,7 @@ public class PvpLobbyPanel extends JPanel {
 
         cancelButton.addActionListener(e -> {
             stopAnimation();
-            game.changeState(Gamestate.PVP_MENU);
+            game.changeState(GameState.PVP_MENU);
         });
 
         startAnimation();

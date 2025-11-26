@@ -12,9 +12,11 @@ public class UranusAlienEntity extends AlienEntity {
 
     @Override
     protected void initAnimations(String ref) {
-        // 천왕성 적은 기본적으로 애니메이션(frames)을 생성하지 않거나 다르게 처리할 수 있음
-        // 여기서는 부모 로직을 따르되, 필요시 오버라이드하여 수정
-        super.initAnimations(ref);
+        frames[0] = sprite;
+        frames[1] = sprite;
+        frames[2] = sprite;
+        frames[3] = sprite;
+        // 부모 클래스와 달리 _2 이미지를 로드하여 프레임에 섞지 않음
     }
 
     @Override

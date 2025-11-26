@@ -43,12 +43,12 @@ public abstract class Stage {
 
     /** 헬퍼 */
     protected List<Entity> getEntities() {
-        return game.getEntities();
+        return game.getEntityManager().getEntities();
     }
 
     /** 헬퍼 */
     protected boolean noAliensLeft(Class<? extends Entity> alienType) {
-        for (Entity e : game.getEntities()) {
+        for (Entity e : game.getEntityManager().getEntities()) {
             if (alienType.isInstance(e)) return false;
         }
         return true;
@@ -59,7 +59,7 @@ public abstract class Stage {
                 // 팩토리 메서드 호출
                 AlienEntity alien = createAlien(spriteRef, 100 + (x * gapX), startY + row * gapY, speed, fireChance);
                 customizeAlien(alien);
-                game.addEntity(alien);
+                game.getEntityManager().addEntity(alien);
             }
         }
     }

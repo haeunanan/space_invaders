@@ -36,7 +36,7 @@ public class GammaRayEntity extends Entity {
     public void move(long delta) {
         duration -= delta;
         if (duration <= 0) {
-            game.removeEntity(this);
+            game.getEntityManager().removeEntity(this);
         }
     }
 

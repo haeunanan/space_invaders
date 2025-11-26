@@ -15,7 +15,7 @@ public class AlienIceShotEntity extends Entity {
     public void move(long delta) {
         super.move(delta);
         if (y > 600) {
-            game.removeEntity(this);
+            game.getEntityManager().removeEntity(this);
         }
     }
 
@@ -23,7 +23,7 @@ public class AlienIceShotEntity extends Entity {
     public void collidedWith(Entity other) {
         if (other instanceof ShipEntity) {
             ShipEntity ship = (ShipEntity) other;
-            game.removeEntity(this); // 총알 제거
+            game.getEntityManager().removeEntity(this); // 총알 제거
 
             // [수정] 방어막 상태에 따른 분기 처리
             if (ship.isShieldActive()) {
@@ -33,7 +33,7 @@ public class AlienIceShotEntity extends Entity {
             } else {
                 // 방어막이 없으면: 데미지 + 슬로우 효과 적용
                 ship.takeDamage();
-                game.applySlow(2000);
+                game.getPlayerController().applySlow(2000);
             }
         }
     }

@@ -2,6 +2,7 @@ package org.newdawn.spaceinvaders.entity;
 
 import org.newdawn.spaceinvaders.CurrentUserManager;
 import org.newdawn.spaceinvaders.Game;
+import org.newdawn.spaceinvaders.GameState;
 import org.newdawn.spaceinvaders.SoundManager;
 import org.newdawn.spaceinvaders.stage.Stage;
 
@@ -37,7 +38,7 @@ public class ShotEntity extends Entity {
 		super.move(delta); // 기본 이동 처리
 
 		// [추가] 해왕성 바람 효과 (싱글 플레이어 미사일만 해당)
-		if (game.getCurrentState() == Gamestate.PLAYING_SINGLE && dy < 0) {
+		if (game.getCurrentState() == GameState.PLAYING_SINGLE && dy < 0) {
 			if (game.getCurrentStage() instanceof org.newdawn.spaceinvaders.stage.NeptuneStage) {
 				org.newdawn.spaceinvaders.stage.NeptuneStage ns =
 						(org.newdawn.spaceinvaders.stage.NeptuneStage) game.getCurrentStage();
@@ -50,7 +51,7 @@ public class ShotEntity extends Entity {
 
 		// 화면 밖 제거
 		if (y < -50 || y > 650) {
-			game.removeEntity(this);
+			game.getEntityManager().removeEntity(this);
 		}
 	}
 
@@ -64,13 +65,13 @@ public class ShotEntity extends Entity {
             handleAlienCollision(other);
         }
         // 2. PVP 모드일 때 플레이어 간 충돌 처리
-        else if (game.getCurrentState() == Gamestate.PLAYING_PVP) {
+        else if (game.getCurrentState() == GameState.PLAYING_PVP) {
             handlePvpCollision(other);
         }
     }
     private boolean isSingleOrCoopMode() {
-        return game.getCurrentState() == Gamestate.PLAYING_SINGLE ||
-                game.getCurrentState() == Gamestate.PLAYING_COOP;
+        return game.getCurrentState() == GameState.PLAYING_SINGLE ||
+                game.getCurrentState() == GameState.PLAYING_COOP;
     }
     private void handleAlienCollision(Entity other) {
         if (other instanceof AlienEntity) {
@@ -78,7 +79,7 @@ public class ShotEntity extends Entity {
             if (!alien.isAlive()) return;
 
             // 총알 제거 및 사용 처리
-            game.removeEntity(this);
+            game.getEntityManager().removeEntity(this);
             used = true;
 
             // 데미지 적용 및 사망 처리
@@ -89,15 +90,15 @@ public class ShotEntity extends Entity {
     }
     private void processAlienDeath(AlienEntity alien) {
         alien.markDead();
-        game.removeEntity(alien);
-        game.notifyAlienKilled();
+        game.getEntityManager().removeEntity(alien);
+        game.getLevelManager().notifyAlienKilled();
         SoundManager.get().playSound("sounds/explosion.wav");
 
         tryDropItem(alien);
     }
     private void tryDropItem(AlienEntity alien) {
         // 싱글 모드이고 아이템이 허용된 스테이지인 경우에만
-        if (game.getCurrentState() == Gamestate.PLAYING_SINGLE &&
+        if (game.getCurrentState() == GameState.PLAYING_SINGLE &&
                 game.getCurrentStage() != null &&
                 game.getCurrentStage().isItemAllowed()) {
 
@@ -105,7 +106,7 @@ public class ShotEntity extends Entity {
             if (Math.random() < 0.1) {
                 String itemRef = game.getCurrentStage().getItemSpriteRef();
                 ItemEntity item = new ItemEntity(game, itemRef, alien.getX(), alien.getY());
-                game.addEntity(item);
+                game.getEntityManager().addEntity(item);
             }
         }
     }
@@ -116,7 +117,7 @@ public class ShotEntity extends Entity {
         if (other == game.getOpponentShip()) {
             if (this.isOwnedBy(myUid)) {
                 used = true;
-                game.removeEntity(this);
+                game.getEntityManager().removeEntity(this);
                 // 데미지 처리는 상대방 클라이언트에서 수행됨
             }
         }
@@ -124,7 +125,7 @@ public class ShotEntity extends Entity {
         else if (other == game.getShip()) {
             if (!this.isOwnedBy(myUid)) { // 내 총알이 아닐 경우
                 used = true;
-                game.removeEntity(this);
+                game.getEntityManager().removeEntity(this);
 
                 // 데미지 처리 (쉴드 여부는 takeDamage 내부에서 확인)
                 ((ShipEntity) other).takeDamage();

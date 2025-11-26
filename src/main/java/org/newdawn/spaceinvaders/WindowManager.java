@@ -20,6 +20,9 @@ public class WindowManager {
     private PvpMenuPanel pvpMenuPanel;
     private PvpLobbyPanel pvpLobbyPanel;
     private MyPagePanel myPagePanel;
+    private long lastFpsTime;
+    private int fps;
+    private String windowTitle = "Space Invaders 102";
 
     // 카드 이름 상수
     public static final String CARD_START = "START";
@@ -72,6 +75,15 @@ public class WindowManager {
                 System.exit(0);
             }
         });
+    }
+    public void updateFPS(long delta) {
+        lastFpsTime += delta;
+        fps++;
+        if (lastFpsTime >= 1000) {
+            setWindowTitle(windowTitle + " (FPS: " + fps + ")");
+            lastFpsTime = 0;
+            fps = 0;
+        }
     }
 
     public void showWindow() {
