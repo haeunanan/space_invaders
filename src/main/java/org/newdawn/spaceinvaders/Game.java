@@ -192,24 +192,36 @@ public class Game
         inputManager = new InputManager(this); // 객체 생성
         gamePlayPanel.addKeyListener(inputManager); // 리스너 등록
         gamePlayPanel.addMouseListener(new MouseAdapter() {
-            private void handleGameMouseClick(int mx, int my) {
-                // '메뉴로 돌아가기' 버튼 처리
+            @Override
+            public void mousePressed(MouseEvent e) {
+                int mx = e.getX();
+                int my = e.getY();
+
+                // '메뉴로 돌아가기' 버튼 처리 (싱글 플레이 중 & 대기 상태일 때)
                 if (isWaitingForKeyPress() && getCurrentState() == GameState.PLAYING_SINGLE) {
+                    // 버튼 좌표 범위 (UIRenderer의 drawMessageOverlay 위치와 일치해야 함)
                     if (mx >= 325 && mx <= 475 && my >= 550 && my <= 590) {
                         showReturnToMenuDialog();
                         return;
                     }
                 }
 
-                // 상점 버튼 처리
-                if (mx >= 720 && mx <= 780 && my >= 10 && my <= 40) {
-                    shopOpen = !shopOpen;
-                    return;
+                // 상점 버튼 처리 (싱글 플레이 중일 때만)
+                if (getCurrentState() == GameState.PLAYING_SINGLE) {
+                    // 좌표: x(720~780), y(10~40) -> UIRenderer와 일치함
+                    if (mx >= 720 && mx <= 780 && my >= 10 && my <= 40) {
+                        shopOpen = !shopOpen;
+                        // 상점 상태가 변경되었으므로 화면 갱신 요청
+                        gamePlayPanel.repaint();
+                        return;
+                    }
                 }
 
-                // 상점 내부 아이템 구매 처리
+                // 상점 내부 아이템 구매 처리 (상점이 열려있을 때만)
                 if (shopOpen) {
                     handleShopPurchase(mx, my);
+                    // 구매 후 UI 갱신을 위해 repaint
+                    gamePlayPanel.repaint();
                 }
             }
         });
