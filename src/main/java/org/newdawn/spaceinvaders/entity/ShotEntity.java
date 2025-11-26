@@ -1,6 +1,5 @@
 package org.newdawn.spaceinvaders.entity;
 
-import org.newdawn.spaceinvaders.CurrentUserManager;
 import org.newdawn.spaceinvaders.Game;
 
 /**
@@ -9,8 +8,6 @@ import org.newdawn.spaceinvaders.Game;
  * @author Kevin Glass
  */
 public class ShotEntity extends Entity {
-	/** The vertical speed at which the players shot moves */
-	private double moveSpeed = -300;
 	/** The game in which this entity exists */
 	private Game game;
 	/** True if this shot has been "used", i.e. its hit something */

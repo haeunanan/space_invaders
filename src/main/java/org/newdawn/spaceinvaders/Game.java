@@ -82,8 +82,6 @@ public class Game
 	private volatile String player1_uid;
 	private volatile String player2_uid;
 	private Thread networkThread;
-	private volatile Map<String, Object> lastOpponentState;
-
 	/** The message to display which waiting for a key press */
 	private String message = "";
 	/** True if we're holding up game play until a key has been pressed */
@@ -96,13 +94,6 @@ public class Game
 	private boolean firePressed = false;
 	/** True if game logic needs to be applied this loop, normally as a result of a game event */
 	private boolean logicRequiredThisLoop = false;
-	/** The last time at which we recorded the frame rate */
-	private long lastFpsTime;
-	/** The current number of frames recorded */
-	private int fps;
-	/** The normal title of the game window */
-	private String windowTitle = "Space Invaders 102";
-	/** The game window that we'll update with the frame count */
 	private JFrame container;
 	private CardLayout cardLayout;
 	private JPanel mainPanel;
@@ -118,9 +109,6 @@ public class Game
 	}
 	public Entity getOpponentShip() {
 		return this.opponentShip;
-	}
-	public JFrame getContainer() {
-		return this.container;
 	}
 	public boolean amIPlayer1() {
 		// 현재 로그인한 사용자의 UID를 가져옵니다.
@@ -257,7 +245,6 @@ public class Game
 	}
 
 	public void changeState(GameState newState) {
-		System.out.println("!!! Changing state from " + currentState + " to " + newState);
 		currentState = newState;
 
 		if (matchmakingThread != null && matchmakingThread.isAlive()) {
@@ -712,10 +699,6 @@ public class Game
 	 * - Checking Input
 	 * <p>
 	 */
-	// Game.java
-
-	// Game.java
-
 	public void gameLoop() {
 		long lastLoopTime = SystemTimer.getTime();
 		while (gameRunning) {
@@ -781,7 +764,6 @@ public class Game
 							}
 						}
 					}
-					// 🔽 모든 충돌 후, 실제 남은 외계인 수를 다시 세기
 					int aliensRemaining = 0;
 					for (Entity e : entities) {
 						if (e instanceof AlienEntity) aliensRemaining++;
@@ -833,8 +815,6 @@ public class Game
 			try { SystemTimer.sleep(10); } catch (Exception e) {}
 		}
 	}
-
-	// ▼▼▼ `getVisualBounds` 헬퍼 메소드도 `Game.java`에 추가해주세요. ▼▼▼
 	private Rectangle getVisualBounds(Entity entity) {
 		if (entity == null) return new Rectangle(0,0,0,0);
 		int drawX = entity.getX();
@@ -918,7 +898,6 @@ public class Game
 				}
 			}
 		}
-
 		/**
 		 * 키에서 손을 뗐을 때 호출됩니다.
 		 */
@@ -943,7 +922,6 @@ public class Game
 				}
 			}
 		}
-
 		/**
 		 * 키를 타이핑했을 때 호출됩니다. (ESC 키 종료 등)
 		 */
@@ -954,7 +932,6 @@ public class Game
 			}
 		}
 	}
-	
 	/**
 	 * The entry point into the game. We'll simply create an
 	 * instance of class which will start the display and game

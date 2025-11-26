@@ -12,11 +12,9 @@ public class MyPagePanel extends JPanel {
 
     public MyPagePanel(Game game) {
         this.game = game;
-        // GridBagLayout으로 변경하여 중앙 정렬을 쉽게 합니다.
         setLayout(new GridBagLayout());
         setBackground(new Color(40, 42, 45));
 
-        // GridBagConstraints를 사용하여 컴포넌트 위치를 정밀하게 제어합니다.
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10); // 컴포넌트 간의 여백
         gbc.gridwidth = GridBagConstraints.REMAINDER; // 이 컴포넌트가 행의 마지막임을 의미

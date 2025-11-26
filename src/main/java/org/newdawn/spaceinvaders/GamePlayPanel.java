@@ -134,7 +134,6 @@ public class GamePlayPanel extends JPanel {
                 int textY = py + 20;
                 int innerWidth = panelW - 24;
 
-                // ▼▼▼ 폰트 설정 부분을 명확하게 변경 ▼▼▼
                 g2d.setFont(new Font("Malgun Gothic", Font.BOLD, 16));
                 drawWrappedString(g2d, titles[i], textX, textY, innerWidth, 20);
 
@@ -154,7 +153,6 @@ public class GamePlayPanel extends JPanel {
                 if (!maxed && game.coins < game.UPGRADE_COST) g2d.setColor(Color.red);
                 else g2d.setColor(Color.darkGray);
 
-                // 여기도 폰트를 동일하게 적용
                 g2d.setFont(new Font("Malgun Gothic", Font.PLAIN, 12));
                 drawWrappedString(g2d, priceText, px+12, py+panelH-40, innerWidth, 14);
                 g2d.drawString(levelText, px+panelW-60, py+panelH-20);
@@ -222,10 +220,7 @@ public class GamePlayPanel extends JPanel {
 
         int playerHealth = playerShip.getCurrentHealth();
         int maxHealth = playerShip.getMaxHealth();
-
-        // TODO: 나중에 네트워크에서 상대방 체력 정보를 받아와야 합니다. 지금은 임시값(2)으로 설정.
         int opponentHealth = opponentShip.getCurrentHealth();
-
         int heartSize = 32; // 하트 이미지 크기
         int padding = 10;   // 화면 가장자리와의 간격
 
@@ -235,7 +230,6 @@ public class GamePlayPanel extends JPanel {
             int x = getWidth() - padding - heartSize - (i * (heartSize + 5));
             heart.draw(g2d, x, padding);
         }
-
         // 상대 체력 (왼쪽 상단)
         for (int i = 0; i < maxHealth; i++) {
             Sprite heart = (i < opponentHealth) ? heartFullSprite : heartEmptySprite;
