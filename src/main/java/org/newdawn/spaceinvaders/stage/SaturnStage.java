@@ -83,45 +83,44 @@ public class SaturnStage extends Stage {
 
     // handleMeteorRingReflection 메서드 수정
     // handleMeteorRingReflection 메소드 전체 교체
+    // [수정] 복잡도 개선: 메인 메서드는 순회와 타입 검사만 담당
     private void handleMeteorRingReflection() {
-        List<Entity> list = getEntities();
-
-        for (Entity e : list) {
+        for (Entity e : getEntities()) {
             if (e instanceof ShotEntity) {
-                ShotEntity shot = (ShotEntity) e;
-
-                // 이미 튕긴 탄환은 패스
-                if (bouncedShots.contains(shot)) continue;
-
-                int shotY = shot.getY();
-                int shotHeight = shot.getSpriteHeight(); // 탄환의 높이 고려
-                double dy = shot.getDY();
-
-                // [수정] 정밀한 충돌 체크 (AABB 방식)
-                // 탄환의 '아랫부분'이 고리 '윗부분'보다 아래에 있고,
-                // 탄환의 '윗부분'이 고리 '아랫부분'보다 위에 있으면 충돌로 간주
-                boolean hitRing = (shotY + shotHeight >= ringY) && (shotY <= ringY + ringThickness);
-
-                if (hitRing) {
-                    // 1. 플레이어 탄환 (위로 이동 중) -> 아래로 튕김
-                    if (dy < 0) {
-                        shot.setDY(-dy);
-                        // 끼임 방지를 위해 고리 밖으로 강제 이동
-                        shot.setLocation(shot.getX(), ringY + ringThickness + 1);
-                        bouncedShots.add(shot);
-                    }
-                    // 2. 적 탄환 (아래로 이동 중) -> 위로 튕김
-                    else if (dy > 0) {
-                        shot.setDY(-dy);
-                        // 끼임 방지를 위해 고리 밖으로 강제 이동
-                        shot.setLocation(shot.getX(), ringY - shotHeight - 1);
-                        bouncedShots.add(shot);
-                    }
-                }
+                tryReflectShot((ShotEntity) e);
             }
         }
     }
+    // [추가] 조건 검사: 반사 가능한 상태인지 확인 (튕긴 적 없음 & 고리 충돌)
+    private void tryReflectShot(ShotEntity shot) {
+        if (bouncedShots.contains(shot)) return;
 
+        if (isCollidingWithRing(shot)) {
+            applyReflection(shot);
+            bouncedShots.add(shot); // 반사 처리 후 목록에 추가
+        }
+    }
+
+    private boolean isCollidingWithRing(ShotEntity shot) {
+        int shotY = shot.getY();
+        int shotHeight = shot.getSpriteHeight();
+        // 탄환이 고리 두께 사이에 있는지 정밀 체크
+        return (shotY + shotHeight >= ringY) && (shotY <= ringY + ringThickness);
+    }
+
+    private void applyReflection(ShotEntity shot) {
+        double dy = shot.getDY();
+
+        if (dy < 0) {
+            // 1. 위로 이동 중(플레이어 탄환) -> 아래로 튕김
+            shot.setDY(-dy);
+            shot.setLocation(shot.getX(), ringY + ringThickness + 1);
+        } else if (dy > 0) {
+            // 2. 아래로 이동 중(적 탄환) -> 위로 튕김
+            shot.setDY(-dy);
+            shot.setLocation(shot.getX(), ringY - shot.getSpriteHeight() - 1);
+        }
+    }
     // [기믹 2] 아이템 획득 시 호출됨: 반사 효과 제거
     @Override
     public void activateItem() {

@@ -2,10 +2,7 @@ package org.newdawn.spaceinvaders.stage;
 
 import org.newdawn.spaceinvaders.Game;
 import org.newdawn.spaceinvaders.SpriteStore;
-import org.newdawn.spaceinvaders.entity.AlienEntity;
-import org.newdawn.spaceinvaders.entity.Entity;
-import org.newdawn.spaceinvaders.entity.IceShardEntity;
-import org.newdawn.spaceinvaders.entity.ShipEntity;
+import org.newdawn.spaceinvaders.entity.*;
 
 public class UranusStage extends Stage {
 
@@ -65,6 +62,12 @@ public class UranusStage extends Stage {
             if (e instanceof AlienEntity) return false;
         }
         return true;
+    }
+
+    @Override
+    protected AlienEntity createAlien(String ref, int x, int y, double speed, double chance) {
+        // 천왕성에서는 일반 AlienEntity 대신 UranusAlienEntity 생성
+        return new UranusAlienEntity(game, ref, x, y, speed, chance);
     }
 
     @Override

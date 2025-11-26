@@ -6,6 +6,7 @@ import org.newdawn.spaceinvaders.Game;
 import org.newdawn.spaceinvaders.SpriteStore;
 import org.newdawn.spaceinvaders.entity.AlienEntity;
 import org.newdawn.spaceinvaders.entity.Entity;
+import org.newdawn.spaceinvaders.entity.NeptuneAlienEntity;
 import org.newdawn.spaceinvaders.entity.ShipEntity;
 
 public class NeptuneStage extends Stage {
@@ -85,6 +86,11 @@ public class NeptuneStage extends Stage {
             if (e instanceof AlienEntity) return false;
         }
         return true;
+    }
+    @Override
+    protected AlienEntity createAlien(String ref, int x, int y, double speed, double chance) {
+        // 해왕성에서는 일반 AlienEntity 대신 NeptuneAlienEntity 생성
+        return new NeptuneAlienEntity(game, ref, x, y, speed, chance);
     }
 
     @Override

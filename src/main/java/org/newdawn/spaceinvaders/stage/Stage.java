@@ -53,18 +53,18 @@ public abstract class Stage {
         }
         return true;
     }
-    // Stage.java에 공통 메서드 추가
     protected void setupAliens(String spriteRef, int rows, int cols, int startY, int gapX, int gapY, double speed, double fireChance) {
         for (int row = 0; row < rows; row++) {
             for (int x = 0; x < cols; x++) {
-                AlienEntity alien = new AlienEntity(game, spriteRef, 100 + (x * gapX), startY + row * gapY, speed, fireChance);
-
-                // [핵심] 자식 스테이지에서 커스텀할 수 있는 'Hook' 메서드 호출
+                // 팩토리 메서드 호출
+                AlienEntity alien = createAlien(spriteRef, 100 + (x * gapX), startY + row * gapY, speed, fireChance);
                 customizeAlien(alien);
-
                 game.addEntity(alien);
             }
         }
+    }
+    protected AlienEntity createAlien(String ref, int x, int y, double speed, double chance) {
+        return new AlienEntity(game, ref, x, y, speed, chance);
     }
     protected void customizeAlien(AlienEntity alien) {
         // Override me if needed!
