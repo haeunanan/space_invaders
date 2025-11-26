@@ -6,7 +6,6 @@ import org.newdawn.spaceinvaders.Sprite;
 import org.newdawn.spaceinvaders.SpriteStore;
 
 public class AlienEntity extends Entity {
-    // [수정] private -> protected로 변경하여 자식 클래스 접근 허용
     protected double moveSpeed = 75;
     protected double firingChance;
     protected boolean alive = true;
@@ -36,14 +35,12 @@ public class AlienEntity extends Entity {
         initHitSprite(ref);
     }
 
-    // [추가] 생성자 로직 분리
     protected void initAnimations(String ref) {
         frames[0] = sprite;
         frames[1] = sprite;
         frames[2] = sprite;
         frames[3] = sprite;
 
-        // 일반적인 외계인 움직임 애니메이션 (_2 이미지 로드)
         String ref2 = ref.replace(".", "_2.");
         java.net.URL url = this.getClass().getClassLoader().getResource(ref2);
         if (url != null) {
@@ -68,16 +65,16 @@ public class AlienEntity extends Entity {
         }
     }
 
-    public void setHp(int hp) { this.hp = hp; }
-    public void setBulletType(String type) { this.bulletType = type; }
+    public void setHp(int hp) {
+        this.hp = hp;
+    }
 
-    /**
-     * 데미지 처리 (천왕성 갑옷 로직 제거 -> 자식 클래스로 이동)
-     */
+    public void setBulletType(String type) {
+        this.bulletType = type;
+    }
+
     public boolean takeDamage(int damage) {
         this.hp -= damage;
-
-        // 피격 효과
         this.hitTimer = 100;
         this.sprite = this.hitSprite;
 
@@ -90,7 +87,6 @@ public class AlienEntity extends Entity {
 
     @Override
     public void move(long delta) {
-        // [수정] updateNeptuneBehavior 제거됨
         updateAnimation(delta);
         checkBoundaries();
         tryToFire();
@@ -137,10 +133,19 @@ public class AlienEntity extends Entity {
     public void doLogic() {
         dx = -dx;
         y += 10;
-        if (y > 570) game.notifyDeath();
+        // [수정] Game 클래스가 아니라 LevelManager를 통해 사망 처리 호출
+        if (y > 570) game.getLevelManager().notifyDeath();
     }
 
-    public boolean isAlive() { return alive; }
-    public void markDead() { this.alive = false; }
-    public void collidedWith(Entity other) {}
+    public boolean isAlive() {
+        return alive;
+    }
+
+    public void markDead() {
+        this.alive = false;
+    }
+
+    public void collidedWith(Entity other) {// 충돌 처리는 ShotEntity(피격 시) 또는 ShipEntity(충돌 시)에서 담당하므로
+        // AlienEntity 자체에는 별도의 충돌 로직이 필요하지 않습니다.}
+    }
 }

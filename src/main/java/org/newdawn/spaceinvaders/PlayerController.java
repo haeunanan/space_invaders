@@ -6,9 +6,11 @@ import org.newdawn.spaceinvaders.stage.NeptuneStage;
 public class PlayerController {
     private final Game game;
     private final InputManager inputManager;
-
-    // 조작할 대상 (매번 바뀔 수 있으므로 Setter 제공)
     private ShipEntity currentShip;
+
+    // [이동됨] Game 클래스에서 가져온 이동 속도 관련 변수들
+    private double moveSpeed = 300;
+    private long slowTimer = 0;
 
     public PlayerController(Game game, InputManager inputManager) {
         this.game = game;
@@ -19,7 +21,6 @@ public class PlayerController {
         this.currentShip = ship;
     }
 
-    // [Game.java에서 processPlayerInput 대체]
     public void update() {
         if (currentShip == null || game.isWaitingForKeyPress()) return;
 
@@ -31,20 +32,39 @@ public class PlayerController {
         }
     }
 
-    // [Game.java에서 handleMovement 이동]
+    // [추가] 타이머 업데이트 (Game의 gameLoop에서 호출)
+    public void updateTimer(long delta) {
+        if (slowTimer > 0) {
+            slowTimer -= delta;
+        }
+    }
+
+    // [추가] 상점에서 속도 업그레이드 시 호출
+    public void upgradeMoveSpeed() {
+        double baseSpeed = 300;
+        // 플레이어의 현재 이동 레벨만큼 속도 증가 (10%씩)
+        for (int i = 0; i < game.getPlayerStats().getMoveLevel(); i++) {
+            baseSpeed *= 1.1;
+        }
+        this.moveSpeed = baseSpeed;
+    }
+
+    // [추가] 외부(아이템 등)에서 슬로우 효과를 걸 때 사용
+    public void applySlow(long duration) {
+        this.slowTimer = duration;
+    }
+
+    // [내부] 현재 실제 이동 속도 계산 (슬로우 디버프 적용 여부 확인)
+    private double getCurrentMoveSpeed() {
+        return (slowTimer > 0) ? moveSpeed * 0.5 : moveSpeed;
+    }
+
     private void handleMovement() {
         currentShip.setHorizontalMovement(0);
         currentShip.setDY(0);
 
-        // Game의 private 변수에 접근하기 위해 getter가 필요할 수 있음
-        // 여기서는 Game의 로직을 가져왔으므로 Game을 통해 필요한 값에 접근
-        // (slowTimer 등은 Game에 public getter를 추가하거나 인자로 받아야 함.
-        //  간단하게는 Game 내부에 getter가 있다고 가정하거나 직접 접근권한을 줍니다.)
-
-        // ※ 주의: Game.java에 getMoveSpeed(), isSlowed() 같은 메서드가 필요할 수 있음.
-        // 리팩토링 편의상 직접 로직을 수행하도록 작성합니다.
-
-        double speed = game.getMoveSpeed(); // Getter 필요 (아래 Game.java 수정 참고)
+        // [수정] Game의 메서드가 아닌 자신의 메서드 사용
+        double speed = getCurrentMoveSpeed();
 
         int dx = 0;
         int dy = 0;
@@ -54,7 +74,7 @@ public class PlayerController {
         if (inputManager.isUpPressed())    dy -= 1;
         if (inputManager.isDownPressed())  dy += 1;
 
-        if (game.isReverseControls()) { // Getter 필요
+        if (game.isReverseControls()) {
             dx *= -1;
             dy *= -1;
         }
@@ -63,9 +83,8 @@ public class PlayerController {
         currentShip.setDY(dy * speed);
     }
 
-    // [Game.java에서 handleEnvironmentalEffects 이동]
     private void handleEnvironmentalEffects() {
-        if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE
+        if (game.getCurrentState() == Gamestate.PLAYING_SINGLE
                 && game.getCurrentStage() instanceof NeptuneStage) {
 
             NeptuneStage ns = (NeptuneStage) game.getCurrentStage();

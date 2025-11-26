@@ -18,11 +18,35 @@ public class CollisionManager {
 
     // 메인 충돌 체크 메서드
     public void checkCollisions() {
-        if (game.getCurrentState() == Game.GameState.PLAYING_PVP) {
+        if (game.getCurrentState() == Gamestate.PLAYING_PVP) {
             checkPvpCollisions();
         } else {
             checkStandardCollisions();
         }
+    }
+
+    private Rectangle getVisualBounds(Entity entity) {
+        if (entity == null) return new Rectangle(0,0,0,0);
+
+        int drawX = entity.getX();
+        int drawY = entity.getY();
+
+        boolean isOpponentEntity = false;
+        if (game.getCurrentState() == Gamestate.PLAYING_PVP) {
+            String myUid = CurrentUserManager.getInstance().getUid();
+            // 상대방 기체이거나, 내가 쏘지 않은 총알인 경우 반전 대상
+            if (entity == game.getOpponentShip() ||
+                    (entity instanceof ShotEntity && myUid != null && !((ShotEntity)entity).isOwnedBy(myUid))) {
+                isOpponentEntity = true;
+            }
+        }
+
+        if (isOpponentEntity) {
+            // 화면 높이 기준으로 Y축 반전
+            drawY = Constants.WINDOW_HEIGHT - entity.getY() - entity.getSpriteHeight();
+        }
+
+        return new Rectangle(drawX, drawY, entity.getSpriteWidth(), entity.getSpriteHeight());
     }
 
     // 일반 게임 충돌 처리

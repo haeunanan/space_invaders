@@ -74,7 +74,7 @@ public class NetworkManager {
                 this.player2_uid = opUid;
                 clientService.deleteFromQueue(myUid);
                 clientService.deleteFromQueue(opUid);
-                SwingUtilities.invokeLater(() -> game.changeState(Game.GameState.PLAYING_PVP));
+                SwingUtilities.invokeLater(() -> game.changeState(Gamestate.PLAYING_PVP));
                 return true;
             }
         }
@@ -90,7 +90,7 @@ public class NetworkManager {
                 if (matchData != null) {
                     this.player1_uid = (String) matchData.get("player1");
                     this.player2_uid = (String) matchData.get("player2");
-                    SwingUtilities.invokeLater(() -> game.changeState(Game.GameState.PLAYING_PVP));
+                    SwingUtilities.invokeLater(() -> game.changeState(Gamestate.PLAYING_PVP));
                     return true;
                 }
             }
@@ -133,7 +133,7 @@ public class NetworkManager {
                 this.player2_uid = opUid;
                 clientService.deleteFromCoopQueue(myUid);
                 clientService.deleteFromCoopQueue(opUid);
-                SwingUtilities.invokeLater(() -> game.changeState(Game.GameState.PLAYING_COOP));
+                SwingUtilities.invokeLater(() -> game.changeState(Gamestate.PLAYING_COOP));
                 return true;
             }
         }
@@ -149,7 +149,7 @@ public class NetworkManager {
                 if (matchData != null) {
                     this.player1_uid = (String) matchData.get("player1");
                     this.player2_uid = (String) matchData.get("player2");
-                    SwingUtilities.invokeLater(() -> game.changeState(Game.GameState.PLAYING_COOP));
+                    SwingUtilities.invokeLater(() -> game.changeState(Gamestate.PLAYING_COOP));
                     return true;
                 }
             }
@@ -174,8 +174,8 @@ public class NetworkManager {
     }
 
     private boolean isPlayingState() {
-        return game.getCurrentState() == Game.GameState.PLAYING_PVP ||
-                game.getCurrentState() == Game.GameState.PLAYING_COOP;
+        return game.getCurrentState() == Gamestate.PLAYING_PVP ||
+                game.getCurrentState() == Gamestate.PLAYING_COOP;
     }
 
     private void sendMyStatus() {
@@ -227,7 +227,7 @@ public class NetworkManager {
                 ((ShipEntity) opponentShip).setCurrentHealth(opHealth);
 
                 // PVP 승리 조건 체크 (상대 체력 0)
-                if (opHealth <= 0 && game.getCurrentState() == Game.GameState.PLAYING_PVP) {
+                if (opHealth <= 0 && game.getCurrentState() == Gamestate.PLAYING_PVP) {
                     SwingUtilities.invokeLater(game::notifyWinPVP);
                     Thread.currentThread().interrupt();
                     return;

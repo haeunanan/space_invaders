@@ -46,7 +46,7 @@ public class EntityManager {
     public void moveEntities(long delta) {
         for (int i = 0; i < entities.size(); i++) {
             Entity entity = entities.get(i);
-            if (game.getCurrentState() == Game.GameState.PLAYING_PVP && entity == game.getOpponentShip()) {
+            if (game.getCurrentState() == Gamestate.PLAYING_PVP && entity == game.getOpponentShip()) {
                 continue;
             }
             entity.move(delta);

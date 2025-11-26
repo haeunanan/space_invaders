@@ -60,12 +60,12 @@ public class InputManager extends KeyAdapter {
 
     // [추가] 대기 상태(게임 오버/클리어 등)에서의 키 입력 처리
     private void handleWaitingKeyPress() {
-        if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE) {
+        if (game.getCurrentState() == Gamestate.PLAYING_SINGLE) {
             game.requestTransition();
         }
-        else if (game.getCurrentState() == Game.GameState.PLAYING_PVP ||
-                game.getCurrentState() == Game.GameState.PLAYING_COOP) {
-            game.changeState(Game.GameState.PVP_MENU);
+        else if (game.getCurrentState() == Gamestate.PLAYING_PVP ||
+                game.getCurrentState() == Gamestate.PLAYING_COOP) {
+            game.changeState(Gamestate.PVP_MENU);
         }
     }
 
@@ -93,9 +93,9 @@ public class InputManager extends KeyAdapter {
     }
 
     private boolean isPlayingState() {
-        Game.GameState state = game.getCurrentState();
-        return state == Game.GameState.PLAYING_SINGLE ||
-                state == Game.GameState.PLAYING_PVP ||
-                state == Game.GameState.PLAYING_COOP;
+        Gamestate state = game.getCurrentState();
+        return state == Gamestate.PLAYING_SINGLE ||
+                state == Gamestate.PLAYING_PVP ||
+                state == Gamestate.PLAYING_COOP;
     }
 }

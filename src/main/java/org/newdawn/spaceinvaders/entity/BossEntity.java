@@ -1,5 +1,3 @@
-// src/main/java/org/newdawn/spaceinvaders/entity/BossEntity.java
-
 package org.newdawn.spaceinvaders.entity;
 
 import org.newdawn.spaceinvaders.Constants;
@@ -29,25 +27,33 @@ public class BossEntity extends Entity {
 
     @Override
     public void move(long delta) {
+        // ... (이동 및 패턴 로직은 변경 없음) ...
         if (isGammaRayActive) {
             gammaRayTimer += delta;
-
-            // 1단계: 경고 (2초)
             if (gammaRayStep == 1 && gammaRayTimer > 2000) {
                 gammaRayStep = 2;
                 gammaRayTimer = 0;
-                // 실제 발사
                 game.addEntity(new GammaRayEntity(game, 275, 0, 3000, false));
             }
-            // 2단계: 발사 중 (3초)
             else if (gammaRayStep == 2 && gammaRayTimer > 3000) {
                 isGammaRayActive = false;
                 gammaRayStep = 0;
                 lastShot = System.currentTimeMillis();
             }
-            // 스레드 없이 메인 루프에서 처리되므로 안전함
             return;
         }
+
+        // 보스 좌우 이동 로직 (기존 코드 누락분 보완)
+        if (movingLeft) {
+            x -= (delta * moveSpeed) / 1000;
+            if (x < 100) movingLeft = false;
+        } else {
+            x += (delta * moveSpeed) / 1000;
+            if (x > 600) movingLeft = true;
+        }
+
+        updatePhase();
+        executePattern(delta);
     }
 
     private void updatePhase() {
@@ -63,7 +69,6 @@ public class BossEntity extends Entity {
             currentPhase = 3;
             game.reverseControls = false;
 
-            // 3페이즈 진입 시 이미지 교체
             if (!spriteChanged) {
                 changeSprite("sprites/boss_phase3.gif");
                 spriteChanged = true;
@@ -77,14 +82,12 @@ public class BossEntity extends Entity {
         if (currentPhase == 1) {
             if (now - lastShot > 800) {
                 lastShot = now;
-                // 파편 뱉기 (기본 구현으로 대체 가능)
                 game.addEntity(new ShotEntity(game, "sprites/debris.png", (int)x+50, (int)y+50, -100, 200));
                 game.addEntity(new ShotEntity(game, "sprites/debris.png", (int)x+50, (int)y+50, 100, 200));
             }
         } else if (currentPhase == 2) {
             if (now - lastShot > 1200) {
                 lastShot = now;
-                // 확산탄
                 game.addEntity(new ShotEntity(game, Constants.BOSS_SHOT_SPRITE, (int)x+50, (int)y+50, 0, 150));
                 game.addEntity(new ShotEntity(game, Constants.BOSS_SHOT_SPRITE, (int)x+50, (int)y+50, -80, 100));
                 game.addEntity(new ShotEntity(game, Constants.BOSS_SHOT_SPRITE, (int)x+50, (int)y+50, 80, 100));
@@ -101,9 +104,7 @@ public class BossEntity extends Entity {
         isGammaRayActive = true;
         gammaRayStep = 1;
         gammaRayTimer = 0;
-        x = 275; // 중앙 이동
-
-        // 경고 이펙트 생성
+        x = 275;
         game.addEntity(new GammaRayEntity(game, 275, 0, 2000, true));
     }
 
@@ -118,11 +119,12 @@ public class BossEntity extends Entity {
     @Override
     public void collidedWith(Entity other) {
         if (other instanceof ShotEntity && ((ShotEntity)other).getDY() < 0) {
-            hp -= 50; // 데미지
+            hp -= 50;
             game.removeEntity(other);
             if (hp <= 0) {
                 game.removeEntity(this);
-                game.bossKilled();
+                // [수정] Game 클래스가 아니라 LevelManager를 통해 보스 처치 처리 호출
+                game.getLevelManager().bossKilled();
                 game.reverseControls = false;
             }
         }

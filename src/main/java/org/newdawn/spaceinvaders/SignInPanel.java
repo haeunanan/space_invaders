@@ -57,7 +57,7 @@ public class SignInPanel extends JPanel {
 
         // "회원가입 하러가기" 버튼 클릭 시
         goToSignUpButton.addActionListener(e -> {
-            game.changeState(Game.GameState.SIGN_UP);
+            game.changeState(Gamestate.SIGN_UP);
         });
 
         // "로그인" 버튼 클릭 시
@@ -102,7 +102,7 @@ public class SignInPanel extends JPanel {
 
             // 5. PVP 메뉴 화면으로 전환합니다.
             JOptionPane.showMessageDialog(this, nickname + "님, 환영합니다!");
-            game.changeState(Game.GameState.PVP_MENU);
+            game.changeState(Gamestate.PVP_MENU);
 
         } else {
             // 클라이언트 로그인 실패 (아이디/비밀번호 틀림)

@@ -25,6 +25,17 @@ public class LevelManager {
         this.game = game;
         this.entityManager = entityManager;
     }
+    public void notifyAlienKilled() {
+        game.getPlayerStats().addScore(100);
+    }
+    public void notifyWinPVP() {
+        // 중복 호출 방지를 위해 상태 확인
+        if (game.getCurrentState() != Gamestate.PLAYING_PVP) return;
+
+        game.getPlayerStats().addScore(30);
+        game.setMessage("You win! 30 reward coins");
+        game.setWaitingForKeyPress(true);
+    }
 
     public void startNewGame() {
         entityManager.clear();
@@ -113,7 +124,7 @@ public class LevelManager {
         if (stageIndex > MAX_STAGE) {
             game.setMessage("ALL STAGES CLEAR! Returning to Menu...");
             game.setWaitingForKeyPress(true);
-            game.changeState(Game.GameState.PVP_MENU);
+            game.changeState(Gamestate.PVP_MENU);
             return;
         }
 
@@ -128,7 +139,7 @@ public class LevelManager {
         if (currentStage != null) {
             currentStage.init();
         } else {
-            game.changeState(Game.GameState.PVP_MENU);
+            game.changeState(Gamestate.PVP_MENU);
         }
     }
 
@@ -147,7 +158,7 @@ public class LevelManager {
 
     public void checkWinCondition() {
         // 협동 모드 승리 체크 (보스전 이전)
-        if (game.getCurrentState() == Game.GameState.PLAYING_COOP && currentLevel < BOSS_LEVEL) {
+        if (game.getCurrentState() == Gamestate.PLAYING_COOP && currentLevel < BOSS_LEVEL) {
             if (entityManager.getAlienCount() == 0 && !game.isWaitingForKeyPress()) {
                 notifyWin();
             }
@@ -174,7 +185,7 @@ public class LevelManager {
     }
 
     public void notifyDeath() {
-        if (game.getCurrentState() == Game.GameState.PLAYING_PVP) {
+        if (game.getCurrentState() == Gamestate.PLAYING_PVP) {
             if (game.isWaitingForKeyPress()) return;
             game.setMessage("You Lose...");
             game.setWaitingForKeyPress(true);

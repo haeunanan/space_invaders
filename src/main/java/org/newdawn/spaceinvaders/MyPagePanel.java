@@ -62,7 +62,7 @@ public class MyPagePanel extends JPanel {
         saveButton.addActionListener(e -> handleSave());
 
         backButton.addActionListener(e -> {
-            game.changeState(Game.GameState.PVP_MENU);
+            game.changeState(Gamestate.PVP_MENU);
         });
 
         updateUser();
@@ -97,7 +97,7 @@ public class MyPagePanel extends JPanel {
         if (success) {
             CurrentUserManager.getInstance().setNickname(newNickname);
             JOptionPane.showMessageDialog(this, "닉네임이 성공적으로 변경되었습니다.");
-            game.changeState(Game.GameState.PVP_MENU);
+            game.changeState(Gamestate.PVP_MENU);
         } else {
             JOptionPane.showMessageDialog(this, "닉네임 변경에 실패했습니다.");
         }

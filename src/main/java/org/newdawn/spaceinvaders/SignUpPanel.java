@@ -73,7 +73,7 @@ public class SignUpPanel extends JPanel {
         });
 
         goToSignInButton.addActionListener(e -> {
-            game.changeState(Game.GameState.SIGN_IN); // 로그인 화면으로 전환
+            game.changeState(Gamestate.SIGN_IN); // 로그인 화면으로 전환
         });
     }
 
@@ -97,7 +97,7 @@ public class SignUpPanel extends JPanel {
         if (uid != null) {
             // 회원가입 성공 로직 (이제 여기서 닉네임 저장 로직을 추가하면 됩니다)
             JOptionPane.showMessageDialog(this, "회원가입 성공! 로그인 화면으로 돌아갑니다.");
-            game.changeState(Game.GameState.SIGN_IN);
+            game.changeState(Gamestate.SIGN_IN);
         } else {
             // 회원가입 실패 로직
             JOptionPane.showMessageDialog(this, "회원가입 실패. (이미 존재하는 이메일이거나 비밀번호가 너무 짧습니다.)");

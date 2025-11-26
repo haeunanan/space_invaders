@@ -39,7 +39,7 @@ public class UIRenderer {
         }
 
         // 4. 상점 버튼 (싱글)
-        if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE) {
+        if (game.getCurrentState() == Gamestate.PLAYING_SINGLE) {
             drawShopButton(g2d);
         }
 
@@ -78,7 +78,7 @@ public class UIRenderer {
         if (isSingleOrCoop() && game.getShip() instanceof ShipEntity) {
             int hp = ((ShipEntity) game.getShip()).getCurrentHealth();
             drawHeartRow(g2d, 20, 60, hp);
-        } else if (game.getCurrentState() == Game.GameState.PLAYING_PVP) {
+        } else if (game.getCurrentState() == Gamestate.PLAYING_PVP) {
             ShipEntity player = (ShipEntity) game.getShip();
             ShipEntity opponent = (ShipEntity) game.getOpponentShip();
             if (player == null || opponent == null) return;
@@ -268,7 +268,7 @@ public class UIRenderer {
     }
 
     private void drawMessageOverlay(Graphics2D g2d, int width, int height) {
-        if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE) {
+        if (game.getCurrentState() == Gamestate.PLAYING_SINGLE) {
             g2d.setColor(Color.white);
             g2d.setFont(new Font("Arial", Font.BOLD, 24));
             String message = game.getMessage();
@@ -325,7 +325,7 @@ public class UIRenderer {
     }
 
     private boolean isSingleOrCoop() {
-        return game.getCurrentState() == Game.GameState.PLAYING_SINGLE ||
-                game.getCurrentState() == Game.GameState.PLAYING_COOP;
+        return game.getCurrentState() == Gamestate.PLAYING_SINGLE ||
+                game.getCurrentState() == Gamestate.PLAYING_COOP;
     }
 }

@@ -10,190 +10,143 @@ import org.newdawn.spaceinvaders.SoundManager;
  * * @author Kevin Glass
  */
 public class ShipEntity extends Entity {
-	/** The game in which the ship exists */
-	private boolean shieldActive = false;
+    /** The game in which the ship exists */
+    private boolean shieldActive = false;
 
-	private int maxHealth = 1; // 최대 체력
-	private int currentHealth; // 현재 체력
-	private boolean boosterActive = false; // 부스터 활성화 여부
-	private long boosterTimer = 0;
+    private int maxHealth = 1; // 최대 체력
+    private int currentHealth; // 현재 체력
+    private boolean boosterActive = false; // 부스터 활성화 여부
+    private long boosterTimer = 0;
 
-	/**
-	 * 게임 모드에 맞게 체력을 설정합니다.
-	 * @param health 설정할 체력 값
-	 */
-	public void setHealth(int health) {
-		this.maxHealth = health;
-		this.currentHealth = health;
-	}
+    public void setHealth(int health) {
+        this.maxHealth = health;
+        this.currentHealth = health;
+    }
 
-	public void activateShield() {
-		this.shieldActive = true;
-		System.out.println("Heat Shield Activated!");
-	}
-	public void activateBooster() {
-		this.boosterActive = true;
-		this.boosterTimer = 2000; // 2초(2000ms) 동안 유지
-		System.out.println("Thrust Booster Activated! (2s)");
-	}
-	public boolean isBoosterActive() { // <--- 이 메서드가 필요합니다!
-		return boosterActive;
-	}
+    public void activateShield() {
+        this.shieldActive = true;
+        System.out.println("Heat Shield Activated!");
+    }
+    public void activateBooster() {
+        this.boosterActive = true;
+        this.boosterTimer = 2000;
+        System.out.println("Thrust Booster Activated! (2s)");
+    }
+    public boolean isBoosterActive() {
+        return boosterActive;
+    }
 
     /**
      * 데미지를 입었을 때 호출됩니다.
      */
     public void takeDamage() {
-        // [추가] 피격 효과음 재생
         SoundManager.get().playSound("sounds/hit.wav");
 
-        // 1. 쉴드가 있으면 쉴드만 끄고 데미지 무효화
         if (shieldActive) {
             shieldActive = false;
             System.out.println("Shield blocked the damage!");
             return;
         }
 
-        // 2. 쉴드가 없을 때만 체력 감소
         currentHealth--;
         if (currentHealth <= 0) {
-            game.notifyDeath(); // 체력이 0이 되면 게임 오버 처리
+            // [수정] Game 클래스가 아니라 LevelManager를 통해 사망 처리 호출
+            game.getLevelManager().notifyDeath();
         }
     }
 
-	public int getCurrentHealth() {
-		return currentHealth;
-	}
-	/**
-	 * 현재 체력을 특정 값으로 설정합니다. (네트워크 동기화용)
-	 */
-	public void setCurrentHealth(int health) {
-		this.currentHealth = health;
-	}
+    public int getCurrentHealth() {
+        return currentHealth;
+    }
 
-	public int getMaxHealth() {
-		return maxHealth;
-	}
-	/**
-	 * Create a new entity to represent the players ship
-	 * * @param game The game in which the ship is being created
-	 * @param ref The reference to the sprite to show for the ship
-	 * @param x The initial x location of the player's ship
-	 * @param y The initial y location of the player's ship
-	 */
-	public ShipEntity(Game game,String ref,int x,int y) {
-		super(ref,x,y);
+    public void setCurrentHealth(int health) {
+        this.currentHealth = health;
+    }
 
-		this.game = game;
-	}
+    public int getMaxHealth() {
+        return maxHealth;
+    }
 
-	public boolean isShieldActive() {
-		return this.shieldActive;
-	}
+    public ShipEntity(Game game,String ref,int x,int y) {
+        super(ref,x,y);
+        this.game = game;
+    }
 
-	// ShipEntity.java 내부의 draw 메소드
+    public boolean isShieldActive() {
+        return this.shieldActive;
+    }
 
-	@Override
-	public void draw(java.awt.Graphics g) {
-		// 1. 원래 비행기 이미지 그리기
-		super.draw(g);
+    @Override
+    public void draw(java.awt.Graphics g) {
+        super.draw(g);
 
-		// 2. 방어막이 켜져 있다면 빨간색 원 그리기
-		if (shieldActive) {
-			// [수정] 색상을 빨간색(Red)으로 변경
-			g.setColor(new java.awt.Color(255, 0, 0, 150)); // 반투명한 빨간색
-			g.drawOval((int)x - 5, (int)y - 5, getSpriteWidth() + 10, getSpriteHeight() + 10);
+        if (shieldActive) {
+            g.setColor(new java.awt.Color(255, 0, 0, 150));
+            g.drawOval((int)x - 5, (int)y - 5, getSpriteWidth() + 10, getSpriteHeight() + 10);
+            g.setColor(java.awt.Color.RED);
+            g.drawOval((int)x - 6, (int)y - 6, getSpriteWidth() + 12, getSpriteHeight() + 12);
+        }
+        if (boosterActive) {
+            g.setColor(new java.awt.Color(255, 215, 0, 150));
+            g.fillOval((int)x + 10, (int)y + getSpriteHeight(), 10, 15);
+            g.fillOval((int)x + getSpriteWidth() - 20, (int)y + getSpriteHeight(), 10, 15);
+        }
+    }
 
-			// [수정] 테두리는 더 진한 빨간색
-			g.setColor(java.awt.Color.RED);
-			g.drawOval((int)x - 6, (int)y - 6, getSpriteWidth() + 12, getSpriteHeight() + 12);
-		}
-		if (boosterActive) {
-			g.setColor(new java.awt.Color(255, 215, 0, 150)); // 반투명한 황금색
-			// 기체 아래쪽에 작은 원(엔진 분사) 그리기
-			g.fillOval((int)x + 10, (int)y + getSpriteHeight(), 10, 15);
-			g.fillOval((int)x + getSpriteWidth() - 20, (int)y + getSpriteHeight(), 10, 15);
-		}
-	}
+    @Override
+    public void move(long delta) {
+        if (boosterActive) {
+            boosterTimer -= delta;
+            if (boosterTimer <= 0) {
+                boosterActive = false;
+                boosterTimer = 0;
+                System.out.println("Booster Deactivated.");
+            }
+        }
 
-	/**
-	 * Request that the ship move itself based on an elapsed ammount of
-	 * time
-	 * * @param delta The time that has elapsed since last move (ms)
-	 */
-	// [수정] move 메소드에 타이머 로직 추가
-	// [수정] move 메소드 전체 교체 (가장 확실한 방법)
-	@Override
-	public void move(long delta) {
-		// 1. 부스터 타이머 로직 (기존 유지)
-		if (boosterActive) {
-			boosterTimer -= delta;
-			if (boosterTimer <= 0) {
-				boosterActive = false;
-				boosterTimer = 0;
-				System.out.println("Booster Deactivated.");
-			}
-		}
+        super.move(delta);
 
-		// 2. 일단 이동 시킵니다. (부모 클래스의 이동 로직 수행)
-		super.move(delta);
-
-		// 3. 화면 밖으로 나갔다면 강제로 안으로 끌어옵니다 (Clamping)
-		// 이렇게 하면 키 입력이 무시되는 일이 없습니다.
-
-        // 변경 후 (Constants 활용)
-// 비행기 크기(약 50)를 고려해 여유분을 뺍니다.
         if (x > Constants.WINDOW_WIDTH - 50) x = Constants.WINDOW_WIDTH - 50;
         if (y > Constants.WINDOW_HEIGHT - 50) y = Constants.WINDOW_HEIGHT - 50;
 
-		// 상하 보정
-		if (y < 10) y = 10;
-		if (y > 550) y = 550;
-	}
-    // [ShipEntity.java] 내부에 추가
+        if (y < 10) y = 10;
+        if (y > 550) y = 550;
+    }
+
     public void tryToFire() {
-        // 1. 쿨타임 체크 (Game의 변수 사용)
         if (System.currentTimeMillis() - game.lastFire < game.firingInterval) {
             return;
         }
         game.lastFire = System.currentTimeMillis();
 
-        // 2. 발사 위치 및 속도 설정
         int baseX = (int) x + 10;
         int baseY = (int) y - 30;
         double shotDX = 0;
         double shotDY = -300;
 
-        // 3. 스테이지별 탄환 속도 보정
-        if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE && game.getCurrentStage() != null) {
+        if (game.getCurrentState() == Gamestate.PLAYING_SINGLE && game.getCurrentStage() != null) {
             shotDY = game.getCurrentStage().getPlayerShotVelocity();
         }
 
-        // 4. 미사일 생성 및 등록
         String myUid = org.newdawn.spaceinvaders.CurrentUserManager.getInstance().getUid();
 
         for (int i = 0; i < game.playerStats.getMissileCount(); i++) {
             int offset = (i - (game.playerStats.getMissileCount() - 1) / 2) * 10;
             ShotEntity shot = new ShotEntity(game, "sprites/shot.gif", baseX + offset, baseY, shotDX, shotDY);
 
-            // PVP/COOP 소유자 설정
-            if (game.getCurrentState() == Game.GameState.PLAYING_PVP || game.getCurrentState() == Game.GameState.PLAYING_COOP) {
+            if (game.getCurrentState() == Gamestate.PLAYING_PVP || game.getCurrentState() == Gamestate.PLAYING_COOP) {
                 shot.setOwnerUid(myUid);
             }
             game.addEntity(shot);
         }
 
-        // 5. 효과음 재생
         org.newdawn.spaceinvaders.SoundManager.get().playSound("sounds/shoot.wav");
     }
-	/**
-	 * Notification that the player's ship has collided with something
-	 * * @param other The entity with which the ship has collided
-	 */
-	public void collidedWith(Entity other) {
-        // [수정] AlienEntity 뿐만 아니라 BossEntity와 충돌했을 때도 게임 오버 처리
+
+    public void collidedWith(Entity other) {
         if (other instanceof AlienEntity || other instanceof BossEntity) {
-            game.notifyDeath();
-		}
-	}
+            // [수정] Game 클래스가 아니라 LevelManager를 통해 사망 처리 호출
+            game.getLevelManager().notifyDeath();
+        }
+    }
 }

@@ -45,7 +45,7 @@ public class GamePlayPanel extends JPanel {
     }
 
     private void drawBackground(Graphics2D g2d) {
-        if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE &&
+        if (game.getCurrentState() == Gamestate.PLAYING_SINGLE &&
                 game.getCurrentStage() != null &&
                 game.getCurrentStage().getBackground() != null) {
 
@@ -68,7 +68,7 @@ public class GamePlayPanel extends JPanel {
                 int drawY = entity.getY();
                 boolean isOpponentEntity = false;
 
-                if (game.getCurrentState() == Game.GameState.PLAYING_PVP) {
+                if (game.getCurrentState() == Gamestate.PLAYING_PVP) {
                     String myUid = CurrentUserManager.getInstance().getUid();
                     if (entity == game.getOpponentShip() ||
                             (entity instanceof ShotEntity && myUid != null && !((ShotEntity)entity).isOwnedBy(myUid))) {

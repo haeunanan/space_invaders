@@ -37,7 +37,7 @@ public class ShotEntity extends Entity {
 		super.move(delta); // 기본 이동 처리
 
 		// [추가] 해왕성 바람 효과 (싱글 플레이어 미사일만 해당)
-		if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE && dy < 0) {
+		if (game.getCurrentState() == Gamestate.PLAYING_SINGLE && dy < 0) {
 			if (game.getCurrentStage() instanceof org.newdawn.spaceinvaders.stage.NeptuneStage) {
 				org.newdawn.spaceinvaders.stage.NeptuneStage ns =
 						(org.newdawn.spaceinvaders.stage.NeptuneStage) game.getCurrentStage();
@@ -64,13 +64,13 @@ public class ShotEntity extends Entity {
             handleAlienCollision(other);
         }
         // 2. PVP 모드일 때 플레이어 간 충돌 처리
-        else if (game.getCurrentState() == Game.GameState.PLAYING_PVP) {
+        else if (game.getCurrentState() == Gamestate.PLAYING_PVP) {
             handlePvpCollision(other);
         }
     }
     private boolean isSingleOrCoopMode() {
-        return game.getCurrentState() == Game.GameState.PLAYING_SINGLE ||
-                game.getCurrentState() == Game.GameState.PLAYING_COOP;
+        return game.getCurrentState() == Gamestate.PLAYING_SINGLE ||
+                game.getCurrentState() == Gamestate.PLAYING_COOP;
     }
     private void handleAlienCollision(Entity other) {
         if (other instanceof AlienEntity) {
@@ -97,7 +97,7 @@ public class ShotEntity extends Entity {
     }
     private void tryDropItem(AlienEntity alien) {
         // 싱글 모드이고 아이템이 허용된 스테이지인 경우에만
-        if (game.getCurrentState() == Game.GameState.PLAYING_SINGLE &&
+        if (game.getCurrentState() == Gamestate.PLAYING_SINGLE &&
                 game.getCurrentStage() != null &&
                 game.getCurrentStage().isItemAllowed()) {
 

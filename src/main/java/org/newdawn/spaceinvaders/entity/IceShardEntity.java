@@ -34,7 +34,7 @@ public class IceShardEntity extends Entity {
             } else {
                 // 방어막이 없으면: 데미지 + 슬로우
                 ship.takeDamage();
-                game.applySlow(2000);
+                game.getPlayerController().applySlow(2000);
             }
         }
     }
