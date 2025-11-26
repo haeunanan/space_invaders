@@ -9,7 +9,6 @@ import org.newdawn.spaceinvaders.stage.Stage;
  * An entity representing a shot fired by the player's ship
  */
 public class ShotEntity extends Entity {
-	private Game game;
 	private boolean used = false;
 	private String ownerUid;
 

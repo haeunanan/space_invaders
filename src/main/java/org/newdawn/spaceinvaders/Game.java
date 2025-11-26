@@ -325,8 +325,7 @@ public class Game
 	 */
 	private void startGame() {
 		// 모든 엔티티 초기화
-		entities.clear();
-		removeList.clear();
+        entityManager.clear();
 
 		slowTimer = 0;
 		reverseControls = false;
@@ -341,7 +340,7 @@ public class Game
         ship = new ShipEntity(this, "sprites/ship.gif", Constants.PLAYER_START_X, Constants.PLAYER_START_Y);
 		((ShipEntity) ship).setHealth(3);
 		this.slowTimer = 0;
-		entities.add(ship);
+        entityManager.addEntity(ship);
 
 		// 스테이지 적/보스 생성
 		if (currentStage != null) {
@@ -357,8 +356,7 @@ public class Game
 		waitingForKeyPress = false;
 
 		// [중요] 엔티티 리스트뿐만 아니라 '삭제 대기 목록'도 반드시 비워야 합니다.
-		entities.clear();
-		removeList.clear();
+        entityManager.clear();
 
 		// [수정] 스테이지 전환/재시작 시 조작 반전 및 키 입력 상태 초기화
 		reverseControls = false;
@@ -379,7 +377,7 @@ public class Game
 		ship = new ShipEntity(this, "sprites/ship.gif", 370, 550);
 		((ShipEntity) ship).setHealth(3); // 체력 복구
 		this.slowTimer = 0;
-		entities.add(ship);
+        entityManager.addEntity(ship);
 
 		if (currentStage != null) {
 			currentStage.init();
@@ -452,133 +450,133 @@ public class Game
     }
 
 	private void startPvpGame() {
-		entities.clear();
+        entityManager.clear();
 		waitingForKeyPress = false;
         inputManager.reset();
 
         // 언제나 '나'는 아래쪽에 생성
         ship = new ShipEntity(this, "sprites/ship.gif", 370, 550);
         ((ShipEntity) ship).setHealth(3);
-        entities.add(ship);
+        entityManager.addEntity(ship);
 
         // 언제나 '상대방'은 위쪽에 생성
         opponentShip = new ShipEntity(this, "sprites/opponent_ship.gif", 370, 50);
         ((ShipEntity) opponentShip).setHealth(3);
-        entities.add(opponentShip);
+        entityManager.addEntity(opponentShip);
 
         startNetworkLoop();
     }
 
     private void startNetworkLoop() {
         networkThread = new Thread(() -> {
+            // 매번 객체를 생성하지 않도록 루프 밖으로 뺄 수도 있지만, 로직 유지를 위해 내부에 둠
             FirebaseClientService clientService = new FirebaseClientService();
-            String myUid = CurrentUserManager.getInstance().getUid();
 
-			while ((currentState == GameState.PLAYING_PVP || currentState == GameState.PLAYING_COOP) && !Thread.currentThread().isInterrupted()) {
-				try {
-					// --- 내 상태 전송 ---
-					Map<String, Object> myState = new java.util.HashMap<>();
-					myState.put("x", ship.getX());
-					myState.put("y", ship.getY());
-					myState.put("health", ((ShipEntity) ship).getCurrentHealth());
+            while (isPlayingState() && !Thread.currentThread().isInterrupted()) {
+                try {
+                    // 1. 내 상태 전송
+                    sendMyStatus(clientService);
 
-                    // 내가 쏜 총알들의 좌표 목록 생성
-                    java.util.List<Map<String, Integer>> myShotsData = new ArrayList<>();
-                    for (Entity entity : entities) {
-                        if (entity instanceof ShotEntity) {
-                            ShotEntity shot = (ShotEntity) entity;
-                            if (myUid.equals(shot.getOwnerUid())) {
-                                Map<String, Integer> shotData = new HashMap<>();
-                                shotData.put("x", shot.getX());
-                                shotData.put("y", shot.getY());
-                                myShotsData.add(shotData);
-                            }
-                        }
-                    }
-                    myState.put("shots", myShotsData);
+                    // 2. 상대 상태 수신 및 업데이트
+                    updateOpponentStatus(clientService);
 
-                    String myPlayerNode = amIPlayer1() ? "player1_state" : "player2_state";
-                    clientService.updatePlayerState(currentMatchId, myPlayerNode, myState);
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        });
+        networkThread.start();
+    }
 
-                    // --- 상대 상태 수신 ---
-                    String opponentNode = amIPlayer1() ? "player2_state" : "player1_state";
-                    Map<String, Object> opponentState = clientService.getOpponentState(currentMatchId, opponentNode);
+    private void sendMyStatus(FirebaseClientService clientService) {
+        String myUid = org.newdawn.spaceinvaders.CurrentUserManager.getInstance().getUid();
+        Map<String, Object> myState = new HashMap<>();
+        myState.put("x", ship.getX());
+        myState.put("y", ship.getY());
+        myState.put("health", ((ShipEntity) ship).getCurrentHealth());
 
-                    if (opponentState != null) {
-                        if (opponentState.get("x") != null) {
-                            Object xObj = opponentState.get("x");
-                            Object yObj = opponentState.get("y");
-                            if (xObj instanceof Number && yObj instanceof Number) {
-                                double opponentX = ((Number) xObj).doubleValue();
-                                double opponentY = ((Number) yObj).doubleValue();
-                                opponentShip.setLocation((int) opponentX, (int) opponentY);
-                            }
-                        }
-                        String opponentUid = amIPlayer1() ? player2_uid : player1_uid;
+        java.util.List<Map<String, Integer>> myShotsData = new ArrayList<>();
+        for (Entity entity : entityManager.getEntities()) {
+            if (entity instanceof ShotEntity) {
+                ShotEntity shot = (ShotEntity) entity;
+                if (myUid.equals(shot.getOwnerUid())) {
+                    Map<String, Integer> shotData = new HashMap<>();
+                    shotData.put("x", shot.getX());
+                    shotData.put("y", shot.getY());
+                    myShotsData.add(shotData);
+                }
+            }
+        }
+        myState.put("shots", myShotsData);
 
-                        if (opponentState.get("health") instanceof Number) {
-                            int opponentHealth = ((Number) opponentState.get("health")).intValue();
-                            ((ShipEntity)opponentShip).setCurrentHealth(opponentHealth);
+        String myPlayerNode = amIPlayer1() ? "player1_state" : "player2_state";
+        clientService.updatePlayerState(currentMatchId, myPlayerNode, myState);
+    }
 
-							if (opponentHealth <= 0) {
-								SwingUtilities.invokeLater(this::notifyWinPVP);
-								break; // 네트워크 루프 종료
-							}
-						}
+    private void updateOpponentStatus(FirebaseClientService clientService) {
+        String opponentNode = amIPlayer1() ? "player2_state" : "player1_state";
+        Map<String, Object> opponentState = clientService.getOpponentState(currentMatchId, opponentNode);
 
-                        // 2-1. 기존의 상대방 총알들을 모두 제거 목록에 추가
-                        for (Entity entity : entities) {
-                            if (entity instanceof ShotEntity && opponentUid.equals(((ShotEntity) entity).getOwnerUid())) {
-                                removeEntity(entity);
-                            }
-                        }
-                        // 2-2. 새로 받은 총알 정보로 다시 생성
-                        if (opponentState.get("shots") instanceof java.util.List) {
-                            java.util.List<Map<String, Double>> opponentShotsData =
-                                    (java.util.List<Map<String, Double>>) opponentState.get("shots");
+        if (opponentState != null) {
+            // 위치 동기화
+            if (opponentState.get("x") instanceof Number && opponentState.get("y") instanceof Number) {
+                double opX = ((Number) opponentState.get("x")).doubleValue();
+                double opY = ((Number) opponentState.get("y")).doubleValue();
+                opponentShip.setLocation((int) opX, (int) opY);
+            }
 
-                            for (Map<String, Double> shotData : opponentShotsData) {
+            // 체력 동기화
+            if (opponentState.get("health") instanceof Number) {
+                int opHealth = ((Number) opponentState.get("health")).intValue();
+                ((ShipEntity)opponentShip).setCurrentHealth(opHealth);
+                if (opHealth <= 0) {
+                    SwingUtilities.invokeLater(this::notifyWinPVP);
+                    // 루프 종료를 위해 인터럽트 발생 (선택 사항)
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
 
-                                double shotDX = 0;
-                                double shotDY = -300;
+            // 총알 동기화
+            updateOpponentShots(opponentState);
+        }
+    }
 
-                                ShotEntity shot = new ShotEntity(
-                                        this,
-                                        "sprites/shot.gif",
-                                        shotData.get("x").intValue(),
-                                        shotData.get("y").intValue(),
-                                        shotDX,
-                                        shotDY
-                                );
-								shot.setOwnerUid(opponentUid);
-                                addEntity(shot);
-                            }
-                        }
+    private void updateOpponentShots(Map<String, Object> opponentState) {
+        String opponentUid = amIPlayer1() ? player2_uid : player1_uid;
 
-                    }
+        // 기존 총알 제거
+        for (Entity entity : entityManager.getEntities()) {
+            if (entity instanceof ShotEntity && opponentUid.equals(((ShotEntity) entity).getOwnerUid())) {
+                removeEntity(entity);
+            }
+        }
 
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-				}
-			}
-		});
-		networkThread.start();
-	}
+        // 새 총알 생성
+        if (opponentState.get("shots") instanceof java.util.List) {
+            java.util.List<Map<String, Double>> shotList = (java.util.List<Map<String, Double>>) opponentState.get("shots");
+            for (Map<String, Double> sData : shotList) {
+                ShotEntity shot = new ShotEntity(this, "sprites/shot.gif", sData.get("x").intValue(), sData.get("y").intValue(), 0, -300);
+                shot.setOwnerUid(opponentUid);
+                addEntity(shot);
+            }
+        }
+    }
 
 	private void startCoopGame() {
-		entities.clear();
+        entityManager.clear();
         inputManager.reset();
 
 		// 내 우주선 (아래쪽)
 		ship = new ShipEntity(this, "sprites/ship.gif", 300, 550); // X좌표를 약간 왼쪽으로
 		((ShipEntity) ship).setHealth(3);
-		entities.add(ship);
+        entityManager.addEntity(ship);
 
 		// 상대방 우주선 (같은 편! 아래쪽)
 		opponentShip = new ShipEntity(this, "sprites/ship.gif", 500, 550); // X좌표를 약간 오른쪽으로, 이미지는 ship.gif 사용
 		((ShipEntity) opponentShip).setHealth(3);
-		entities.add(opponentShip);
+        entityManager.addEntity(opponentShip);
 
 		// 외계인 생성 (싱글 플레이처럼 적들도 생성해야 함!)
 		alienCount = 0;
@@ -641,22 +639,7 @@ public class Game
 	 * Initialise the starting state of the entities (ship and aliens). Each
 	 * entitiy will be added to the overall list of entities in the game.
 	 */
-	private void initEntities() {
-		alienCount = 0;
 
-		// 1. 플레이어 우주선을 생성하고 entities 리스트에 추가합니다.
-		// 이 부분이 누락되면 우주선이 나타나지 않습니다.
-		ship = new ShipEntity(this, "sprites/ship.gif", 370, 550);
-		((ShipEntity)ship).setHealth(1);
-		entities.add(ship);
-
-		// 3. 현재 레벨에 맞는 스테이지를 설정합니다.
-		if (currentLevel >= BOSS_LEVEL) {
-			initBossStage();
-		} else {
-			initStandardStage();
-		}
-	}
 	private void initStandardStage() {
 		double moveSpeed = 100;
 		int alienRows = 3;
@@ -692,16 +675,12 @@ public class Game
 		for (int row = 0; row < alienRows; row++) {
 			for (int x = 0; x < 12; x++) {
 				Entity alien = new AlienEntity(this, "sprites/alien.gif", 100 + (x * 50), startY + row * 30, moveSpeed, firingChance);
-				entities.add(alien);
+                entityManager.addEntity(alien);
 				alienCount++;
 			}
 		}
 	}
-	private void initBossStage() {
-		Entity boss = new BossEntity(this, 350, 50);
-		entities.add(boss);
-		// 보스 스테이지에서는 alienCount가 아닌 다른 방식으로 승리 조건을 관리합니다.
-	}
+
     public void addEntity(Entity entity) {
         entityManager.addEntity(entity);
     }
@@ -929,43 +908,46 @@ public class Game
 
     private void processPlayerInput() {
         if (!waitingForKeyPress && ship != null) {
-            ship.setHorizontalMovement(0);
-            ship.setDY(0);
+            // 1. 기본 이동 처리
+            handleMovement();
 
-            double currentSpeed = moveSpeed;
-            if (slowTimer > 0) currentSpeed *= 0.5;
+            // 2. 특수 효과 (바람 등) 처리
+            handleEnvironmentalEffects();
 
-            boolean moveLeft = inputManager.isLeftPressed();
-            boolean moveRight = inputManager.isRightPressed();
-            boolean moveUp = inputManager.isUpPressed();
-            boolean moveDown = inputManager.isDownPressed();
-
-            if (reverseControls) {
-                moveLeft = inputManager.isRightPressed();
-                moveRight = inputManager.isLeftPressed();
-                moveUp = inputManager.isDownPressed();
-                moveDown = inputManager.isUpPressed();
+            // 3. 발사 처리
+            if (inputManager.isFirePressed() && ship instanceof ShipEntity) {
+                ((ShipEntity) ship).tryToFire();
             }
+        }
+    }
 
-            if (moveLeft && !moveRight) ship.setHorizontalMovement(-currentSpeed);
-            else if (moveRight && !moveLeft) ship.setHorizontalMovement(currentSpeed);
+    // [추가] 이동 로직 분리
+    private void handleMovement() {
+        ship.setHorizontalMovement(0);
+        ship.setDY(0);
 
-            if (moveUp && !moveDown) ship.setDY(-currentSpeed);
-            else if (moveDown && !moveUp) ship.setDY(currentSpeed);
+        double currentSpeed = moveSpeed;
+        if (slowTimer > 0) currentSpeed *= 0.5;
 
-            // 해왕성 바람 효과
-            if (currentState == GameState.PLAYING_SINGLE && currentStage instanceof NeptuneStage) {
-                NeptuneStage ns = (NeptuneStage) currentStage;
-                double wind = ns.getCurrentWindForce();
-                if (wind != 0 && !((ShipEntity) ship).isBoosterActive()) {
-                    ship.setHorizontalMovement(ship.getDX() + wind);
-                }
-            }
+        boolean left = reverseControls ? inputManager.isRightPressed() : inputManager.isLeftPressed();
+        boolean right = reverseControls ? inputManager.isLeftPressed() : inputManager.isRightPressed();
+        boolean up = reverseControls ? inputManager.isDownPressed() : inputManager.isUpPressed();
+        boolean down = reverseControls ? inputManager.isUpPressed() : inputManager.isDownPressed();
 
-            if (inputManager.isFirePressed()) {
-                if (ship instanceof ShipEntity) {
-                    ((ShipEntity) ship).tryToFire(); // ShipEntity에게 발사 위임
-                }
+        if (left && !right) ship.setHorizontalMovement(-currentSpeed);
+        else if (right && !left) ship.setHorizontalMovement(currentSpeed);
+
+        if (up && !down) ship.setDY(-currentSpeed);
+        else if (down && !up) ship.setDY(currentSpeed);
+    }
+
+    // [추가] 환경 효과 분리
+    private void handleEnvironmentalEffects() {
+        if (currentState == GameState.PLAYING_SINGLE && currentStage instanceof NeptuneStage) {
+            NeptuneStage ns = (NeptuneStage) currentStage;
+            double wind = ns.getCurrentWindForce();
+            if (wind != 0 && !((ShipEntity) ship).isBoosterActive()) {
+                ship.setHorizontalMovement(ship.getDX() + wind);
             }
         }
     }
@@ -1007,45 +989,15 @@ public class Game
         }
     }
 
-    private void checkPvpCollisions() {
-        String myUid = CurrentUserManager.getInstance().getUid();
-        for (int p = 0; p < entities.size(); p++) {
-            for (int s = p + 1; s < entities.size(); s++) {
-                Entity me = entities.get(p);
-                Entity him = entities.get(s);
 
-                if (removeList.contains(me) || removeList.contains(him)) continue;
 
-                Rectangle meRect = getVisualBounds(me);
-                Rectangle himRect = getVisualBounds(him);
 
-                if (meRect.intersects(himRect)) {
-                    handlePvpCollision(me, him, myUid);
-                }
-            }
-        }
-    }
-
-    private void handlePvpCollision(Entity me, Entity him, String myUid) {
-        // PVP 충돌 로직 분리
-        if (me instanceof ShotEntity && ((ShotEntity)me).isOwnedBy(myUid) && him == opponentShip) {
-            removeEntity(me);
-        } else if (him instanceof ShotEntity && ((ShotEntity)him).isOwnedBy(myUid) && me == opponentShip) {
-            removeEntity(him);
-        } else if (me instanceof ShotEntity && !((ShotEntity)me).isOwnedBy(myUid) && him == ship) {
-            removeEntity(me);
-            ((ShipEntity)him).takeDamage();
-        } else if (him instanceof ShotEntity && !((ShotEntity)him).isOwnedBy(myUid) && me == ship) {
-            removeEntity(him);
-            ((ShipEntity)me).takeDamage();
-        }
-    }
 
     private void checkWinCondition() {
         if (currentState == GameState.PLAYING_COOP) {
             if (currentLevel < BOSS_LEVEL) {
                 int aliensRemaining = 0;
-                for (Entity e : entities) if (e instanceof AlienEntity) aliensRemaining++;
+                for (Entity e : entityManager.getEntities()) if (e instanceof AlienEntity) aliensRemaining++;
                 if (aliensRemaining == 0 && !waitingForKeyPress) {
                     notifyWin();
                 }
@@ -1090,20 +1042,6 @@ public class Game
         return message;
     }
 
-    private void updatePvpGameplay(long delta) {
-        // 이 안에는 PVP 모드에서 매 프레임 실행되는 내용만 넣음.
-        // 현재는 네 기존 PvP move/shot/network 코드를 그대로 유지하면 됨.
-
-        // 예시:
-        // 상대방 위치 업데이트는 networkThread가 하고 있으므로
-        // 여기서는 단순히 플레이어 이동/총알 이동만 하면 됨.
-
-        for (Entity e : entities) {
-            if (e != opponentShip) {
-                e.move(delta);
-            }
-        }
-    }
     public void requestTransition() {
         this.transitionRequested = true;
     }

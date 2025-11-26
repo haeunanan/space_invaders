@@ -4,7 +4,6 @@ import org.newdawn.spaceinvaders.Game;
 
 public class BossShotEntity extends Entity {
     private double moveSpeed = 250;
-    private Game game;
 
     public BossShotEntity(Game game, String ref, int x, int y, double dx) {
         super(ref, x, y);

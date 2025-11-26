@@ -7,7 +7,6 @@ import java.awt.Color;
 import java.awt.Graphics;
 
 public class GammaRayEntity extends Entity {
-    private Game game;
     private long duration;
     private boolean isWarning;
 

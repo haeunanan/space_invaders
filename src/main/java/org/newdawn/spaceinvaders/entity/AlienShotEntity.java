@@ -4,7 +4,6 @@ import org.newdawn.spaceinvaders.Game;
 
 public class AlienShotEntity extends Entity {
     private double moveSpeed = 300;
-    private Game game;
     private boolean used = false;
 
     public AlienShotEntity(Game game, String ref, int x, int y) {

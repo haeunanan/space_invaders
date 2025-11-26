@@ -11,7 +11,6 @@ import org.newdawn.spaceinvaders.SoundManager;
  */
 public class ShipEntity extends Entity {
 	/** The game in which the ship exists */
-	private Game game;
 	private boolean shieldActive = false;
 
 	private int maxHealth = 1; // 최대 체력

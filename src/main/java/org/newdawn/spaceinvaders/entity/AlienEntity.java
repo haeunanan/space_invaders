@@ -6,7 +6,6 @@ import org.newdawn.spaceinvaders.Sprite;
 import org.newdawn.spaceinvaders.SpriteStore;
 
 public class AlienEntity extends Entity {
-	private Game game;
 	private double moveSpeed = 75;
 	private double firingChance;
 	private boolean alive = true;

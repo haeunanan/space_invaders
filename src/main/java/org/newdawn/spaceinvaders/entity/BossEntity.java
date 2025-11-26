@@ -10,7 +10,6 @@ public class BossEntity extends Entity {
     private int maxHp = 3000;
     private int hp = maxHp;
     private long lastShot = 0;
-    private Game game;
     private double moveSpeed = 100;
     private boolean movingLeft = true;
 

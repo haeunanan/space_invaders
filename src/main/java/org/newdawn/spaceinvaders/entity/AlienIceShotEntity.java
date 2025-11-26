@@ -4,7 +4,6 @@ import org.newdawn.spaceinvaders.Game;
 
 public class AlienIceShotEntity extends Entity {
     private double moveSpeed = 250; // 일반탄보다 약간 느림
-    private Game game;
 
     public AlienIceShotEntity(Game game, String ref, int x, int y) {
         super(ref, x, y);

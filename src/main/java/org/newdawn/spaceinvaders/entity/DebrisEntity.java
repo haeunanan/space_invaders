@@ -3,7 +3,6 @@ package org.newdawn.spaceinvaders.entity;
 import org.newdawn.spaceinvaders.Game;
 
 public class DebrisEntity extends Entity {
-    private Game game;
     private double centerX = 400; // 블랙홀 중심 X
     private double centerY = 100; // 블랙홀 중심 Y
     private double speed = 200;

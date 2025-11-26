@@ -4,7 +4,6 @@ import org.newdawn.spaceinvaders.Game;
 import org.newdawn.spaceinvaders.stage.Stage;
 
 public class ItemEntity extends Entity {
-    private Game game;
     private double moveSpeed = 150; // 아이템 낙하 속도
 
     public ItemEntity(Game game, String ref, int x, int y) {

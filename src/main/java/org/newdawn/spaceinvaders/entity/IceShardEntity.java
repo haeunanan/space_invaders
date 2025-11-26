@@ -3,7 +3,6 @@ package org.newdawn.spaceinvaders.entity;
 import org.newdawn.spaceinvaders.Game;
 
 public class IceShardEntity extends Entity {
-    private Game game;
     private double moveSpeed = 200; // 낙하 속도
 
     public IceShardEntity(Game game, String ref, int x, int y) {
