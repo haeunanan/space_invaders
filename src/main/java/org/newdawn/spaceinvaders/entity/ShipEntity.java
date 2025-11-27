@@ -111,8 +111,16 @@ public class ShipEntity extends Entity {
 
         super.move(delta);
 
-        if (x > Constants.WINDOW_WIDTH - 50) x = Constants.WINDOW_WIDTH - 50;
-        if (y > Constants.WINDOW_HEIGHT - 50) y = Constants.WINDOW_HEIGHT - 50;
+        // 1. 왼쪽 경계 (X 최소값: 10픽셀 여백 유지)
+        if (x < 10) {
+            x = 10;
+        }
+
+        // 2. 오른쪽 경계 (X 최대값: WINDOW_WIDTH - 스프라이트 너비 - 10픽셀 여백)
+        int maxX = Constants.WINDOW_WIDTH - getSpriteWidth() - 10;
+        if (x > maxX) {
+            x = maxX;
+        }
 
         if (y < 10) y = 10;
         if (y > 550) y = 550;

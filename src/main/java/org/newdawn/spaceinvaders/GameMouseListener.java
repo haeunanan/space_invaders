@@ -59,7 +59,7 @@ public class GameMouseListener extends MouseAdapter {
         // 상점이 열려있으면 구매 시도
         if (game.getShopManager().isShopOpen()) {
             game.getShopManager().handlePurchase(mx, my);
-            game.updateStatsBasedOnShop(); // 스탯 갱신
+            game.getPlayerController().upgradeMoveSpeed(); // 스탯 갱신
             game.getWindowManager().gamePanelRepaint();
         }
 

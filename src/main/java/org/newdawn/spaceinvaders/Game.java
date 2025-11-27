@@ -104,11 +104,6 @@ public class Game {
         entityManager.removeDeadEntities();
     }
 
-    // [중요] 상점 업그레이드 반영 (Game에 남겨두거나 PlayerController로 이동 가능)
-    public void updateStatsBasedOnShop() {
-        playerController.upgradeMoveSpeed();
-    }
-
     public boolean isPlayingState() {
         return gameStateManager.isPlayingState();
     }
@@ -180,6 +175,10 @@ public class Game {
 
     public InputManager getInputManager() {
         return inputManager;
+    }
+
+    public void stopGame() {
+        this.gameRunning = false;
     }
 
     public org.newdawn.spaceinvaders.stage.Stage getCurrentStage() {

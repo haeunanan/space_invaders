@@ -72,6 +72,10 @@ public class WindowManager {
         container.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
+                game.stopGame();
+                // 2. NetworkManager 스레드 정리 (선택적이지만 안전한 종료를 위해 Game.java에 이미 구현되어 있음)
+                // game.getNetworkManager().stopAllThreads(); // GameStateManager에서 처리됨
+                // 3. JVM 종료
                 System.exit(0);
             }
         });
