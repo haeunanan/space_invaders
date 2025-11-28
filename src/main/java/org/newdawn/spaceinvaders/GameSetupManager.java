@@ -81,11 +81,28 @@ public class GameSetupManager {
         game.getLevelManager().setWaitingForKeyPress(false);
     }
     public void respawnShipsForNextStage(int stageIndex) {
-        // LevelManager의 nextStage에 있던 기체 생성 분기문(if-else)을 이곳으로 이동
+        // [수정] 스테이지 전환 시 기체 재생성 로직 구현
         if (game.getGameStateManager().getCurrentState() == GameState.PLAYING_COOP) {
-            // 협동 모드 기체 2개 생성 로직
+            // 협동 모드: 두 기체 모두 재생성 (위치는 startCoopGame과 동일하게 설정)
+
+            // 1. 내 기체 생성 (좌측)
+            ShipEntity ship = new ShipEntity(game, Constants.SHIP_SPRITE, 300, 550);
+            ship.setHealth(3); // 새 스테이지 체력 리셋
+            entityManager.addEntity(ship);
+            game.setShip(ship);
+
+            // 2. 상대방 기체 생성 (우측)
+            ShipEntity opponentShip = new ShipEntity(game, Constants.SHIP_SPRITE, 500, 550);
+            opponentShip.setHealth(3);
+            entityManager.addEntity(opponentShip);
+            game.setOpponentShip(opponentShip);
+
         } else {
-            // 싱글 모드 기체 1개 생성 로직
+            // 싱글 모드: 내 기체만 생성
+            ShipEntity ship = new ShipEntity(game, Constants.SHIP_SPRITE, Constants.PLAYER_START_X, Constants.PLAYER_START_Y);
+            ship.setHealth(3);
+            entityManager.addEntity(ship);
+            game.setShip(ship);
         }
     }
 

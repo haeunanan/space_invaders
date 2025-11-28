@@ -5,11 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="eb80459d-6f84-4ce9-b90c-dd6c51981bd9" name="변경" comment="sonar cube, metrics reloaded 리팩토링 완료">
+      <change afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2025-11-28__11_23___.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2025-11-28_오후_11_23_[변경]/shelved.patch" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/Game.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/Game.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/GameMouseListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/GameMouseListener.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/WindowManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/WindowManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShipEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShipEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/GameSetupManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/GameSetupManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/NetworkSyncHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/NetworkSyncHelper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShotEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShotEntity.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -58,6 +59,8 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Application.Main.executor": "Run",
+    "Application.이름이 지정되지 않았습니다.executor": "Run",
     "Maven.space_invaders [clean].executor": "Run",
     "Maven.space_invaders [install].executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
@@ -84,8 +87,8 @@
   }
 }]]></component>
   <component name="RunManager">
-    <configuration name="이름이 지정되지 않았습니다" type="Application" factoryName="Application" singleton="false" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="org.newdawn.spaceinvaders.Game" />
+    <configuration name="Main" type="Application" factoryName="Application" singleton="false" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="org.newdawn.spaceinvaders.Main" />
       <module name="space_invaders" />
       <method v="2">
         <option name="Make" enabled="true" />

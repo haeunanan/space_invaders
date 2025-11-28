@@ -86,8 +86,11 @@ public class ShotEntity extends Entity {
             if (game.getCurrentState() == GameState.PLAYING_COOP && !game.getNetworkManager().amIPlayer1()) {
                 // 1. 게스트: 호스트에게 "내가 얘 맞췄어"라고 알림
                 game.getNetworkManager().notifyAlienHit(alien.getNetworkId());
-                // (사운드나 이펙트는 여기서 재생해도 됨)
                 SoundManager.get().playSound("sounds/explosion.wav");
+
+                // [추가] 게스트도 아이템 드랍 시도 (확률은 각자 계산)
+                tryDropItem(alien);
+
             } else {
                 // 2. 호스트(또는 싱글): 직접 데미지 처리 및 사망 로직 수행
                 if (alien.takeDamage(1)) {
@@ -105,8 +108,12 @@ public class ShotEntity extends Entity {
         tryDropItem(alien);
     }
     private void tryDropItem(AlienEntity alien) {
-        // 싱글 모드이고 아이템이 허용된 스테이지인 경우에만
-        if (game.getCurrentState() == GameState.PLAYING_SINGLE &&
+        // [수정] 싱글 모드 또는 협동 모드일 때 아이템 드랍 허용
+        boolean isSingle = game.getCurrentState() == GameState.PLAYING_SINGLE;
+        boolean isCoop = game.getCurrentState() == GameState.PLAYING_COOP;
+
+        // 아이템 허용 스테이지인지 확인
+        if ((isSingle || isCoop) &&
                 game.getCurrentStage() != null &&
                 game.getCurrentStage().isItemAllowed()) {
 

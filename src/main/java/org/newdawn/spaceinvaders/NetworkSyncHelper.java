@@ -49,13 +49,13 @@ public class NetworkSyncHelper {
                 lm.setWaitingForKeyPress(true);
             }
 
-            // (B) 호스트의 스테이지 번호 확인 및 강제 이동
             if (opponentState.containsKey("stage")) {
                 int hostStage = ((Number) opponentState.get("stage")).intValue();
-                // 호스트가 다음 스테이지로 넘어갔다면 나도 즉시 이동
-                if (hostStage > lm.getStageIndex()) {
+
+                // [수정] 호스트와 내 스테이지가 '다르면' 무조건 동기화 (잘못된 스테이지 복구 포함)
+                if (hostStage != 0 && hostStage != lm.getStageIndex()) {
                     lm.setStageIndex(hostStage); // 스테이지 번호 맞춤
-                    lm.nextStage();              // 다음 스테이지 시작 (LevelManager.nextStage 호출)
+                    lm.nextStage();              // 해당 스테이지 로드 (배경/적 리셋)
                 }
             }
         }
@@ -149,12 +149,16 @@ public class NetworkSyncHelper {
         EntityManager em = game.getEntityManager();
         List<Entity> localEntities = em.getEntities();
 
+        // 서버에 존재하는 ID들을 수집할 Set 생성
+        Set<String> serverIds = new HashSet<>();
+
         // 1. 서버 데이터를 기반으로 로컬 적 업데이트 또는 생성
         for (Map<String, Object> data : serverAliens) {
             String id = (String) data.get("id");
+            serverIds.add(id); // ID 수집 (생존 확인용)
+
             double x = ((Number) data.get("x")).doubleValue();
             double y = ((Number) data.get("y")).doubleValue();
-            // [추가] 서버에서 보낸 이미지 경로 받기 (기본값 설정)
             String ref = (String) data.getOrDefault("ref", "sprites/alien.gif");
 
             Optional<AlienEntity> localAlien = localEntities.stream()
@@ -166,13 +170,21 @@ public class NetworkSyncHelper {
             if (localAlien.isPresent()) {
                 localAlien.get().setLocation((int) x, (int) y);
             } else {
-                // 없으면 새로 생성 (받아온 ref 사용)
+                // 없으면 새로 생성
                 AlienEntity newAlien = new AlienEntity(game, ref, (int)x, (int)y, 0, 0);
                 newAlien.setNetworkId(id);
                 em.addEntity(newAlien);
             }
         }
 
-        // ... (삭제 로직은 기존 유지) ...
+        // 2. [추가된 로직] 서버 리스트에 없는 로컬 적 제거 (사망 처리 동기화)
+        // 로컬에는 존재하지만 serverIds(호스트가 보내준 생존 목록)에는 없다면, 이미 죽은 적이므로 제거합니다.
+        List<Entity> toRemove = localEntities.stream()
+                .filter(e -> e instanceof AlienEntity)
+                .map(e -> (AlienEntity) e)
+                .filter(a -> !serverIds.contains(a.getNetworkId())) // 서버 목록에 없는 ID 필터링
+                .collect(Collectors.toList());
+
+        toRemove.forEach(em::removeEntity);
     }
 }
