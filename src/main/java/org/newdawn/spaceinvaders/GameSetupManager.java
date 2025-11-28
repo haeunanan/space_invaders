@@ -1,6 +1,5 @@
 package org.newdawn.spaceinvaders;
 
-import org.newdawn.spaceinvaders.entity.AlienEntity;
 import org.newdawn.spaceinvaders.entity.Entity;
 import org.newdawn.spaceinvaders.entity.ShipEntity;
 import org.newdawn.spaceinvaders.stage.Stage;
@@ -50,33 +49,44 @@ public class GameSetupManager {
         game.setOpponentShip(opponentShip);
     }
 
-    public void startCoopGame() {
+    public void startCoopGame(LevelManager levelManager) {
         entityManager.clear();
+        game.getPlayerController().applySlow(0); // 디버프 초기화
         game.getInputManager().reset();
 
+        // 1. 레벨/스테이지 상태 리셋 (싱글 플레이와 동일하게 1단계부터 시작)
+        levelManager.resetForNewGame();
+
+        // 2. 1스테이지(화성) 생성
+        Stage currentStage = StageFactory.createStage(game, 1);
+        levelManager.setCurrentStage(currentStage);
+
+        // 3. 플레이어(나) 생성 - 왼쪽 위치
         ShipEntity ship = new ShipEntity(game, Constants.SHIP_SPRITE, 300, 550);
         ship.setHealth(3);
         entityManager.addEntity(ship);
         game.setShip(ship);
 
+        // 4. 협동 플레이어(상대방) 생성 - 오른쪽 위치
+        // (Co-op 모드에서는 상대방도 ShipEntity이며 아군 판정)
         ShipEntity opponentShip = new ShipEntity(game, Constants.SHIP_SPRITE, 500, 550);
         opponentShip.setHealth(3);
         entityManager.addEntity(opponentShip);
         game.setOpponentShip(opponentShip);
 
-        setupCoopStage();
-    }
+        // 5. 스테이지 초기화 (적 생성 등)
+        if (currentStage != null) currentStage.init();
 
-    private void setupCoopStage() {
-        double moveSpeed = 100;
-        int alienRows = 3;
-        int startY = 50;
-        for (int row = 0; row < alienRows; row++) {
-            for (int x = 0; x < 12; x++) {
-                Entity alien = new AlienEntity(game, "sprites/alien.gif",
-                        100 + (x * 50), startY + row * 30, moveSpeed, 0);
-                entityManager.addEntity(alien);
-            }
+        // 키 입력 대기 해제
+        game.getLevelManager().setWaitingForKeyPress(false);
+    }
+    public void respawnShipsForNextStage(int stageIndex) {
+        // LevelManager의 nextStage에 있던 기체 생성 분기문(if-else)을 이곳으로 이동
+        if (game.getGameStateManager().getCurrentState() == GameState.PLAYING_COOP) {
+            // 협동 모드 기체 2개 생성 로직
+        } else {
+            // 싱글 모드 기체 1개 생성 로직
         }
     }
+
 }

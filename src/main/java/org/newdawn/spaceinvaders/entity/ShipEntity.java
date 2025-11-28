@@ -18,6 +18,11 @@ public class ShipEntity extends Entity {
     private int currentHealth; // 현재 체력
     private boolean boosterActive = false; // 부스터 활성화 여부
     private long boosterTimer = 0;
+    private double targetX = -999; // 초기값은 유효하지 않은 값으로 설정
+    private double targetY = -999;
+    private static final double SMOOTHING_FACTOR = 0.2;
+    private final ShipWeapon weapon;
+    private final ShipMovement movement;
 
     public void setHealth(int health) {
         this.maxHealth = health;
@@ -29,12 +34,14 @@ public class ShipEntity extends Entity {
         System.out.println("Heat Shield Activated!");
     }
     public void activateBooster() {
-        this.boosterActive = true;
-        this.boosterTimer = 2000;
-        System.out.println("Thrust Booster Activated! (2s)");
+        movement.activateBooster(2000);
     }
     public boolean isBoosterActive() {
         return boosterActive;
+    }
+
+    public void setTargetLocation(double x, double y) {
+        movement.setTargetLocation(x, y);
     }
 
     /**
@@ -72,9 +79,11 @@ public class ShipEntity extends Entity {
         return maxHealth;
     }
 
-    public ShipEntity(Game game,String ref,int x,int y) {
-        super(ref,x,y);
+    public ShipEntity(Game game, String ref, int x, int y) {
+        super(ref, x, y);
         this.game = game;
+        this.weapon = new ShipWeapon(game); // 초기화
+        this.movement = new ShipMovement(this);
     }
 
     public boolean isShieldActive() {
@@ -100,61 +109,17 @@ public class ShipEntity extends Entity {
 
     @Override
     public void move(long delta) {
-        if (boosterActive) {
-            boosterTimer -= delta;
-            if (boosterTimer <= 0) {
-                boosterActive = false;
-                boosterTimer = 0;
-                System.out.println("Booster Deactivated.");
-            }
-        }
+        // 1. 이동 관련 로직 위임
+        movement.update(delta);
 
+        // 2. 만약 내 기체라면(보간 타겟이 없다면) 부모의 기본 이동(velocity 기반) 수행
+        // (ShipMovement에서 처리가 안 된 부분만 수행)
         super.move(delta);
-
-        // 1. 왼쪽 경계 (X 최소값: 10픽셀 여백 유지)
-        if (x < 10) {
-            x = 10;
-        }
-
-        // 2. 오른쪽 경계 (X 최대값: WINDOW_WIDTH - 스프라이트 너비 - 10픽셀 여백)
-        int maxX = Constants.WINDOW_WIDTH - getSpriteWidth() - 10;
-        if (x > maxX) {
-            x = maxX;
-        }
-
-        if (y < 10) y = 10;
-        if (y > 550) y = 550;
     }
 
     public void tryToFire() {
-        long interval = game.getPlayerStats().getFiringInterval();
-        if (System.currentTimeMillis() - game.lastFire < interval) {
-            return;
-        }
-        game.lastFire = System.currentTimeMillis();
-
-        int baseX = (int) x + 10;
-        int baseY = (int) y - 30;
-        double shotDX = 0;
-        double shotDY = -300;
-
-        if (game.getCurrentState() == GameState.PLAYING_SINGLE && game.getCurrentStage() != null) {
-            shotDY = game.getCurrentStage().getPlayerShotVelocity();
-        }
-
-        String myUid = org.newdawn.spaceinvaders.CurrentUserManager.getInstance().getUid();
-
-        for (int i = 0; i < game.playerStats.getMissileCount(); i++) {
-            int offset = (i - (game.playerStats.getMissileCount() - 1) / 2) * 10;
-            ShotEntity shot = new ShotEntity(game, "sprites/shot.gif", baseX + offset, baseY, shotDX, shotDY);
-
-            if (game.getCurrentState() == GameState.PLAYING_PVP || game.getCurrentState() == GameState.PLAYING_COOP) {
-                shot.setOwnerUid(myUid);
-            }
-            game.getEntityManager().addEntity(shot);
-        }
-
-        org.newdawn.spaceinvaders.SoundManager.get().playSound("sounds/shoot.wav");
+        // 복잡한 로직 제거 -> 위임
+        weapon.tryToFire(this.x, this.y);
     }
 
     public void collidedWith(Entity other) {

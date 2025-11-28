@@ -78,13 +78,21 @@ public class ShotEntity extends Entity {
             AlienEntity alien = (AlienEntity) other;
             if (!alien.isAlive()) return;
 
-            // 총알 제거 및 사용 처리
+            // 총알 제거 및 사용 처리 (공통)
             game.getEntityManager().removeEntity(this);
             used = true;
 
-            // 데미지 적용 및 사망 처리
-            if (alien.takeDamage(1)) {
-                processAlienDeath(alien);
+            // [수정] 협동 모드 분기 처리
+            if (game.getCurrentState() == GameState.PLAYING_COOP && !game.getNetworkManager().amIPlayer1()) {
+                // 1. 게스트: 호스트에게 "내가 얘 맞췄어"라고 알림
+                game.getNetworkManager().notifyAlienHit(alien.getNetworkId());
+                // (사운드나 이펙트는 여기서 재생해도 됨)
+                SoundManager.get().playSound("sounds/explosion.wav");
+            } else {
+                // 2. 호스트(또는 싱글): 직접 데미지 처리 및 사망 로직 수행
+                if (alien.takeDamage(1)) {
+                    processAlienDeath(alien);
+                }
             }
         }
     }

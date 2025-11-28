@@ -188,6 +188,13 @@ public abstract class Entity {
     public void setDY(double dy) {
         this.dy = dy;
     }
+    public void setX(double x) {
+        this.x = x;
+    }
+
+    public void setY(double y) {
+        this.y = y;
+    }
 
     /**
 	 * Notification that this entity collided with another.

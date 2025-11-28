@@ -60,11 +60,14 @@ public class InputManager extends KeyAdapter {
 
     // [추가] 대기 상태(게임 오버/클리어 등)에서의 키 입력 처리
     private void handleWaitingKeyPress() {
-        if (game.getCurrentState() == GameState.PLAYING_SINGLE) {
+        // 싱글 혹은 협동 모드이면 다음 스테이지 진행 요청
+        if (game.getCurrentState() == GameState.PLAYING_SINGLE ||
+                game.getCurrentState() == GameState.PLAYING_COOP) {
+
             game.requestTransition();
         }
-        else if (game.getCurrentState() == GameState.PLAYING_PVP ||
-                game.getCurrentState() == GameState.PLAYING_COOP) {
+        // PVP 모드일 때만 메뉴로 이동
+        else if (game.getCurrentState() == GameState.PLAYING_PVP) {
             game.changeState(GameState.PVP_MENU);
         }
     }

@@ -6,6 +6,7 @@ import org.newdawn.spaceinvaders.entity.ShotEntity;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.List;
 
 public class CollisionManager {
     private final Game game;
@@ -51,7 +52,7 @@ public class CollisionManager {
 
     // 일반 게임 충돌 처리
     private void checkStandardCollisions() {
-        ArrayList<Entity> entities = entityManager.getEntities();
+        List<Entity> entities = entityManager.getEntities();
         for (int p = 0; p < entities.size(); p++) {
             for (int s = p + 1; s < entities.size(); s++) {
                 Entity me = entities.get(p);
@@ -68,7 +69,7 @@ public class CollisionManager {
     // PVP 충돌 처리
     private void checkPvpCollisions() {
         String myUid = CurrentUserManager.getInstance().getUid();
-        ArrayList<Entity> entities = entityManager.getEntities();
+        List<Entity> entities = entityManager.getEntities();
 
         for (int p = 0; p < entities.size(); p++) {
             for (int s = p + 1; s < entities.size(); s++) {

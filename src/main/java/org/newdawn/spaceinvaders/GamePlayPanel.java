@@ -7,6 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.HierarchyEvent;
 import java.util.ArrayList;
+import java.util.List;
 
 public class GamePlayPanel extends JPanel {
     // [수정] 직렬화 제외를 위해 transient 키워드 추가
@@ -51,7 +52,9 @@ public class GamePlayPanel extends JPanel {
     }
 
     private void drawBackground(Graphics2D g2d) {
-        if (game.getGameStateManager().getCurrentState() == GameState.PLAYING_SINGLE &&
+        // [수정] 싱글 모드뿐만 아니라 협동 모드(PLAYING_COOP)일 때도 배경을 그리도록 변경
+        if ((game.getGameStateManager().getCurrentState() == GameState.PLAYING_SINGLE ||
+                game.getGameStateManager().getCurrentState() == GameState.PLAYING_COOP) &&
                 game.getCurrentStage() != null &&
                 game.getCurrentStage().getBackground() != null) {
 
@@ -65,12 +68,11 @@ public class GamePlayPanel extends JPanel {
             g2d.fillRect(0, 0, getWidth(), getHeight());
         }
     }
-
     private void drawEntities(Graphics2D g2d) {
         // 게임이 대기 상태(메시지 표시 중 등)가 아닐 때만 엔티티를 그립니다.
         // (필요에 따라 이 조건을 완화할 수도 있습니다)
         if (!game.getLevelManager().isWaitingForKeyPress()) {
-            ArrayList<Entity> entities = game.getEntityManager().getEntities();
+            List<Entity> entities = game.getEntityManager().getEntities();
 
             for (int i = 0; i < entities.size(); i++) {
                 Entity entity = entities.get(i);

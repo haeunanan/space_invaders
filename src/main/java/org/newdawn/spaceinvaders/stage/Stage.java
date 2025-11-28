@@ -54,6 +54,12 @@ public abstract class Stage {
         return true;
     }
     protected void setupAliens(String spriteRef, int rows, int cols, int startY, int gapX, int gapY, double speed, double fireChance) {
+        // [추가] 협동 모드이면서 내가 게스트(Player 2)라면 적을 생성하지 않음 (호스트가 보내준 데이터로 생성함)
+        if (game.getCurrentState() == org.newdawn.spaceinvaders.GameState.PLAYING_COOP
+                && !game.getNetworkManager().amIPlayer1()) {
+            return;
+        }
+
         for (int row = 0; row < rows; row++) {
             for (int x = 0; x < cols; x++) {
                 // 팩토리 메서드 호출

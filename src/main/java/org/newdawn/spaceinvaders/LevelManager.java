@@ -22,6 +22,9 @@ public class LevelManager {
     private String message = "";
     private boolean waitingForKeyPress = true;
 
+    public int getStageIndex() { return stageIndex; }
+    public void setStageIndex(int index) { this.stageIndex = index; }
+
     public LevelManager(Game game, EntityManager entityManager) {
         this.game = game;
         this.entityManager = entityManager;
@@ -41,7 +44,7 @@ public class LevelManager {
     }
 
     public void startCoopGame() {
-        setupManager.startCoopGame();
+        setupManager.startCoopGame(this);
     }
 
     // --- [위임] 게임 결과 처리 (ResultHandler) ---
@@ -65,23 +68,27 @@ public class LevelManager {
         resultHandler.bossKilled();
     }
 
-    // --- LevelManager 고유 로직 (스테이지 진행) ---
     public void checkWinCondition() {
-        // 협동 모드 승리 체크 (보스전 이전)
+        // [수정] 게스트는 승리 체크를 하지 않음
+        if (isGuest()) return;
+
         if (game.getGameStateManager().getCurrentState() == GameState.PLAYING_COOP && currentLevel < BOSS_LEVEL) {
             if (entityManager.getAlienCount() == 0 && !waitingForKeyPress) {
                 notifyWin();
             }
         }
     }
+    private boolean isGuest() {
+        return game.getGameStateManager().getCurrentState() == GameState.PLAYING_COOP
+                && !game.getNetworkManager().amIPlayer1();
+    }
 
     public void nextStage() {
-        this.setWaitingForKeyPress(false); // GameStateManger 혹은 직접 제어 확인 필요
-        // 여기서는 game.setWaiting...이 사라졌으므로 this.setWaiting... 사용
         this.setWaitingForKeyPress(false);
 
         entityManager.clear();
         game.getInputManager().reset();
+        game.getPlayerController().applySlow(0); // 스테이지 넘어가면 슬로우 해제
 
         if (stageIndex > MAX_STAGE) {
             setMessage("ALL STAGES CLEAR! Returning to Menu...");
@@ -92,15 +99,7 @@ public class LevelManager {
 
         currentStage = StageFactory.createStage(game, stageIndex);
 
-        // (참고) 플레이어 재생성은 SetupManager 로직과 중복될 수 있으나,
-        // 다음 스테이지 진행 시 위치 초기화를 위해 여기에 둡니다.
-        // 필요하다면 setupManager.respawnShip() 같은 메서드로 뺄 수 있습니다.
-        // 여기서는 간단하게 직접 생성합니다.
-        org.newdawn.spaceinvaders.entity.ShipEntity ship =
-                new org.newdawn.spaceinvaders.entity.ShipEntity(game, Constants.SHIP_SPRITE, 370, 550);
-        ship.setHealth(3);
-        entityManager.addEntity(ship);
-        game.setShip(ship);
+        setupManager.respawnShipsForNextStage(stageIndex);
 
         if (currentStage != null) {
             currentStage.init();
@@ -112,6 +111,10 @@ public class LevelManager {
     public void updateStage(long delta) {
         if (currentStage != null) {
             currentStage.update(delta);
+
+            // [수정] 협동 모드 게스트라면, 스스로 스테이지 클리어를 판단하지 않음 (호스트 명령 대기)
+            if (isGuest()) return;
+
             if (!waitingForKeyPress && currentStage.isCompleted()) {
                 setWaitingForKeyPress(true);
                 setMessage("Stage " + stageIndex + " Clear!");

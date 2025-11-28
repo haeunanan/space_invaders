@@ -1,9 +1,8 @@
 package org.newdawn.spaceinvaders.entity;
 
-import org.newdawn.spaceinvaders.Constants;
-import org.newdawn.spaceinvaders.Game;
-import org.newdawn.spaceinvaders.Sprite;
-import org.newdawn.spaceinvaders.SpriteStore;
+import org.newdawn.spaceinvaders.*;
+
+import java.util.UUID;
 
 public class AlienEntity extends Entity {
     protected double moveSpeed = 75;
@@ -22,6 +21,7 @@ public class AlienEntity extends Entity {
     protected Sprite normalSprite;
     protected Sprite hitSprite;
     protected long hitTimer = 0;
+    private String networkId;
 
     public AlienEntity(Game game, String ref, int x, int y, double moveSpeed, double firingChance) {
         super(ref, x, y);
@@ -33,7 +33,12 @@ public class AlienEntity extends Entity {
 
         initAnimations(ref);
         initHitSprite(ref);
+
+        this.networkId = UUID.randomUUID().toString();
     }
+
+    public String getNetworkId() { return networkId; }
+    public void setNetworkId(String id) { this.networkId = id; }
 
     protected void initAnimations(String ref) {
         frames[0] = sprite;
@@ -87,6 +92,17 @@ public class AlienEntity extends Entity {
 
     @Override
     public void move(long delta) {
+        // [수정] 협동 모드이고 내가 게스트(Player 2)라면, 자체 이동 로직을 수행하지 않음
+        // (NetworkManager를 통해 호스트가 보내준 위치로 강제 이동됨)
+        if (game.getCurrentState() == GameState.PLAYING_COOP &&
+                !game.getNetworkManager().amIPlayer1()) {
+
+            // 애니메이션은 계속 업데이트해야 자연스러움
+            updateAnimation(delta);
+            return;
+        }
+
+        // 기존 이동 로직 (싱글 플레이 or 호스트)
         updateAnimation(delta);
         checkBoundaries();
         tryToFire();
@@ -135,6 +151,9 @@ public class AlienEntity extends Entity {
         y += 10;
         // [수정] Game 클래스가 아니라 LevelManager를 통해 사망 처리 호출
         if (y > 570) game.getLevelManager().notifyDeath();
+    }
+    public String getSpriteRef() {
+        return this.spriteRef;
     }
 
     public boolean isAlive() {
