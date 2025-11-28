@@ -146,6 +146,13 @@ public class AlienEntity extends Entity {
         }
     }
 
+    public void updateSpriteRef(String newRef) {
+        this.spriteRef = newRef;
+        this.sprite = SpriteStore.get().getSprite(newRef);
+        initAnimations(newRef);
+        initHitSprite(newRef);
+    }
+
     public void doLogic() {
         dx = -dx;
         y += 10;

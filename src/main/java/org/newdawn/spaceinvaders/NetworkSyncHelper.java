@@ -21,10 +21,8 @@ public class NetworkSyncHelper {
     public void syncOpponent(String matchId, boolean amIPlayer1, Map<String, Object> opponentState) {
         Entity opponentShip = game.getOpponentShip();
 
-        // 상대방 데이터가 없거나 기체가 없으면 중단
         if (opponentState == null || opponentShip == null) return;
 
-        // 1. 공통 동기화 (위치, 체력, 총알)
         syncPosition(opponentShip, opponentState);
         syncHealth(opponentShip, opponentState);
         updateOpponentShots(opponentState, amIPlayer1);
@@ -33,13 +31,10 @@ public class NetworkSyncHelper {
             processOpponentHits((List<String>) opponentState.get(KEY_HITS));
         }
 
-        // 2. 게스트(Player 2) 전용 동기화 (적, 스테이지)
         if (!amIPlayer1) {
-            // 적(Alien) 동기화
             if (opponentState.containsKey(KEY_ALIENS)) {
                 syncAliens((List<Map<String, Object>>) opponentState.get(KEY_ALIENS));
             }
-
             if (opponentState.containsKey(KEY_ENEMY_SHOTS)) {
                 syncEnemyShots((List<Map<String, Object>>) opponentState.get(KEY_ENEMY_SHOTS));
             }
@@ -47,46 +42,32 @@ public class NetworkSyncHelper {
                 syncItems((List<Map<String, Object>>) opponentState.get(KEY_ITEMS));
             }
 
-            // 스테이지 및 대기 상태 동기화
             LevelManager lm = game.getLevelManager();
-
-            // (A) 호스트가 클리어 대기 중인지 확인
             boolean hostWaiting = Boolean.TRUE.equals(opponentState.get("waiting"));
-            // 호스트는 대기 중인데 나는 아직 대기 중이 아니라면 -> 나도 대기 상태로 전환
             if (hostWaiting && !lm.isWaitingForKeyPress()) {
                 lm.setMessage("Stage Clear! Waiting for Host...");
                 lm.setWaitingForKeyPress(true);
             }
 
-            // (B) 스테이지 강제 동기화 로직
             if (opponentState.containsKey("stage")) {
                 int hostStage = ((Number) opponentState.get("stage")).intValue();
-
-                // [수정] 호스트와 내 스테이지가 '다르면' 무조건 동기화 (잘못된 스테이지 복구 포함)
                 if (hostStage != 0 && hostStage != lm.getStageIndex()) {
                     System.out.println("Syncing Stage to Host: " + hostStage);
-                    lm.setStageIndex(hostStage); // 스테이지 번호 맞춤
-                    lm.nextStage();              // 해당 스테이지 로드 (배경/적 리셋)
-
-                    // [중요 추가] 스테이지 변경 후 대기 상태를 해제하여 게임이 멈추지 않고 바로 진행되도록 함
+                    lm.setStageIndex(hostStage);
+                    lm.nextStage();
                     lm.setWaitingForKeyPress(false);
                 }
             }
         }
     }
 
-
-
     private void processOpponentHits(List<String> hitIds) {
         EntityManager em = game.getEntityManager();
         for (Entity e : em.getEntities()) {
             if (e instanceof AlienEntity) {
                 AlienEntity alien = (AlienEntity) e;
-                // ID가 일치하면 데미지 처리 (호스트 권한으로 죽임)
                 if (hitIds.contains(alien.getNetworkId())) {
                     if (alien.takeDamage(1)) {
-                        // AlienEntity 내부 로직으로는 점수/사운드 처리가 부족할 수 있으니
-                        // 명시적으로 사망 처리 메서드 호출 (ShotEntity에 있던 로직과 유사하게)
                         alien.markDead();
                         em.removeEntity(alien);
                         game.getLevelManager().notifyAlienKilled();
@@ -125,17 +106,11 @@ public class NetworkSyncHelper {
     private void updateOpponentShots(Map<String, Object> opponentState, boolean amIPlayer1) {
         String opponentUid = amIPlayer1 ?
                 game.getNetworkManager().getPlayer2Uid() :
-                game.getNetworkManager().getPlayer1Uid(); // Getter 필요 (NetworkManager에 추가)
-
-        // UID를 가져오기 번거롭다면, NetworkManager에서 p1, p2 UID를 public으로 열거나
-        // 단순히 "내가 아닌 모든 총알"을 관리하는 방식으로 처리할 수도 있습니다.
-        // 여기서는 가장 확실한 방법인 NetworkManager에 Getter를 추가한다고 가정합니다.
+                game.getNetworkManager().getPlayer1Uid();
 
         if (opponentUid == null) return;
 
         EntityManager em = game.getEntityManager();
-
-        // 1. 기존 상대방 총알 제거
         List<Entity> toRemove = em.getEntities().stream()
                 .filter(e -> e instanceof ShotEntity)
                 .map(e -> (ShotEntity) e)
@@ -143,16 +118,11 @@ public class NetworkSyncHelper {
                 .collect(Collectors.toList());
         toRemove.forEach(em::removeEntity);
 
-        // 2. 새 총알 생성
         if (opponentState.get(KEY_SHOTS) instanceof List) {
             List<Map<String, Double>> shotList = (List<Map<String, Double>>) opponentState.get(KEY_SHOTS);
             for (Map<String, Double> sData : shotList) {
-                // 상대방 총알이므로 위치 보정 필요 없음 (화면 그릴 때 GamePlayPanel에서 반전 처리됨)
                 int sx = sData.get("x").intValue();
                 int sy = sData.get("y").intValue();
-
-                // 총알 속도: 상대방 화면 기준 위(-300)로 쏘는 것 -> 내 화면에선 아래(+300)로 내려와야 함?
-                // 아니오, 좌표계가 반전되므로 로직상으로는 똑같이 -300으로 두고, 그릴 때만 위치를 뒤집습니다.
                 ShotEntity shot = new ShotEntity(game, "sprites/shot.gif", sx, sy, 0, -300);
                 shot.setOwnerUid(opponentUid);
                 em.addEntity(shot);
@@ -164,14 +134,11 @@ public class NetworkSyncHelper {
         if (serverAliens == null) return;
         EntityManager em = game.getEntityManager();
         List<Entity> localEntities = em.getEntities();
-
-        // 서버에 존재하는 ID들을 수집할 Set 생성
         Set<String> serverIds = new HashSet<>();
 
-        // 1. 서버 데이터를 기반으로 로컬 적 업데이트 또는 생성
         for (Map<String, Object> data : serverAliens) {
             String id = (String) data.get("id");
-            serverIds.add(id); // ID 수집 (생존 확인용)
+            serverIds.add(id);
 
             double x = ((Number) data.get("x")).doubleValue();
             double y = ((Number) data.get("y")).doubleValue();
@@ -184,34 +151,46 @@ public class NetworkSyncHelper {
                     .findFirst();
 
             if (localAlien.isPresent()) {
-                localAlien.get().setLocation((int) x, (int) y);
+                AlienEntity entity = localAlien.get();
+                entity.setLocation((int) x, (int) y);
+                // [수정] 서버의 이미지 참조값(ref)이 로컬과 다르면 업데이트 (갑옷 깨짐 동기화)
+                if (!entity.getSpriteRef().equals(ref)) {
+                    entity.updateSpriteRef(ref);
+                }
             } else {
-                // 없으면 새로 생성
                 AlienEntity newAlien = new AlienEntity(game, ref, (int)x, (int)y, 0, 0);
                 newAlien.setNetworkId(id);
+                // 천왕성 에일리언 등의 특수 로직을 위해 스테이지 체크 후 형변환 생성 고려 가능하나,
+                // 기본적으로 SpriteRef가 맞으면 이미지는 맞게 나옴.
+                // 완벽한 동작을 위해선 UranusAlienEntity로 생성되어야 함.
+                // 여기선 단순화를 위해 AlienEntity로 생성하되, updateSpriteRef가 작동하도록 함.
+                if (game.getCurrentStage() instanceof org.newdawn.spaceinvaders.stage.UranusStage) {
+                    // 이미 존재하는 객체를 제거하고 다시 만들거나, Factory 패턴 사용 필요.
+                    // 하지만 현재 구조상 AlienEntity의 updateSpriteRef가 작동하면 이미지는 바뀜.
+                    // 기믹(갑옷 깨짐 애니메이션)을 위해선 아래 updateSpriteRef 호출이 중요함.
+                    newAlien = new UranusAlienEntity(game, ref, (int)x, (int)y, 0, 0);
+                    newAlien.setNetworkId(id);
+                }
                 em.addEntity(newAlien);
             }
         }
 
-        // 2. [추가된 로직] 서버 리스트에 없는 로컬 적 제거 (사망 처리 동기화)
-        // 로컬에는 존재하지만 serverIds(호스트가 보내준 생존 목록)에는 없다면, 이미 죽은 적이므로 제거합니다.
         List<Entity> toRemove = localEntities.stream()
                 .filter(e -> e instanceof AlienEntity)
                 .map(e -> (AlienEntity) e)
-                .filter(a -> !serverIds.contains(a.getNetworkId())) // 서버 목록에 없는 ID 필터링
+                .filter(a -> !serverIds.contains(a.getNetworkId()))
                 .collect(Collectors.toList());
 
         toRemove.forEach(em::removeEntity);
     }
+
     private void syncEnemyShots(List<Map<String, Object>> shotData) {
         EntityManager em = game.getEntityManager();
-        // 1. 기존 로컬 적 총알 모두 제거
         List<Entity> toRemove = em.getEntities().stream()
                 .filter(e -> (e instanceof AlienShotEntity) || (e instanceof AlienIceShotEntity) || (e instanceof BossShotEntity))
                 .collect(Collectors.toList());
         toRemove.forEach(em::removeEntity);
 
-        // 2. 서버 데이터대로 재생성
         for (Map<String, Object> data : shotData) {
             int x = ((Number) data.get("x")).intValue();
             int y = ((Number) data.get("y")).intValue();
@@ -221,7 +200,7 @@ public class NetworkSyncHelper {
             if ("ice".equals(type)) {
                 newShot = new AlienIceShotEntity(game, "sprites/ice_shot.png", x, y);
             } else if ("boss".equals(type)) {
-                newShot = new BossShotEntity(game, Constants.BOSS_SHOT_SPRITE, x, y, 0); // dx는 단순 0 처리
+                newShot = new BossShotEntity(game, Constants.BOSS_SHOT_SPRITE, x, y, 0);
             } else {
                 newShot = new AlienShotEntity(game, "sprites/alien_shot.gif", x, y);
             }
@@ -229,16 +208,13 @@ public class NetworkSyncHelper {
         }
     }
 
-    // [추가] 아이템 동기화 (스냅샷 방식)
     private void syncItems(List<Map<String, Object>> itemData) {
         EntityManager em = game.getEntityManager();
-        // 1. 기존 아이템 제거
         List<Entity> toRemove = em.getEntities().stream()
                 .filter(e -> e instanceof ItemEntity)
                 .collect(Collectors.toList());
         toRemove.forEach(em::removeEntity);
 
-        // 2. 서버 데이터대로 재생성
         for (Map<String, Object> data : itemData) {
             int x = ((Number) data.get("x")).intValue();
             int y = ((Number) data.get("y")).intValue();
@@ -247,4 +223,3 @@ public class NetworkSyncHelper {
         }
     }
 }
-

@@ -4,12 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="eb80459d-6f84-4ce9-b90c-dd6c51981bd9" name="변경" comment="협동모드 수정중(적 동기화는 해결됨)">
+    <list default="true" id="eb80459d-6f84-4ce9-b90c-dd6c51981bd9" name="변경" comment="협동모드 수정중(적 움직임, 공격 아이템 동기화는 해결됨)">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/NetworkManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/NetworkManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/NetworkStateConverter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/NetworkStateConverter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/GameResultHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/GameResultHandler.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/NetworkSyncHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/NetworkSyncHelper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShotEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShotEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/OverlayRenderer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/OverlayRenderer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/AlienEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/AlienEntity.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/UranusAlienEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/UranusAlienEntity.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -193,7 +193,15 @@
       <option name="project" value="LOCAL" />
       <updated>1764341397825</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="협동모드 수정중(적 움직임, 공격 아이템 동기화는 해결됨)">
+      <option name="closed" value="true" />
+      <created>1764344122928</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1764344122928</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -218,6 +226,7 @@
     <MESSAGE value="metric 리팩토링중" />
     <MESSAGE value="sonar cube, metrics reloaded 리팩토링 완료" />
     <MESSAGE value="협동모드 수정중(적 동기화는 해결됨)" />
-    <option name="LAST_COMMIT_MESSAGE" value="협동모드 수정중(적 동기화는 해결됨)" />
+    <MESSAGE value="협동모드 수정중(적 움직임, 공격 아이템 동기화는 해결됨)" />
+    <option name="LAST_COMMIT_MESSAGE" value="협동모드 수정중(적 움직임, 공격 아이템 동기화는 해결됨)" />
   </component>
 </project>

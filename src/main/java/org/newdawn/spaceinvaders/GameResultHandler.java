@@ -6,7 +6,7 @@ public class GameResultHandler {
     private final Game game;
     private final LevelManager levelManager;
 
-    private static final int BOSS_LEVEL = 5;
+    private static final int BOSS_LEVEL = 6;
 
     public GameResultHandler(Game game, LevelManager levelManager) {
         this.game = game;
