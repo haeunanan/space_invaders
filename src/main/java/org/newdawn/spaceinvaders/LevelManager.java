@@ -135,6 +135,7 @@ public class LevelManager {
         this.stageIndex = 1;
         this.currentLevel = 1;
         game.getPlayerStats().resetScore();
+        game.getPlayerStats().setCoins(0); // [추가] 새 게임 시작 시 코인도 0으로 초기화
     }
 
     public void increaseLevel() {

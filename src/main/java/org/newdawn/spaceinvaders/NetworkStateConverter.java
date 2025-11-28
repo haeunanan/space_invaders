@@ -13,6 +13,8 @@ public class NetworkStateConverter {
     // [추가] 새로운 키 정의
     private static final String KEY_ENEMY_SHOTS = "enemy_shots";
     private static final String KEY_ITEMS = "items";
+    protected static final String KEY_SCORE = "score";
+    protected static final String KEY_COINS = "coins";
 
     public Map<String, Object> createMyState(Game game, boolean isPlayer1) {
         Entity ship = game.getShip();
@@ -35,12 +37,17 @@ public class NetworkStateConverter {
 
         if (isPlayer1) {
             myState.put(KEY_ALIENS, createAlienData(game));
-            // [추가] 호스트는 적 총알과 아이템 정보도 전송
             myState.put(KEY_ENEMY_SHOTS, createEnemyShotData(game));
             myState.put(KEY_ITEMS, createItemData(game));
 
             myState.put("stage", game.getLevelManager().getStageIndex());
             myState.put("waiting", game.getLevelManager().isWaitingForKeyPress());
+
+            // [추가] 협동 모드일 때 점수와 코인 정보 전송
+            if (game.getCurrentState() == GameState.PLAYING_COOP) {
+                myState.put(KEY_SCORE, game.getPlayerStats().getScore());
+                myState.put(KEY_COINS, game.getPlayerStats().getCoins());
+            }
         }
 
         return myState;

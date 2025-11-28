@@ -5,6 +5,9 @@ import javax.swing.SwingUtilities;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.newdawn.spaceinvaders.NetworkStateConverter.KEY_COINS;
+import static org.newdawn.spaceinvaders.NetworkStateConverter.KEY_SCORE;
+
 public class NetworkSyncHelper {
     private final Game game;
     private static final String KEY_HEALTH = "health";
@@ -32,6 +35,14 @@ public class NetworkSyncHelper {
         }
 
         if (!amIPlayer1) {
+            if (opponentState.containsKey(KEY_SCORE)) {
+                int score = ((Number) opponentState.get(KEY_SCORE)).intValue();
+                game.getPlayerStats().setScore(score);
+            }
+            if (opponentState.containsKey(KEY_COINS)) {
+                int coins = ((Number) opponentState.get(KEY_COINS)).intValue();
+                game.getPlayerStats().setCoins(coins);
+            }
             if (opponentState.containsKey(KEY_ALIENS)) {
                 syncAliens((List<Map<String, Object>>) opponentState.get(KEY_ALIENS));
             }
