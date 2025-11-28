@@ -81,31 +81,12 @@ public class GameStateManager {
             SwingUtilities.invokeLater(() -> game.getWindowManager().gamePanelRequestFocus());
 
             if (state == GameState.PLAYING_PVP) {
-                game.getLevelManager().setWaitingForKeyPress(false); // 혹은 LevelManager로 이동했다면 수정 필요
+                game.getLevelManager().setWaitingForKeyPress(false);
                 game.getLevelManager().startPvpGame();
             } else {
-                game.getLevelManager().setWaitingForKeyPress(false);
                 game.getLevelManager().startCoopGame();
             }
             game.getNetworkManager().startNetworkLoop();
         }
-    }
-    private void setupSinglePlayer() {
-        game.getWindowManager().changeCard(WindowManager.CARD_PLAYING_SINGLE);
-        game.getWindowManager().gamePanelRequestFocus();
-        game.getLevelManager().startNewGame();
-    }
-    private void setupPvpPlayer() {
-        game.getLevelManager().setWaitingForKeyPress(false); // 혹은 levelManager로 옮겼다면 game.getLevelManager().setWaiting...
-        game.getWindowManager().changeCard(WindowManager.CARD_PLAYING_SINGLE);
-        SwingUtilities.invokeLater(() -> game.getWindowManager().gamePanelRequestFocus());
-        game.getLevelManager().startPvpGame();
-        game.getNetworkManager().startNetworkLoop();
-    }
-    private void setupCoopPlayer() {
-        game.getWindowManager().changeCard(WindowManager.CARD_PLAYING_SINGLE);
-        SwingUtilities.invokeLater(() -> game.getWindowManager().gamePanelRequestFocus());
-        game.getLevelManager().startCoopGame();
-        game.getNetworkManager().startNetworkLoop();
     }
 }
