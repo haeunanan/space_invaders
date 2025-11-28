@@ -10,7 +10,7 @@ public class CurrentUserManager {
     private String nickname;
     private CurrentUserManager() {}
 
-    public static CurrentUserManager getInstance() {
+    public static synchronized CurrentUserManager getInstance() {
         if (instance == null) {
             instance = new CurrentUserManager();
         }

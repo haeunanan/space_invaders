@@ -8,15 +8,9 @@ public class UranusAlienEntity extends AlienEntity {
 
     public UranusAlienEntity(Game game, String ref, int x, int y, double moveSpeed, double firingChance) {
         super(game, ref, x, y, moveSpeed, firingChance);
-    }
 
-    @Override
-    protected void initAnimations(String ref) {
-        frames[0] = sprite;
-        frames[1] = sprite;
-        frames[2] = sprite;
-        frames[3] = sprite;
-        // 부모 클래스와 달리 _2 이미지를 로드하여 프레임에 섞지 않음 (초기에는 갑옷 상태)
+        // [수정] 생성 직후 애니메이션 비활성화 (갑옷 입은 상태 고정)
+        disableAnimation();
     }
 
     // [추가] 네트워크 동기화로 인해 이미지가 변경될 때 호출됨
@@ -37,35 +31,21 @@ public class UranusAlienEntity extends AlienEntity {
 
     @Override
     public boolean takeDamage(int damage) {
-        this.hp -= damage;
+        // 1. 데미지 처리 (부모 클래스 로직 수행)
+        boolean died = super.takeDamage(damage);
 
-        // [특수 기믹] 체력이 1이 남으면(갑옷 깨짐) 이미지 변경
-        if (this.hp == 1) {
+        // 2. [기믹] 체력이 1이 남으면 갑옷 깨짐 이미지로 영구 변경
+        if (!died && getHp() == 1) {
+            // 현재 이미지 경로에서 _2가 포함된 경로 생성 (예: alien_uranus.gif -> alien_uranus_2.gif)
             String brokenRef = this.spriteRef.replace(".", "_2.");
-            try {
-                Sprite brokenSprite = SpriteStore.get().getSprite(brokenRef);
 
-                this.sprite = brokenSprite;
-                this.normalSprite = brokenSprite;
-                this.hitSprite = brokenSprite;
-                this.spriteRef = brokenRef; // ref 업데이트 (네트워크 전송용)
+            // 이미지 교체
+            updateSpriteRef(brokenRef);
 
-                // 애니메이션 프레임도 모두 교체
-                for (int i = 0; i < frames.length; i++) {
-                    frames[i] = brokenSprite;
-                }
-            } catch (Exception e) {
-                System.err.println("Broken armor sprite not found for Uranus alien.");
-            }
+            // 교체 후 다시 애니메이션 비활성화 (깨진 상태 고정)
+            disableAnimation();
         }
 
-        this.hitTimer = 100;
-        this.sprite = this.hitSprite;
-
-        if (this.hp <= 0) {
-            this.alive = false;
-            return true;
-        }
-        return false;
+        return died;
     }
 }

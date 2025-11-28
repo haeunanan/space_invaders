@@ -4,9 +4,24 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="eb80459d-6f84-4ce9-b90c-dd6c51981bd9" name="변경" comment="협동모드 수정중(적 움직임, 공격 아이템 동기화는 해결됨)">
+    <list default="true" id="eb80459d-6f84-4ce9-b90c-dd6c51981bd9" name="변경" comment="협동모드 수정완료">
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/NetworkEntityParser.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/NetworkShipSynchronizer.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/StageTransitionHelper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/AlienAnimator.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/CurrentUserManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/CurrentUserManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/Game.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/Game.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/GameStateManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/GameStateManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/LevelManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/LevelManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/NetworkSyncHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/NetworkSyncHelper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/ShopManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/ShopManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/SpriteStore.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/SpriteStore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/AlienEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/AlienEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/BossEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/BossEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShipEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShipEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShotEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShotEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/UranusAlienEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/UranusAlienEntity.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -21,7 +36,7 @@
     </option>
   </component>
   <component name="FindBugs-IDEA-Workspace">
-    <toolWindowGroupBy>Priority</toolWindowGroupBy>
+    <toolWindowGroupBy>BugRank</toolWindowGroupBy>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -213,7 +228,15 @@
       <option name="project" value="LOCAL" />
       <updated>1764347236946</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="협동모드 수정완료">
+      <option name="closed" value="true" />
+      <created>1764347740767</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1764347740767</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -239,6 +262,7 @@
     <MESSAGE value="sonar cube, metrics reloaded 리팩토링 완료" />
     <MESSAGE value="협동모드 수정중(적 동기화는 해결됨)" />
     <MESSAGE value="협동모드 수정중(적 움직임, 공격 아이템 동기화는 해결됨)" />
-    <option name="LAST_COMMIT_MESSAGE" value="협동모드 수정중(적 움직임, 공격 아이템 동기화는 해결됨)" />
+    <MESSAGE value="협동모드 수정완료" />
+    <option name="LAST_COMMIT_MESSAGE" value="협동모드 수정완료" />
   </component>
 </project>

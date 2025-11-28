@@ -98,7 +98,7 @@ public class ShotEntity extends Entity {
     private void processAlienDeath(AlienEntity alien) {
         alien.markDead();
         game.getEntityManager().removeEntity(alien);
-        game.getLevelManager().notifyAlienKilled();
+        game.getResultHandler().notifyAlienKilled();
         SoundManager.get().playSound("sounds/explosion.wav");
 
         tryDropItem(alien);

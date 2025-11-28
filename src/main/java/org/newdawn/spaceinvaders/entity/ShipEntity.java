@@ -63,7 +63,7 @@ public class ShipEntity extends Entity {
 
         currentHealth--;
         if (currentHealth <= 0) {
-            game.getLevelManager().notifyDeath();
+            game.getResultHandler().notifyDeath();
         }
     }
 
@@ -125,7 +125,7 @@ public class ShipEntity extends Entity {
     public void collidedWith(Entity other) {
         if (other instanceof AlienEntity || other instanceof BossEntity) {
             // [수정] Game 클래스가 아니라 LevelManager를 통해 사망 처리 호출
-            game.getLevelManager().notifyDeath();
+            game.getResultHandler().notifyDeath();
         }
     }
 }

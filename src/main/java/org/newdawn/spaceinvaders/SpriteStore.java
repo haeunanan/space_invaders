@@ -36,6 +36,10 @@ public class SpriteStore {
 	
 	/** The cached sprite map, from reference to sprite instance */
 	private HashMap sprites = new HashMap();
+
+    private SpriteStore() {
+        // 초기화 로직이 있다면 여기에 작성 (없어도 비어있는 private 생성자가 필요함)
+    }
 	
 	/**
 	 * Retrieve a sprite from the store

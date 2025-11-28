@@ -75,16 +75,16 @@ public class GameStateManager {
 
         if (state == GameState.PLAYING_SINGLE) {
             game.getWindowManager().gamePanelRequestFocus();
-            game.getLevelManager().startNewGame();
+            // LevelManager 인스턴스를 인자로 전달
+            game.getSetupManager().startNewGame(game.getLevelManager());
         } else {
-            // PVP 및 COOP 공통 처리
             SwingUtilities.invokeLater(() -> game.getWindowManager().gamePanelRequestFocus());
 
             if (state == GameState.PLAYING_PVP) {
                 game.getLevelManager().setWaitingForKeyPress(false);
-                game.getLevelManager().startPvpGame();
+                game.getSetupManager().startPvpGame(); // [수정]
             } else {
-                game.getLevelManager().startCoopGame();
+                game.getSetupManager().startCoopGame(game.getLevelManager()); // [수정]
             }
             game.getNetworkManager().startNetworkLoop();
         }

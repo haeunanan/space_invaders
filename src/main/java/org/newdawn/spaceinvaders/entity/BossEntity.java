@@ -123,7 +123,7 @@ public class BossEntity extends Entity {
             game.getEntityManager().removeEntity(other);
             if (hp <= 0) {
                 game.getEntityManager().removeEntity(this);
-                game.getLevelManager().bossKilled();
+                game.getResultHandler().bossKilled();
                 game.getPlayerController().setReverseControls(false);
             }
         }

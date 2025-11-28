@@ -45,9 +45,18 @@ public class ShopManager {
 
     private void buyItem(int index) {
         switch (index) {
-            case 0: tryBuyAttackSpeed(); break;
-            case 1: tryBuyMoveSpeed(); break;
-            case 2: tryBuyMissileCount(); break;
+            case 0:
+                tryBuyAttackSpeed();
+                break;
+            case 1:
+                tryBuyMoveSpeed();
+                break;
+            case 2:
+                tryBuyMissileCount();
+                break;
+            default:
+                // 예상치 못한 인덱스가 들어올 경우 아무 작업도 하지 않음
+                break;
         }
     }
     private void tryBuyAttackSpeed() {

@@ -1,15 +1,14 @@
 package org.newdawn.spaceinvaders;
 
-import org.newdawn.spaceinvaders.entity.AlienEntity;
 import org.newdawn.spaceinvaders.stage.Stage;
 
 public class LevelManager {
     private final Game game;
     private final EntityManager entityManager;
 
-    // [분리된 매니저들]
-    private final GameSetupManager setupManager;
-    private final GameResultHandler resultHandler;
+    // [변경] SetupManager와 ResultHandler는 Game 클래스에서 직접 관리하거나
+    // 필요하다면 여기서 getter로 노출만 합니다.
+    private final StageTransitionHelper transitionHelper;
 
     private int currentLevel = 1;
     private int stageIndex = 1;
@@ -18,114 +17,64 @@ public class LevelManager {
     private static final int MAX_STAGE = 6;
     private static final int BOSS_LEVEL = 5;
 
-    // 메시지 상태
     private String message = "";
     private boolean waitingForKeyPress = true;
 
-    public int getStageIndex() { return stageIndex; }
-    public void setStageIndex(int index) { this.stageIndex = index; }
-
-    public LevelManager(Game game, EntityManager entityManager) {
+    public LevelManager(Game game, EntityManager entityManager, GameSetupManager setupManager) {
         this.game = game;
         this.entityManager = entityManager;
-
-        // [초기화] 하위 매니저 생성
-        this.setupManager = new GameSetupManager(game, entityManager);
-        this.resultHandler = new GameResultHandler(game, this);
+        this.transitionHelper = new StageTransitionHelper(game, setupManager);
     }
 
-    // --- [위임] 게임 시작/설정 (SetupManager) ---
-    public void startNewGame() {
-        setupManager.startNewGame(this);
+    // [핵심] 복잡했던 nextStage 로직은 이미 Helper로 위임됨
+    public void nextStage() {
+        this.setWaitingForKeyPress(false);
+        Stage nextStage = transitionHelper.prepareNextStage(stageIndex);
+
+        if (nextStage == null) {
+            handleAllStagesClear();
+        } else {
+            this.currentStage = nextStage;
+        }
     }
 
-    public void startPvpGame() {
-        setupManager.startPvpGame();
+    private void handleAllStagesClear() {
+        setMessage("ALL STAGES CLEAR! Returning to Menu...");
+        setWaitingForKeyPress(true);
+        game.getGameStateManager().changeState(GameState.PVP_MENU);
     }
 
-    public void startCoopGame() {
-        setupManager.startCoopGame(this);
-    }
+    public void updateStage(long delta) {
+        if (currentStage == null) return;
+        currentStage.update(delta);
 
-    // --- [위임] 게임 결과 처리 (ResultHandler) ---
-    public void notifyAlienKilled() {
-        resultHandler.notifyAlienKilled();
-    }
-
-    public void notifyWinPVP() {
-        resultHandler.notifyWinPVP();
-    }
-
-    public void notifyWin() {
-        resultHandler.notifyWin();
-    }
-
-    public void notifyDeath() {
-        resultHandler.notifyDeath();
-    }
-
-    public void bossKilled() {
-        resultHandler.bossKilled();
-    }
-
-    public void checkWinCondition() {
-        // [수정] 게스트는 승리 체크를 하지 않음
         if (isGuest()) return;
 
-        if (game.getGameStateManager().getCurrentState() == GameState.PLAYING_COOP && currentLevel < BOSS_LEVEL) {
+        if (!waitingForKeyPress && currentStage.isCompleted()) {
+            setWaitingForKeyPress(true);
+            setMessage("Stage " + stageIndex + " Clear!");
+            game.getPlayerStats().addCoins(50);
+            game.getPlayerStats().addScore(100);
+            stageIndex++;
+        }
+    }
+
+    // [변경] 승리 조건 체크 로직도 ResultHandler로 이동하거나 단순화
+    public void checkWinCondition() {
+        if (isGuest()) return;
+        if (game.getGameStateManager().getCurrentState() == GameState.PLAYING_COOP
+                && currentLevel < BOSS_LEVEL) {
             if (entityManager.getAlienCount() == 0 && !waitingForKeyPress) {
-                notifyWin();
+                game.getResultHandler().notifyWin(); // [변경] 직접 호출
             }
         }
     }
+
     private boolean isGuest() {
         return game.getGameStateManager().getCurrentState() == GameState.PLAYING_COOP
                 && !game.getNetworkManager().amIPlayer1();
     }
 
-    public void nextStage() {
-        this.setWaitingForKeyPress(false);
-
-        entityManager.clear();
-        game.getInputManager().reset();
-        game.getPlayerController().applySlow(0); // 스테이지 넘어가면 슬로우 해제
-
-        if (stageIndex > MAX_STAGE) {
-            setMessage("ALL STAGES CLEAR! Returning to Menu...");
-            setWaitingForKeyPress(true);
-            game.getGameStateManager().changeState(GameState.PVP_MENU);
-            return;
-        }
-
-        currentStage = StageFactory.createStage(game, stageIndex);
-
-        setupManager.respawnShipsForNextStage(stageIndex);
-
-        if (currentStage != null) {
-            currentStage.init();
-        } else {
-            game.getGameStateManager().changeState(GameState.PVP_MENU);
-        }
-    }
-
-    public void updateStage(long delta) {
-        if (currentStage != null) {
-            currentStage.update(delta);
-
-            // [수정] 협동 모드 게스트라면, 스스로 스테이지 클리어를 판단하지 않음 (호스트 명령 대기)
-            if (isGuest()) return;
-
-            if (!waitingForKeyPress && currentStage.isCompleted()) {
-                setWaitingForKeyPress(true);
-                setMessage("Stage " + stageIndex + " Clear!");
-                game.getPlayerStats().addCoins(50);
-                game.getPlayerStats().addScore(100);
-                stageIndex++;
-            }
-        }
-    }
-
-    // --- 헬퍼 메서드 (GameResultHandler 등이 사용) ---
     public void resetSinglePlayerState() {
         this.currentLevel = 1;
         game.getPlayerStats().resetScore();
@@ -135,30 +84,25 @@ public class LevelManager {
         this.stageIndex = 1;
         this.currentLevel = 1;
         game.getPlayerStats().resetScore();
-        game.getPlayerStats().setCoins(0); // [추가] 새 게임 시작 시 코인도 0으로 초기화
+        game.getPlayerStats().setCoins(0);
     }
 
-    public void increaseLevel() {
-        this.currentLevel++;
-    }
+    public void increaseLevel() { this.currentLevel++; }
+    public void resetLevel() { this.currentLevel = 1; }
+    public void increaseStageIndex() { this.stageIndex++; }
 
-    public void resetLevel() {
-        this.currentLevel = 1;
-    }
-
-    public void increaseStageIndex() {
-        this.stageIndex++;
-    }
-
-    // --- Getters / Setters ---
+    // Getters & Setters
+    public int getStageIndex() { return stageIndex; }
+    public void setStageIndex(int index) { this.stageIndex = index; }
     public Stage getCurrentStage() { return currentStage; }
     public void setCurrentStage(Stage stage) { this.currentStage = stage; }
-
     public int getCurrentLevel() { return currentLevel; }
-
     public String getMessage() { return message; }
     public void setMessage(String msg) { this.message = msg; }
-
     public boolean isWaitingForKeyPress() { return waitingForKeyPress; }
     public void setWaitingForKeyPress(boolean val) { this.waitingForKeyPress = val; }
+
+    // [삭제된 메소드들]
+    // startNewGame(), startPvpGame(), startCoopGame() -> GameSetupManager 직접 호출
+    // notifyAlienKilled(), notifyWin(), notifyDeath() -> GameResultHandler 직접 호출
 }
