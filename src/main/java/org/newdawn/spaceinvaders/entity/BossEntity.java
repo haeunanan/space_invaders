@@ -123,7 +123,6 @@ public class BossEntity extends Entity {
             game.getEntityManager().removeEntity(other);
             if (hp <= 0) {
                 game.getEntityManager().removeEntity(this);
-                // [수정] Game 클래스가 아니라 LevelManager를 통해 보스 처치 처리 호출
                 game.getLevelManager().bossKilled();
                 game.getPlayerController().setReverseControls(false);
             }
