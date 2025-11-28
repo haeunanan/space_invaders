@@ -84,6 +84,7 @@ public class GameStateManager {
                 game.getLevelManager().setWaitingForKeyPress(false); // 혹은 LevelManager로 이동했다면 수정 필요
                 game.getLevelManager().startPvpGame();
             } else {
+                game.getLevelManager().setWaitingForKeyPress(false);
                 game.getLevelManager().startCoopGame();
             }
             game.getNetworkManager().startNetworkLoop();

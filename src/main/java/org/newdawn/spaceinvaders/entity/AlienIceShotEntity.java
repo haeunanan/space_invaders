@@ -25,7 +25,6 @@ public class AlienIceShotEntity extends Entity {
             ShipEntity ship = (ShipEntity) other;
             game.getEntityManager().removeEntity(this); // 총알 제거
 
-            // [수정] 방어막 상태에 따른 분기 처리
             if (ship.isShieldActive()) {
                 // 방어막이 있으면: 데미지 처리(방어막 파괴)만 하고 슬로우는 X
                 ship.takeDamage();

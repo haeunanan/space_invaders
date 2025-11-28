@@ -74,7 +74,6 @@ public class Game {
             lastLoopTime = now;
 
             windowManager.updateFPS(delta);
-            // [변경] PlayerController에게 타이머 업데이트 위임
             playerController.updateTimer(delta);
 
             if (transitionRequested) {
@@ -113,13 +112,6 @@ public class Game {
     public void changeState(GameState newState) {
         gameStateManager.changeState(newState);
     }
-
-    // [삭제 대상이었던 메서드들 제거됨]:
-    // notifyDeath, notifyWinPVP, notifyAlienKilled -> LevelManager로 이동
-    // getVisualBounds -> CollisionManager로 이동
-    // purchaseAttackSpeed 등 -> ShopManager가 처리
-    // applySlow -> PlayerController로 이동
-    // addEntity, removeEntity -> EntityManager 직접 접근 권장 (단, 호환성을 위해 남길 수도 있음)
 
     // --- Getters / Setters ---
     public GameState getCurrentState() {

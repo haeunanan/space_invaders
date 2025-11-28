@@ -5,23 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="eb80459d-6f84-4ce9-b90c-dd6c51981bd9" name="변경" comment="sonar cube, metrics reloaded 리팩토링 완료">
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/NetworkStateConverter.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/NetworkSyncHelper.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShipMovement.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShipWeapon.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/CollisionManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/CollisionManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/EntityManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/EntityManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/GamePlayPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/GamePlayPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/GameSetupManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/GameSetupManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/InputManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/InputManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/LevelManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/LevelManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/NetworkManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/NetworkManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/AlienEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/AlienEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/Entity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/Entity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/Game.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/Game.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/GameMouseListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/GameMouseListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/WindowManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/WindowManager.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShipEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShipEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShotEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/entity/ShotEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/Stage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/newdawn/spaceinvaders/stage/Stage.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,7 +24,7 @@
     </option>
   </component>
   <component name="FindBugs-IDEA-Workspace">
-    <toolWindowGroupBy>BugRank</toolWindowGroupBy>
+    <toolWindowGroupBy>Priority</toolWindowGroupBy>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -70,8 +58,6 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "Application.Main.executor": "Run",
-    "Application.이름이 지정되지 않았습니다.executor": "Run",
     "Maven.space_invaders [clean].executor": "Run",
     "Maven.space_invaders [install].executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
@@ -82,7 +68,7 @@
     "git-widget-placeholder": "refactoring",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/이주은/Downloads/space_invaders/src/main/resources",
+    "last_opened_file_path": "C:/Users/이주은/Downloads/space_invaders-refactoring/pom.xml",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -97,14 +83,9 @@
     "애플리케이션.이름이 지정되지 않았습니다.executor": "Run"
   }
 }]]></component>
-  <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="C:\Users\이주은\Downloads\space_invaders\src\main\resources" />
-    </key>
-  </component>
   <component name="RunManager">
-    <configuration name="Main" type="Application" factoryName="Application" singleton="false" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="org.newdawn.spaceinvaders.Main" />
+    <configuration name="이름이 지정되지 않았습니다" type="Application" factoryName="Application" singleton="false" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="org.newdawn.spaceinvaders.Game" />
       <module name="space_invaders" />
       <method v="2">
         <option name="Make" enabled="true" />
@@ -212,19 +193,7 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State>
-              <option name="FILTERS">
-                <map>
-                  <entry key="branch">
-                    <value>
-                      <list>
-                        <option value="origin/refactoring" />
-                      </list>
-                    </value>
-                  </entry>
-                </map>
-              </option>
-            </State>
+            <State />
           </value>
         </entry>
       </map>
