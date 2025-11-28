@@ -11,6 +11,8 @@ public class NetworkSyncHelper {
     private static final String KEY_SHOTS = "shots";
     private static final String KEY_ALIENS = "aliens";
     private static final String KEY_HITS = "hits";
+    private static final String KEY_ENEMY_SHOTS = "enemy_shots";
+    private static final String KEY_ITEMS = "items";
 
     public NetworkSyncHelper(Game game) {
         this.game = game;
@@ -38,6 +40,13 @@ public class NetworkSyncHelper {
                 syncAliens((List<Map<String, Object>>) opponentState.get(KEY_ALIENS));
             }
 
+            if (opponentState.containsKey(KEY_ENEMY_SHOTS)) {
+                syncEnemyShots((List<Map<String, Object>>) opponentState.get(KEY_ENEMY_SHOTS));
+            }
+            if (opponentState.containsKey(KEY_ITEMS)) {
+                syncItems((List<Map<String, Object>>) opponentState.get(KEY_ITEMS));
+            }
+
             // 스테이지 및 대기 상태 동기화
             LevelManager lm = game.getLevelManager();
 
@@ -49,17 +58,24 @@ public class NetworkSyncHelper {
                 lm.setWaitingForKeyPress(true);
             }
 
+            // (B) 스테이지 강제 동기화 로직
             if (opponentState.containsKey("stage")) {
                 int hostStage = ((Number) opponentState.get("stage")).intValue();
 
                 // [수정] 호스트와 내 스테이지가 '다르면' 무조건 동기화 (잘못된 스테이지 복구 포함)
                 if (hostStage != 0 && hostStage != lm.getStageIndex()) {
+                    System.out.println("Syncing Stage to Host: " + hostStage);
                     lm.setStageIndex(hostStage); // 스테이지 번호 맞춤
                     lm.nextStage();              // 해당 스테이지 로드 (배경/적 리셋)
+
+                    // [중요 추가] 스테이지 변경 후 대기 상태를 해제하여 게임이 멈추지 않고 바로 진행되도록 함
+                    lm.setWaitingForKeyPress(false);
                 }
             }
         }
     }
+
+
 
     private void processOpponentHits(List<String> hitIds) {
         EntityManager em = game.getEntityManager();
@@ -187,4 +203,48 @@ public class NetworkSyncHelper {
 
         toRemove.forEach(em::removeEntity);
     }
+    private void syncEnemyShots(List<Map<String, Object>> shotData) {
+        EntityManager em = game.getEntityManager();
+        // 1. 기존 로컬 적 총알 모두 제거
+        List<Entity> toRemove = em.getEntities().stream()
+                .filter(e -> (e instanceof AlienShotEntity) || (e instanceof AlienIceShotEntity) || (e instanceof BossShotEntity))
+                .collect(Collectors.toList());
+        toRemove.forEach(em::removeEntity);
+
+        // 2. 서버 데이터대로 재생성
+        for (Map<String, Object> data : shotData) {
+            int x = ((Number) data.get("x")).intValue();
+            int y = ((Number) data.get("y")).intValue();
+            String type = (String) data.get("type");
+
+            Entity newShot;
+            if ("ice".equals(type)) {
+                newShot = new AlienIceShotEntity(game, "sprites/ice_shot.png", x, y);
+            } else if ("boss".equals(type)) {
+                newShot = new BossShotEntity(game, Constants.BOSS_SHOT_SPRITE, x, y, 0); // dx는 단순 0 처리
+            } else {
+                newShot = new AlienShotEntity(game, "sprites/alien_shot.gif", x, y);
+            }
+            em.addEntity(newShot);
+        }
+    }
+
+    // [추가] 아이템 동기화 (스냅샷 방식)
+    private void syncItems(List<Map<String, Object>> itemData) {
+        EntityManager em = game.getEntityManager();
+        // 1. 기존 아이템 제거
+        List<Entity> toRemove = em.getEntities().stream()
+                .filter(e -> e instanceof ItemEntity)
+                .collect(Collectors.toList());
+        toRemove.forEach(em::removeEntity);
+
+        // 2. 서버 데이터대로 재생성
+        for (Map<String, Object> data : itemData) {
+            int x = ((Number) data.get("x")).intValue();
+            int y = ((Number) data.get("y")).intValue();
+            String ref = (String) data.get("ref");
+            em.addEntity(new ItemEntity(game, ref, x, y));
+        }
+    }
 }
+

@@ -34,6 +34,8 @@ public class UranusAlienEntity extends AlienEntity {
                 this.sprite = brokenSprite;
                 this.normalSprite = brokenSprite;
 
+                this.hitSprite = brokenSprite;
+
                 // 애니메이션 프레임도 모두 교체 (움직여도 갑옷이 다시 생기지 않도록)
                 for (int i = 0; i < frames.length; i++) {
                     frames[i] = brokenSprite;

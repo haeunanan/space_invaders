@@ -71,6 +71,10 @@ public class NetworkManager {
                     Thread.sleep(50);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
+                } catch (Exception e) {
+                    // [수정] 예상치 못한 오류가 발생해도 스레드가 죽지 않고 로그만 출력 후 계속 실행되도록 수정
+                    System.err.println("Network Sync Error: " + e.getMessage());
+                    e.printStackTrace();
                 }
             }
         });

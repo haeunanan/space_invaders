@@ -84,13 +84,9 @@ public class ShotEntity extends Entity {
 
             // [수정] 협동 모드 분기 처리
             if (game.getCurrentState() == GameState.PLAYING_COOP && !game.getNetworkManager().amIPlayer1()) {
-                // 1. 게스트: 호스트에게 "내가 얘 맞췄어"라고 알림
+                // 1. 게스트: 호스트에게 피격 알림만 전송
                 game.getNetworkManager().notifyAlienHit(alien.getNetworkId());
-                SoundManager.get().playSound("sounds/explosion.wav");
-
-                // [추가] 게스트도 아이템 드랍 시도 (확률은 각자 계산)
-                tryDropItem(alien);
-
+                org.newdawn.spaceinvaders.SoundManager.get().playSound("sounds/explosion.wav");
             } else {
                 // 2. 호스트(또는 싱글): 직접 데미지 처리 및 사망 로직 수행
                 if (alien.takeDamage(1)) {

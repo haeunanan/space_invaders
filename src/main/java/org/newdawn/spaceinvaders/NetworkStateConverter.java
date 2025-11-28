@@ -1,10 +1,6 @@
 package org.newdawn.spaceinvaders;
 
-import org.newdawn.spaceinvaders.entity.AlienEntity;
-import org.newdawn.spaceinvaders.entity.Entity;
-import org.newdawn.spaceinvaders.entity.ShipEntity;
-import org.newdawn.spaceinvaders.entity.ShotEntity;
-
+import org.newdawn.spaceinvaders.entity.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -14,14 +10,10 @@ public class NetworkStateConverter {
     private static final String KEY_SHOTS = "shots";
     private static final String KEY_ALIENS = "aliens";
     private static final String KEY_HITS = "hits";
+    // [추가] 새로운 키 정의
+    private static final String KEY_ENEMY_SHOTS = "enemy_shots";
+    private static final String KEY_ITEMS = "items";
 
-
-    /**
-     * 현재 클라이언트의 게임 상태(기체, 총알, 적 등)를 Map 형태로 변환합니다.
-     * @param game 게임 인스턴스
-     * @param isPlayer1 현재 플레이어가 Player 1(호스트)인지 여부
-     * @return 전송할 상태 데이터 Map
-     */
     public Map<String, Object> createMyState(Game game, boolean isPlayer1) {
         Entity ship = game.getShip();
         if (ship == null) return new HashMap<>();
@@ -39,13 +31,14 @@ public class NetworkStateConverter {
             myState.put(KEY_HEALTH, ((ShipEntity) ship).getCurrentHealth());
         }
 
-        // 스트림 메소드 호출로 대체
         myState.put(KEY_SHOTS, createShotData(game));
 
         if (isPlayer1) {
             myState.put(KEY_ALIENS, createAlienData(game));
+            // [추가] 호스트는 적 총알과 아이템 정보도 전송
+            myState.put(KEY_ENEMY_SHOTS, createEnemyShotData(game));
+            myState.put(KEY_ITEMS, createItemData(game));
 
-            // [추가] 호스트의 스테이지 정보와 대기 상태를 패킷에 포함
             myState.put("stage", game.getLevelManager().getStageIndex());
             myState.put("waiting", game.getLevelManager().isWaitingForKeyPress());
         }
@@ -53,11 +46,10 @@ public class NetworkStateConverter {
         return myState;
     }
 
+    // ... (기존 createShotData, mapShotToData 등 유지) ...
     private List<Map<String, Integer>> createShotData(Game game) {
         String myUid = CurrentUserManager.getInstance().getUid();
         if (myUid == null) return Collections.emptyList();
-
-        // Stream을 사용하여 반복문과 조건문 제거
         return game.getEntityManager().getEntities().stream()
                 .filter(e -> e instanceof ShotEntity)
                 .map(e -> (ShotEntity) e)
@@ -65,16 +57,13 @@ public class NetworkStateConverter {
                 .map(this::mapShotToData)
                 .collect(Collectors.toList());
     }
-
     private Map<String, Integer> mapShotToData(ShotEntity shot) {
         Map<String, Integer> data = new HashMap<>();
         data.put("x", shot.getX());
         data.put("y", shot.getY());
         return data;
     }
-
     private List<Map<String, Object>> createAlienData(Game game) {
-        // Stream을 사용하여 Alien 변환 로직 간소화
         return game.getEntityManager().getEntities().stream()
                 .filter(e -> e instanceof AlienEntity)
                 .map(e -> (AlienEntity) e)
@@ -86,8 +75,46 @@ public class NetworkStateConverter {
         data.put("id", alien.getNetworkId());
         data.put("x", alien.getX());
         data.put("y", alien.getY());
-        // [수정] 실제 적의 이미지 경로를 담아서 보냄
         data.put("ref", alien.getSpriteRef());
         return data;
+    }
+
+    // [추가] 적 총알 데이터 생성
+    private List<Map<String, Object>> createEnemyShotData(Game game) {
+        return game.getEntityManager().getEntities().stream()
+                .filter(e -> (e instanceof AlienShotEntity) || (e instanceof AlienIceShotEntity) || (e instanceof BossShotEntity))
+                .map(this::mapEnemyShotToData)
+                .collect(Collectors.toList());
+    }
+
+    private Map<String, Object> mapEnemyShotToData(Entity shot) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("x", shot.getX());
+        data.put("y", shot.getY());
+
+        // 총알 종류 구분
+        if (shot instanceof AlienIceShotEntity) data.put("type", "ice");
+        else if (shot instanceof BossShotEntity) data.put("type", "boss");
+        else data.put("type", "normal");
+
+        return data;
+    }
+
+    // [추가] 아이템 데이터 생성
+    private List<Map<String, Object>> createItemData(Game game) {
+        return game.getEntityManager().getEntities().stream()
+                .filter(e -> e instanceof ItemEntity)
+                .map(e -> {
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("x", e.getX());
+                    data.put("y", e.getY());
+                    // 아이템 이미지는 스테이지마다 다르므로 현재 스테이지에서 참조하거나 아이템 객체에서 가져올 수 있음
+                    // 여기서는 ItemEntity 생성 시 사용된 ref를 가져올 수 없으므로(private),
+                    // 스테이지 정보를 통해 추론하거나, ItemEntity에 getSpriteRef를 추가하는 것이 좋으나,
+                    // 간단히 스테이지 정보를 이용합니다.
+                    data.put("ref", game.getCurrentStage().getItemSpriteRef());
+                    return data;
+                })
+                .collect(Collectors.toList());
     }
 }
