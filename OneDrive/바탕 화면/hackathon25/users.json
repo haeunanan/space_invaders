@@ -1,0 +1,18 @@
+{
+  "testuser": {
+    "password": "password123",
+    "name": "테스트유저",
+    "coins": 2,
+    "inventory": {
+      "grape": 0,
+      "strawberry": 0,
+      "mango": 0,
+      "apple": 0
+    },
+    "score": 0
+  },
+  "guest1": {
+    "password": "guest1234",
+    "name": "grower"
+  }
+}
