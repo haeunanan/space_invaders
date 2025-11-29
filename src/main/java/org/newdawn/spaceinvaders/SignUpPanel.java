@@ -3,6 +3,7 @@ package org.newdawn.spaceinvaders;
 // 필요한 Swing 라이브러리들을 import 합니다.
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 
 public class SignUpPanel extends JPanel {
     // [수정 1] 직렬화 제외를 위해 transient 키워드 추가
@@ -27,7 +28,7 @@ public class SignUpPanel extends JPanel {
         backgroundSprite = SpriteStore.get().getSprite("sprites/main_background.jpg");
 
         // --- UI 요소 생성 및 설정 ---
-        emailField = new JTextField("email");
+        emailField = new JTextField();
         emailField.setBounds(300, 220, 200, 40);
         // [수정 2] JTextField.CENTER -> SwingConstants.CENTER 로 변경
         emailField.setHorizontalAlignment(SwingConstants.CENTER);
@@ -42,7 +43,7 @@ public class SignUpPanel extends JPanel {
         // [수정 4] JTextField.CENTER -> SwingConstants.CENTER 로 변경
         confirmPasswordField.setHorizontalAlignment(SwingConstants.CENTER);
 
-        usernameField = new JTextField("username");
+        usernameField = new JTextField();
         usernameField.setBounds(300, 370, 200, 40);
         // [수정 5] JTextField.CENTER -> SwingConstants.CENTER 로 변경
         usernameField.setHorizontalAlignment(SwingConstants.CENTER);
@@ -74,6 +75,66 @@ public class SignUpPanel extends JPanel {
 
         goToSignInButton.addActionListener(e -> {
             game.changeState(GameState.SIGN_IN); // 로그인 화면으로 전환
+        });
+
+        // 자리 표시자(placeholder) 설정
+        addTextPlaceholder(emailField, "id");
+        addPasswordPlaceholder(passwordField, "password");
+        addPasswordPlaceholder(confirmPasswordField, "password checkout");
+        addTextPlaceholder(usernameField, "username");
+    }
+
+    private void addTextPlaceholder(JTextField field, String placeholder) {
+        field.setText(placeholder);
+        field.setForeground(Color.GRAY);
+
+        field.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (field.getText().equals(placeholder)) {
+                    field.setText("");
+                    field.setForeground(Color.BLACK);
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (field.getText().isEmpty()) {
+                    field.setText(placeholder);
+                    field.setForeground(Color.GRAY);
+                }
+            }
+        });
+    }
+
+    private void addPasswordPlaceholder(JPasswordField field, String placeholder) {
+        // 현재 echo char 저장
+        char defaultEcho = field.getEchoChar();
+        // 빈 칸 대신 placeholder 텍스트 보이게 하기 위해 echo를 끔
+        field.setText(placeholder);
+        field.setForeground(Color.GRAY);
+        field.setEchoChar((char) 0);
+
+        field.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                String text = new String(field.getPassword());
+                if (text.equals(placeholder)) {
+                    field.setText("");
+                    field.setForeground(Color.BLACK);
+                    field.setEchoChar(defaultEcho == 0 ? '*' : defaultEcho);
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                String text = new String(field.getPassword());
+                if (text.isEmpty()) {
+                    field.setText(placeholder);
+                    field.setForeground(Color.GRAY);
+                    field.setEchoChar((char) 0);
+                }
+            }
         });
     }
 
