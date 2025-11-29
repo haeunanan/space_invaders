@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="eb80459d-6f84-4ce9-b90c-dd6c51981bd9" name="변경" comment="협동모드 수정완료" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="FindBugs-IDEA-Workspace">
+    <toolWindowGroupBy>BugRank</toolWindowGroupBy>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;parley8892&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/haeunanan/space_invaders.git&quot;,
+    &quot;accountId&quot;: &quot;62cd962e-651e-4d1d-ab5a-c53636edd0f1&quot;
+  }
+}</component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="3607ZYIlLfqRXQSKIWKnTkuh51i" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.Main.executor&quot;: &quot;Run&quot;,
+    &quot;Application.이름이 지정되지 않았습니다.executor&quot;: &quot;Run&quot;,
+    &quot;Maven.space_invaders [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.space_invaders [install].executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SONARLINT_PRECOMMIT_ANALYSIS&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;refactoring&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/haeun/IdeaProjects/space_invaders&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;inlay.hints&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;,
+    &quot;애플리케이션.Game.executor&quot;: &quot;Run&quot;,
+    &quot;애플리케이션.Main.executor&quot;: &quot;Run&quot;,
+    &quot;애플리케이션.이름이 지정되지 않았습니다.executor&quot;: &quot;Run&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\haeun\IdeaProjects\2차과제Project_13조_김세은_이주은_조하은\src\main\resources" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="Main" type="Application" factoryName="Application" singleton="false" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="org.newdawn.spaceinvaders.Main" />
+      <module name="space_invaders" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-a94e463ab2e7-intellij.indexing.shared.core-IU-243.26574.91" />
+        <option value="bundled-js-predefined-d6986cc7102b-1632447f56bf-JavaScript-IU-243.26574.91" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="애플리케이션 수준" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="디폴트 작업">
+      <changelist id="eb80459d-6f84-4ce9-b90c-dd6c51981bd9" name="변경" comment="" />
+      <created>1764131691331</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1764131691331</updated>
+      <workItem from="1764131693803" duration="53377000" />
+      <workItem from="1764221616039" duration="1375000" />
+      <workItem from="1764406546335" duration="468000" />
+      <workItem from="1764414626863" duration="630000" />
+    </task>
+    <task id="LOCAL-00001" summary="리팩토링 실행 오류 수정중">
+      <option name="closed" value="true" />
+      <created>1764142316919</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1764142316919</updated>
+    </task>
+    <task id="LOCAL-00002" summary="리팩토링 실행 오류 수정중">
+      <option name="closed" value="true" />
+      <created>1764151226614</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1764151226614</updated>
+    </task>
+    <task id="LOCAL-00003" summary="리팩토링 중">
+      <option name="closed" value="true" />
+      <created>1764154085372</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1764154085372</updated>
+    </task>
+    <task id="LOCAL-00004" summary="sonarlint 리팩토링 완료">
+      <option name="closed" value="true" />
+      <created>1764167565000</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1764167565000</updated>
+    </task>
+    <task id="LOCAL-00005" summary="sonarlint 리팩토링 완료 (상점이 안뜨는 오류 수정)">
+      <option name="closed" value="true" />
+      <created>1764168438198</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1764168438198</updated>
+    </task>
+    <task id="LOCAL-00006" summary="metric 리팩토링중">
+      <option name="closed" value="true" />
+      <created>1764171351286</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1764171351287</updated>
+    </task>
+    <task id="LOCAL-00007" summary="metric 리팩토링중">
+      <option name="closed" value="true" />
+      <created>1764177113844</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1764177113844</updated>
+    </task>
+    <task id="LOCAL-00008" summary="metric 리팩토링중">
+      <option name="closed" value="true" />
+      <created>1764180319170</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1764180319170</updated>
+    </task>
+    <task id="LOCAL-00009" summary="sonar cube, metrics reloaded 리팩토링 완료">
+      <option name="closed" value="true" />
+      <created>1764192295020</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1764192295020</updated>
+    </task>
+    <task id="LOCAL-00010" summary="협동모드 수정중(적 동기화는 해결됨)">
+      <option name="closed" value="true" />
+      <created>1764341397825</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1764341397825</updated>
+    </task>
+    <task id="LOCAL-00011" summary="협동모드 수정중(적 움직임, 공격 아이템 동기화는 해결됨)">
+      <option name="closed" value="true" />
+      <created>1764344122928</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1764344122928</updated>
+    </task>
+    <task id="LOCAL-00012" summary="협동모드 수정중(적 움직임, 공격 아이템 동기화는 해결됨)">
+      <option name="closed" value="true" />
+      <created>1764345198926</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1764345198926</updated>
+    </task>
+    <task id="LOCAL-00013" summary="협동모드 수정중(적 움직임, 공격 아이템 동기화는 해결됨)">
+      <option name="closed" value="true" />
+      <created>1764347236946</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1764347236946</updated>
+    </task>
+    <task id="LOCAL-00014" summary="협동모드 수정완료">
+      <option name="closed" value="true" />
+      <created>1764347740767</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1764347740767</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="리팩토링 실행 오류 수정중" />
+    <MESSAGE value="리팩토링 중" />
+    <MESSAGE value="sonarlint 리팩토링 완료" />
+    <MESSAGE value="sonarlint 리팩토링 완료 (상점이 안뜨는 오류 수정)" />
+    <MESSAGE value="metric 리팩토링중" />
+    <MESSAGE value="sonar cube, metrics reloaded 리팩토링 완료" />
+    <MESSAGE value="협동모드 수정중(적 동기화는 해결됨)" />
+    <MESSAGE value="협동모드 수정중(적 움직임, 공격 아이템 동기화는 해결됨)" />
+    <MESSAGE value="협동모드 수정완료" />
+    <option name="LAST_COMMIT_MESSAGE" value="협동모드 수정완료" />
+  </component>
+</project>
